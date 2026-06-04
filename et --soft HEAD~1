@@ -1,0 +1,17 @@
+[33m6a75cd2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m feat(usuario): adicionar relacionamento @OneToMany com a entidade Dieta
+[33m3435e2a[m feat: implementada classe DietaController com rotas RESTful para gestao de dietas
+[33m3ed7554[m feat: implementada classe DietaService com regras de negocio e tratamento do CRUD
+[33mc52dea0[m feat: interface DietaRepository estendendo JpaRepository para persistencia de dados
+[33m1553be7[m feat:Implementação e mapeamento a entidade Dieta.java com validacoes Bean e macros em BigDecimal
+[33m456217a[m feat: mapeada classe de entidade Exercicio com atributos de treino
+[33m510208c[m feat: implementada classe ExercicioService com padronizacao CRUD
+[33m5475786[m feat: implementada interface ExercicioRepository com persistencia JPA
+[33mab2b1e9[m feat: interface UsuarioRepository estendendo JpaRepository para persistencia de atletas
+[33m312159d[m feat: implementada classe UsuarioService com regras de negocio para gerenciamento de atletas
+[33m74e253c[m feat: mapeada classe de entidade Usuario.java com atributos de perfil biologico
+[33mf035f70[m feat: implementado UsuarioController com endpoint de diagnostico de TMB e macros
+[33md2a27f0[m feat: implementada classe CalculoService com formulas de TMB e macros g/kg
+[33md4109c3[m feat: implementada interface TreinoRepository com consultas derivadas JPA
+[33mf169565[m feat: mapeada classe de entidade Treino.java com relacionamento ManyToOne
+[33mb712ee3[m feat: implementada classe TreinoController com endpoints REST para gestao de treinos
+[33m6df7eb8[m feat: implementada classe TreinoService com tratamento orElseThrow e padronizacao CRUD

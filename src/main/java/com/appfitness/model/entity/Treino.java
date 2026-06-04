@@ -1,5 +1,7 @@
 package com.appfitness.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -26,14 +28,32 @@ public class Treino {
 	private String intensidade;   // Ex: "Alta"
 	private String frequencia;    // Ex: "3x por semana"
 	
+	/**
+	 * Relacionamento entre Treino e Usuario:
+	 * - Um usuário pode ter várias rotinas de treino associadas a ele  (ManyToOne).
+	 * - A entidade Treino tem uma relação Many-to-One com a entidade Usuario,
+	 *  indicando que muitos treinos podem estar associados a um único usuário.
+	 */
+	
 	@ManyToOne
 	@JoinColumn(name = "usuario_id")
 	private Usuario usuario;      // Chave estrangeira que liga ao Atleta
 
+	
 	// Construtor vazio (Obrigatório para JPA/Hibernate)
 	public Treino() {
 	}
-
+	
+	/**
+	 * Construtor com parâmetros para facilitar a criação de objetos Treino.
+	 * @param nomeTreino
+	 * @param tipoTreino
+	 * @param duracao
+	 * @param intensidade
+	 * @param frequencia
+	 * @param usuario
+	 */
+	
 	// Construtor completo para facilitar o uso no Service
 	public Treino(String nomeTreino, String tipoTreino, int duracao, String intensidade, String frequencia, Usuario usuario) {
 		this.nomeTreino = nomeTreino;

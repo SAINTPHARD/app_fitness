@@ -61,7 +61,12 @@ public class TreinoService {
 	 * Padronizado o nome do método para 'deletar'.
 	 */
 	public void deletar(Long id) {
-		// Boa prática: Verificar se existe antes de tentar deletar
+		// Verificar se existe antes de tentar deletar
+		/**
+		 * @Treino : é a entidade que representa o treino no sistema,
+		 * @treino : é a variável que armazena o treino encontrado no banco de dados usando o método buscarPorId(id).
+		 * @buscarPorId(id); : é o método que busca um treino pelo seu ID. Ele retorna o treino encontrado ou lança uma exceção se não for encontrado.
+		 */
 		Treino treino = buscarPorId(id);
 		treinoRepository.delete(treino);
 	}

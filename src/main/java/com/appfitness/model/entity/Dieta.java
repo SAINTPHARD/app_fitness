@@ -2,11 +2,15 @@ package com.appfitness.model.entity;
 
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -45,7 +49,7 @@ public class Dieta {
 	
 	@NotNull(message = "A quantidade de calorias da dieta é obrigatória")
 	@Positive(message = "A quantidade da dieta deve ser maior que zero")
-	private int calorias;
+	private Integer calorias;
 	
 	@NotBlank(message = "As refeições da dieta são obrigatórias")
 	@Size(max = 500, message = "As refeições da dieta devem ter no máximo 500 caracteres")
@@ -68,8 +72,27 @@ public class Dieta {
 		
 	}
 	
+	/**
+	 * Relacionamento entre Dieta e Usuario:
+	 * 
+	 */
+	//@JsonIgnore 
+	@ManyToOne	// Muitas dietas podem estar associadas a um usuário.
+	@JoinColumn(name = "usuario_id") // Especifica a coluna de junção no banco de dados para o relacionamento entre Dieta e Usuario.
+	private Usuario usuario; // A dieta está associada a um usuário específico, indicando a quem pertence essa dieta.
+	
+	/**
+	 * Construtor com parâmetros para facilitar a criação de objetos Dieta.
+	 * @param nome
+	 * @param calorias
+	 * @param refeicoes
+	 * @param carboidratos
+	 * @param proteinas
+	 * @param gorduras
+	 */
+	
 	// 3. Construtor com parâmetros (opcional, mas útil para facilitar a criação de objetos Dieta)
-	public Dieta(String nome, int calorias, String refeicoes, BigDecimal carboidratos
+	public Dieta(String nome, Integer calorias, String refeicoes, BigDecimal carboidratos
 			, BigDecimal proteinas, BigDecimal gorduras) {
 		this.nome = nome;
 		this.calorias = calorias;
@@ -96,12 +119,12 @@ public class Dieta {
 		this.nome = nome;
 	}
 
-	public int getCalorias() {
-		return calorias;
+	public Integer getCalorias() {
+	    return calorias;
 	}
 
-	public void setCalorias(int calorias) {
-		this.calorias = calorias;
+	public void setCalorias(Integer calorias) {
+	    this.calorias = calorias;
 	}
 
 	public String getRefeicoes() {
@@ -135,4 +158,13 @@ public class Dieta {
 	public void setGorduras(BigDecimal gorduras) {
 		this.gorduras = gorduras;
 	}
+	
+	public Usuario getUsuario() {
+		return usuario;
+	}
+	
+	public void setUsuario(Usuario usuario) {
+		this.usuario = usuario;
+	}
+	
 }

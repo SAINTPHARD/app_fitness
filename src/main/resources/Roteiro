@@ -1,0 +1,311 @@
+ROTEIRO FINAL — APP FITNESS (PARA TERMINAR HOJE)
+
+1️⃣ Repositories faltando
+TreinoRepository
+ExercicioRepository
+DietaRepository
+2️⃣ Controllers faltando
+TreinoController
+ExercicioController
+DietaController
+3️⃣ Services faltando
+TreinoService
+ExercicioService
+DietaService
+
+Com base em toda a estrutura que você mostrou, o objetivo agora NÃO é reinventar arquitetura.
+O objetivo é:
+
+transformar o projeto em um backend REST completo e apresentável.
+
+Seu projeto já possui:
+
+✅ Spring Boot funcionando
+✅ PostgreSQL conectado
+✅ Estrutura em camadas
+✅ Entidades iniciais
+✅ Segurança configurada
+✅ Maven OK
+
+Então agora é execução.
+
+🎯 META FINAL DE HOJE
+
+Você precisa terminar com:
+
+✅ CRUD completo
+✅ Banco persistindo
+✅ Relacionamentos funcionando
+✅ API testada no Postman
+✅ Projeto rodando sem erros
+✅ Estrutura limpa para apresentação
+
+📌 ETAPA 1 — FINALIZAR ENTIDADES (PRIORIDADE MÁXIMA)
+Arquivos:
+Usuario.java
+Treino.java
+Exercicio.java
+Dieta.java
+✅ O que precisa existir
+Usuario
+
+Deve conter:
+
+id
+nome
+email
+peso
+altura
+objetivo
+
+Relacionamentos:
+
+@OneToMany -> treinos
+@OneToMany ou @OneToOne -> dieta
+Treino
+
+Deve conter:
+
+id
+nome
+descricao
+duracao
+
+Relacionamentos:
+
+@ManyToOne -> usuario
+@OneToMany -> exercicios
+Exercicio
+
+Deve conter:
+
+id
+nome
+series
+repeticoes
+
+Relacionamento:
+
+@ManyToOne -> treino
+Dieta
+
+Deve conter:
+
+id
+calorias
+refeicoes
+
+Relacionamento:
+
+@ManyToOne -> usuario
+📌 ETAPA 2 — CRIAR REPOSITORIES
+
+Crie:
+
+UsuarioRepository
+TreinoRepository
+ExercicioRepository
+DietaRepository
+
+Todos assim:
+
+@Repository
+public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
+}
+📌 ETAPA 3 — CRIAR SERVICES
+
+Crie:
+
+UsuarioService
+TreinoService
+ExercicioService
+DietaService
+✅ O que cada service precisa
+
+Métodos:
+
+listarTodos()
+buscarPorId()
+salvar()
+atualizar()
+deletar()
+📌 ETAPA 4 — CRIAR CONTROLLERS
+
+Crie:
+
+TreinoController
+ExercicioController
+DietaController
+✅ ENDPOINTS NECESSÁRIOS
+Usuario
+GET /usuarios
+GET /usuarios/{id}
+POST /usuarios
+PUT /usuarios/{id}
+DELETE /usuarios/{id}
+Treino
+GET /treinos
+POST /treinos
+Exercício
+GET /exercicios
+POST /exercicios
+Dieta
+GET /dietas
+POST /dietas
+📌 ETAPA 5 — AJUSTAR SECURITYCONFIG
+
+Hoje você NÃO precisa autenticação avançada.
+
+Deixe simples:
+
+@Bean
+SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(auth -> auth
+            .anyRequest().permitAll()
+        );
+
+    return http.build();
+}
+📌 ETAPA 6 — AJUSTAR APPLICATION.PROPERTIES
+Deixe assim:
+spring.datasource.url=jdbc:postgresql://localhost:5432/app_fitness
+spring.datasource.username=postgres
+spring.datasource.password=suaSenha
+
+spring.jpa.hibernate.ddl-auto=update
+
+spring.jpa.show-sql=true
+
+spring.jpa.open-in-view=false
+❌ REMOVA
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+📌 ETAPA 7 — TESTAR TUDO NO POSTMAN
+
+Use Postman
+
+TESTES OBRIGATÓRIOS
+POST Usuario
+{
+  "nome": "Roberto",
+  "email": "roberto@email.com",
+  "peso": 80,
+  "altura": 1.75,
+  "objetivo": "GANHO_MASSA"
+}
+GET Usuarios
+GET http://localhost:8080/usuarios
+POST Treino
+{
+  "nome": "Treino A",
+  "descricao": "Peito e tríceps",
+  "duracao": 60
+}
+📌 ETAPA 8 — TRATAR JSON INFINITO (IMPORTANTE)
+
+Quando criar relacionamentos bidirecionais:
+
+Use:
+
+@JsonManagedReference
+
+e
+
+@JsonBackReference
+
+Senão:
+❌ stackoverflow no JSON.
+
+📌 ETAPA 9 — VALIDAÇÕES
+
+Adicione:
+
+@NotBlank
+@NotNull
+@Email
+
+Exemplo:
+
+@NotBlank
+private String nome;
+📌 ETAPA 10 — SWAGGER (SE SOBRAR TEMPO)
+
+Adicionar dependência:
+
+<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>2.8.5</version>
+</dependency>
+
+Depois acessar:
+
+http://localhost:8080/swagger-ui.html
+📌 ETAPA 11 — ORGANIZAR APRESENTAÇÃO
+
+Você precisa conseguir explicar:
+
+✅ Arquitetura
+Controller
+↓
+Service
+↓
+Repository
+↓
+Banco PostgreSQL
+✅ Fluxo
+Usuário cria treino
+↓
+Treino recebe exercícios
+↓
+Sistema salva no PostgreSQL
+📌 ETAPA 12 — CHECKLIST FINAL
+
+Antes de encerrar:
+
+Backend
+ Projeto sobe sem erro
+ PostgreSQL conecta
+ CRUD funcionando
+ Endpoints respondendo
+ JSON correto
+Código
+ Controllers organizados
+ Services funcionando
+ Repositories funcionando
+ Entidades relacionadas
+Testes
+ GET funcionando
+ POST funcionando
+ PUT funcionando
+ DELETE funcionando
+🎯 RESULTADO FINAL
+
+Se você seguir isso:
+
+Você entrega:
+
+✅ Backend profissional básico
+✅ API REST funcional
+✅ Persistência real
+✅ Estrutura Spring correta
+✅ Projeto completo para faculdade
+
+📊 NÍVEL QUE VOCÊ CONSEGUE CHEGAR HOJE
+Área	Resultado
+Backend REST	✅
+PostgreSQL	✅
+CRUD	✅
+Arquitetura limpa	✅
+API testável	✅
+Projeto apresentável	✅
+🔥 ORDEM EXATA PRA VOCÊ FAZER AGORA
+1️⃣ Finalizar entidades
+2️⃣ Fazer repositories
+3️⃣ Fazer services
+4️⃣ Fazer controllers
+5️⃣ Ajustar security
+6️⃣ Testar Postman
+7️⃣ Corrigir erros JSON
+8️⃣ Swagger (opcional)
