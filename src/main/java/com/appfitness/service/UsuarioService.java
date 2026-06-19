@@ -1,77 +1,83 @@
 package com.appfitness.service;
 
 import java.util.List;
-
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import com.appfitness.model.entity.Usuario;
 import com.appfitness.repository.UsuarioRepository;
 
 /**
- * Classe de serviço para operações relacionadas a usuários.
- * 
- * Responsável por:
- * - CRUD de usuários
- * - Regras básicas de negócio relacionadas ao usuário
+ * =========================================================
+ * USUARIO SERVICE
+ * =========================================================
+ * Camada responsável pelas regras de negócio relacionadas
+ * aos usuários da aplicação.
+ * @Service: Anotação para indicar que esta classe é um serviço gerenciado pelo Spring.
  */
-@Service
+@Service	
 public class UsuarioService {
-	
+
 	private final UsuarioRepository repository;
-	
+	private final PasswordEncoder passwordEncoder;
+
 	/**
-	 * Injeção de dependência via construtor
+	 * Injeção de dependências via construtor.
 	 */
-	public UsuarioService(UsuarioRepository repository) {
+	public UsuarioService(UsuarioRepository repository, PasswordEncoder passwordEncoder) {
 		this.repository = repository;
+		this.passwordEncoder = passwordEncoder;
 	}
-	
-	/**
-	 * Salvar um novo usuário
-	 */
+
+	// =====================================================
+	// CREATE
+	// =====================================================
 	public Usuario salvar(Usuario usuario) {
-        return repository.save(usuario);
-    }
-	
+		String senhaOriginal = usuario.getSenha();
+		String senhaCriptografada = passwordEncoder.encode(senhaOriginal);
+		usuario.setSenha(senhaCriptografada);
+		return repository.save(usuario);
+	}
+
+	// =====================================================
+	// READ ALL
+	// =====================================================
 	/**
-	 * Listar todos os usuários
+	 * Retorna todos os usuários cadastrados.
+	 * CORREÇÃO: Adicionado o diamante genérico <Usuario> para evitar raw type warning.
 	 */
 	public List<Usuario> listarTodos() {
 		return repository.findAll();
 	}
-	
-	/**
-	 * Buscar usuário por ID
-	 */
-	public Usuario listarPorId(Long id) {
+
+	// =====================================================
+	// READ BY ID
+	// =====================================================
+	public Usuario buscarPorId(Long id) {
 		return repository.findById(id)
-				.orElseThrow(() -> 
-					new RuntimeException("Usuário não encontrado com ID: " + id));
+				.orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + id));
 	}
-	
-	/**
-	 * Atualizar usuário
-	 */
+
+	// =====================================================
+	// UPDATE
+	// =====================================================
 	public Usuario atualizar(Long id, Usuario usuarioAtualizado) {
-		
-		Usuario usuarioExistente = listarPorId(id);
-		
-		// Atualizando campos
+		Usuario usuarioExistente = buscarPorId(id);
+
 		usuarioExistente.setNome(usuarioAtualizado.getNome());
 		usuarioExistente.setEmail(usuarioAtualizado.getEmail());
 		usuarioExistente.setPeso(usuarioAtualizado.getPeso());
 		usuarioExistente.setAltura(usuarioAtualizado.getAltura());
 		usuarioExistente.setIdade(usuarioAtualizado.getIdade());
 		usuarioExistente.setObjetivo(usuarioAtualizado.getObjetivo());
-		
+
 		return repository.save(usuarioExistente);
 	}
-	
-	/**
-	 * Deletar usuário
-	 */
+
+	// =====================================================
+	// DELETE
+	// =====================================================
 	public void deletar(Long id) {
-		Usuario usuario = listarPorId(id);
+		Usuario usuario = buscarPorId(id);
 		repository.delete(usuario);
 	}
 }
