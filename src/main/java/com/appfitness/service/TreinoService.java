@@ -3,7 +3,9 @@ package com.appfitness.service;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import com.appfitness.model.entity.Treino;
+import com.appfitness.model.entity.Usuario; // Importação da entidade Usuario
 import com.appfitness.repository.TreinoRepository;
+import com.appfitness.repository.UsuarioRepository; // Importação do repositório de Usuario
 
 /**
  * Classe de serviço para a entidade Treino.
@@ -14,9 +16,12 @@ public class TreinoService {
 
 	// 1. Injeção de dependência via Construtor (Boa prática exigida na PUC-Rio)
 	private final TreinoRepository treinoRepository;
+	private final UsuarioRepository usuarioRepository; // Injeção do repositório de usuário para buscar dados completos
 	
-	public TreinoService(TreinoRepository treinoRepository) {
+	// Construtor atualizado recebendo ambos os repositórios
+	public TreinoService(TreinoRepository treinoRepository, UsuarioRepository usuarioRepository) {
 		this.treinoRepository = treinoRepository;
+		this.usuarioRepository = usuarioRepository;
 	}
 	
 	// --- MÉTODOS CRUD (Create, Read, Update, Delete) ---
@@ -24,14 +29,32 @@ public class TreinoService {
 	/**
 	 * 1. CREATE: Salva um novo treino no sistema.
 	 * Padronizado para 'salvar' para casar com a chamada do seu Controller.
+	 * Ajustado para carregar os dados do Usuário antes de persistir no PostgreSQL.
 	 */
 	public Treino salvar(Treino treino) {
+		vincularUsuario(treino);
 		return treinoRepository.save(treino);
+	}
+	
+	private void vincularUsuario(Treino treino) {
+		// Verifica se o JSON enviado possui um vínculo de usuário com ID preenchido
+		if (treino.getUsuario() != null && treino.getUsuario().getId() != null) {
+			Long usuarioId = treino.getUsuario().getId();
+			
+			// Busca o atleta completo no banco de dados
+			Usuario usuarioCompleto = usuarioRepository.findById(usuarioId)
+					.orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + usuarioId));
+			
+			// Vincula o objeto preenchido ao treino antes do salvamento
+			treino.setUsuario(usuarioCompleto);
+		} else {
+			throw new RuntimeException("Não é possível salvar um treino sem um Usuário associado.");
+		}
 	}
 	
 	/**
 	 * 2. READ: Obtém um treino por ID.
-	 * Se não encontrar, lança uma exceção limpa (padrão robusto da PUC-Rio).
+	 * Se não encontrar, lança uma exceção limpa.
 	 */
 	public Treino buscarPorId(Long id) {
 		return treinoRepository.findById(id)
@@ -52,6 +75,8 @@ public class TreinoService {
 		treino.setDuracao(treinoAtualizado.getDuracao());
 		treino.setIntensidade(treinoAtualizado.getIntensidade());
 		treino.setFrequencia(treinoAtualizado.getFrequencia());
+		treino.setUsuario(treinoAtualizado.getUsuario());
+		vincularUsuario(treino);
 		
 		return treinoRepository.save(treino);
 	}

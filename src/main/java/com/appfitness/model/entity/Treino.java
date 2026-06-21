@@ -1,7 +1,5 @@
 package com.appfitness.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -24,7 +22,7 @@ public class Treino {
 
 	private String nomeTreino;    // Ex: "Full Body A"
 	private String tipoTreino;    // Ex: "Hipertrofia", "Cardio"
-	private int duracao;          // Em minutos
+	private Integer duracao;      // Em minutos
 	private String intensidade;   // Ex: "Alta"
 	private String frequencia;    // Ex: "3x por semana"
 	
@@ -32,9 +30,8 @@ public class Treino {
 	 * Relacionamento entre Treino e Usuario:
 	 * - Um usuário pode ter várias rotinas de treino associadas a ele  (ManyToOne).
 	 * - A entidade Treino tem uma relação Many-to-One com a entidade Usuario,
-	 *  indicando que muitos treinos podem estar associados a um único usuário.
+	 * indicando que muitos treinos podem estar associados a um único usuário.
 	 */
-	
 	@ManyToOne
 	@JoinColumn(name = "usuario_id")
 	private Usuario usuario;      // Chave estrangeira que liga ao Atleta
@@ -44,18 +41,8 @@ public class Treino {
 	public Treino() {
 	}
 	
-	/**
-	 * Construtor com parâmetros para facilitar a criação de objetos Treino.
-	 * @param nomeTreino
-	 * @param tipoTreino
-	 * @param duracao
-	 * @param intensidade
-	 * @param frequencia
-	 * @param usuario
-	 */
-	
 	// Construtor completo para facilitar o uso no Service
-	public Treino(String nomeTreino, String tipoTreino, int duracao, String intensidade, String frequencia, Usuario usuario) {
+	public Treino(String nomeTreino, String tipoTreino, Integer duracao, String intensidade, String frequencia, Usuario usuario) {
 		this.nomeTreino = nomeTreino;
 		this.tipoTreino = tipoTreino;
 		this.duracao = duracao;
@@ -90,11 +77,11 @@ public class Treino {
 		this.tipoTreino = tipoTreino;
 	}
 
-	public int getDuracao() {
+	public Integer getDuracao() {
 		return duracao;
 	}
 
-	public void setDuracao(int duracao) {
+	public void setDuracao(Integer duracao) {
 		this.duracao = duracao;
 	}
 
@@ -122,9 +109,7 @@ public class Treino {
 		this.usuario = usuario;
 	}
 
-	// a implementar no futuro,
 	public Object getDificuldade() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 }

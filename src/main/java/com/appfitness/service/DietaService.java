@@ -5,7 +5,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.appfitness.model.entity.Dieta;
+import com.appfitness.model.entity.Usuario;
 import com.appfitness.repository.DietaRepository;
+import com.appfitness.repository.UsuarioRepository;
 
 /**
  * Classe de serviço para Dieta. Responsável por conter a lógica de negócios
@@ -28,6 +30,7 @@ public class DietaService {
 	 * não pode ser alterada.
 	 */
 	private final DietaRepository dietaRepository;
+	private final UsuarioRepository usuarioRepository;
 
 	/**
 	 * 1.1. CONSTRUTOR (A Injeção de Dependência) Quando o Spring inicializa a
@@ -37,8 +40,9 @@ public class DietaService {
 	 * 
 	 * @param dietaRepository
 	 */
-	public DietaService(DietaRepository dietaRepository) {
+	public DietaService(DietaRepository dietaRepository, UsuarioRepository usuarioRepository) {
 		this.dietaRepository = dietaRepository;
+		this.usuarioRepository = usuarioRepository;
 	}
 
 	// --- MÉTODOS CRUD (Create, Read, Update, Delete) ---
@@ -54,18 +58,7 @@ public class DietaService {
 	
 	// troca temporaiamente para debugar o problema do usuario ser null
 	public Dieta salvar(Dieta dieta) {
-
-	    System.out.println("================================");
-	    System.out.println("Nome: " + dieta.getNome());
-	    System.out.println("Calorias: " + dieta.getCalorias());
-
-	    if (dieta.getUsuario() != null) {
-	        System.out.println("Usuario ID: " + dieta.getUsuario().getId());
-	    } else {
-	        System.out.println("Usuario NULL");
-	    }
-
-	    System.out.println("================================");
+		vincularUsuario(dieta);
 
 	    return dietaRepository.save(dieta);
 	}
@@ -94,6 +87,8 @@ public class DietaService {
 		dieta.setCarboidratos(dietaAtualizado.getCarboidratos());
 		dieta.setProteinas(dietaAtualizado.getProteinas());
 		dieta.setGorduras(dietaAtualizado.getGorduras());
+		dieta.setUsuario(dietaAtualizado.getUsuario());
+		vincularUsuario(dieta);
 
 		return dietaRepository.save(dieta);
 	}
@@ -114,5 +109,14 @@ public class DietaService {
 	public List<Dieta> listarTodos() {
 		// CORRIGIDO: Implementado o retorno real da lista de registros
 		return dietaRepository.findAll();
+	}
+
+	private void vincularUsuario(Dieta dieta) {
+		if (dieta.getUsuario() != null && dieta.getUsuario().getId() != null) {
+			Long usuarioId = dieta.getUsuario().getId();
+			Usuario usuario = usuarioRepository.findById(usuarioId)
+					.orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + usuarioId));
+			dieta.setUsuario(usuario);
+		}
 	}
 }

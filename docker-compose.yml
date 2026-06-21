@@ -1,0 +1,145 @@
+# ============================================================================
+# Docker Compose - PostgreSQL + App Fitness
+# ============================================================================
+# Este arquivo orquestra a execução do PostgreSQL e da aplicação Spring Boot
+# juntos. Execute com: docker-compose up -d
+
+version: '3.8'
+
+# ============================================================================
+# SERVIÇOS
+# ============================================================================
+services:
+
+  # ========================================================================
+  # SERVIÇO: PostgreSQL
+  # ========================================================================
+  postgres:
+    # Nome da imagem a ser construída a partir do Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    # Nome do container quando executado
+    container_name: appfitness-postgres
+    
+    # Define a política de reinicialização automática
+    # unless-stopped: reinicia sempre, exceto se foi parado manualmente
+    restart: unless-stopped
+    
+    # ====================================================================
+    # VARIÁVEIS DE AMBIENTE
+    # ====================================================================
+    # Herda as variáveis definidas no Dockerfile
+    # Também pode sobrescrevê-las aqui se necessário
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-appfitness_db}
+      POSTGRES_USER: ${POSTGRES_USER:-appfitness_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-appfitness_secure_password_123}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=pt_BR.UTF-8"
+      TZ: America/Sao_Paulo
+    
+    # ====================================================================
+    # VOLUMES - Persistência de Dados
+    # ====================================================================
+    volumes:
+      # Volume nomeado para dados do PostgreSQL
+      # Mapeia o diretório interno do container para um volume gerenciado pelo Docker
+      # Garante que os dados persistam entre reinicializações e rebuilds
+      - postgres_data:/var/lib/postgresql/data
+      
+      # Volume para logs do PostgreSQL (opcional)
+      - postgres_logs:/var/log/postgresql
+      
+      # Cópia dos scripts de inicialização
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    
+    # ====================================================================
+    # PORTAS - Mapeamento de Portas
+    # ====================================================================
+    # Formato: "porta_host:porta_container"
+    # Permite conectar ao PostgreSQL na máquina host na porta 5432
+    # Para usar porta diferente, mude para "5433:5432"
+    ports:
+      - "5432:5432"
+    
+    # ====================================================================
+    # LOGGING - Configuração de Logs
+    # ====================================================================
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # ====================================================================
+    # HEALTHCHECK - Verificação de Integridade (sobrescrita)
+    # ====================================================================
+    # Verifica se o PostgreSQL está pronto para receber conexões
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appfitness_user -d appfitness_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    
+    # ====================================================================
+    # NETWORKS - Redes de Comunicação
+    # ====================================================================
+    # Conecta o PostgreSQL à rede padrão para comunicação com outros serviços
+    networks:
+      - appfitness-network
+
+# ============================================================================
+# VOLUMES NOMEADOS
+# ============================================================================
+# Define volumes gerenciados pelo Docker que persistem os dados
+volumes:
+  # Volume para dados do PostgreSQL
+  postgres_data:
+    driver: local
+  
+  # Volume para logs do PostgreSQL
+  postgres_logs:
+    driver: local
+
+# ============================================================================
+# REDES CUSTOMIZADAS
+# ============================================================================
+# Define uma rede bridge para isolamento e melhor comunicação entre containers
+networks:
+  appfitness-network:
+    driver: bridge
+
+# ============================================================================
+# COMO USAR ESTE ARQUIVO
+# ============================================================================
+# 
+# 1. Construir e iniciar o container:
+#    docker-compose up -d
+#
+# 2. Verificar status do container:
+#    docker-compose ps
+#
+# 3. Ver logs em tempo real:
+#    docker-compose logs -f postgres
+#
+# 4. Parar o container:
+#    docker-compose down
+#
+# 5. Remover volumes (cuidado - deleta dados!):
+#    docker-compose down -v
+#
+# 6. Conectar ao PostgreSQL com psql:
+#    docker-compose exec postgres psql -U appfitness_user -d appfitness_db
+#
+# ============================================================================
+# VARIÁVEIS DE AMBIENTE (Arquivo .env)
+# ============================================================================
+# Crie um arquivo .env na mesma pasta para sobrescrever valores padrão:
+#
+# POSTGRES_DB=appfitness_db
+# POSTGRES_USER=appfitness_user
+# POSTGRES_PASSWORD=sua_senha_super_segura
+# 
+# O docker-compose lerá automaticamente as variáveis do arquivo .env

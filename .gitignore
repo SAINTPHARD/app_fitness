@@ -31,3 +31,44 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# ============================================================================
+# DOCKER E VOLUMES
+# ============================================================================
+.env                          # Arquivo com variáveis de ambiente (NUNCA versionar!)
+.env.local                     # Variáveis locais de desenvolvimento
+.env.*.local                   # Variáveis de ambiente específicas
+postgres_data/                 # Volume de dados do PostgreSQL
+postgres_logs/                 # Logs do PostgreSQL
+docker_volumes/                # Volumes gerenciados
+docker-compose.override.yml    # Overrides locais
+
+# ============================================================================
+# SEGURANÇA E CREDENCIAIS
+# ============================================================================
+*.pem                          # Chaves SSH/SSL
+*.key                          # Chaves criptográficas
+*.p12
+*.pfx
+*.keystore
+secrets/                       # Pasta com dados sensíveis
+
+# ============================================================================
+# BACKUPS E DADOS
+# ============================================================================
+*.db
+*.sqlite
+*.sqlite3
+database.sql
+backup*.sql
+dump*.sql
+backups/
+*.backup
+
+# ============================================================================
+# LOGS E TEMPORÁRIOS
+# ============================================================================
+*.log
+logs/
+tmp/
+temp/

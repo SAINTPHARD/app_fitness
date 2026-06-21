@@ -1,6 +1,7 @@
 package com.appfitness;
 
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * Clase principal de la aplicación Appfitness, que inicia el contexto de Spring Boot.
@@ -14,6 +15,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class AppfitnessApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(AppfitnessApplication.class, args);
+		SpringApplication application = new SpringApplication(AppfitnessApplication.class);
+		application.setWebApplicationType(WebApplicationType.SERVLET);
+		application.run(args);
 	}
 }

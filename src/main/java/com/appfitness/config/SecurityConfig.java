@@ -1,6 +1,5 @@
 package com.appfitness.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,58 +18,54 @@ import com.appfitness.security.SecurityFilter;
 
 /**
  * Configuração central da cadeia de segurança do Spring Security.
- * Responsável por gerenciar permissões de rotas, política de sessão stateless
- * e registro de interceptadores (Filtros JWT).
  */
-@Configuration	// Anotação para indicar que esta classe é uma configuração de Spring security
+@Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-	private final SecurityFilter securityFilter;
-	private final JwtAuthenticationEntryPoint authenticationEntryPoint;
-
-	@Autowired
-	public SecurityConfig(SecurityFilter securityFilter, JwtAuthenticationEntryPoint authenticationEntryPoint) {
-		this.securityFilter = securityFilter;
-		this.authenticationEntryPoint = authenticationEntryPoint;
-	}
-
+	
 	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	public SecurityFilterChain securityFilterChain(
+			HttpSecurity http,
+			SecurityFilter securityFilter, // Injetado diretamente como parâmetro do Bean
+			JwtAuthenticationEntryPoint authenticationEntryPoint // Injetado diretamente como parâmetro do Bean
+			) throws Exception {
+		
 		return http
-			// 1. Desabilita proteção CSRF (Desnecessária em APIs Stateless com JWT)
+			// 1. Desabilita proteção CSRF
 			.csrf(csrf -> csrf.disable())
 			
-			// 2. Define o EntryPoint customizado para capturar e tratar erros de autenticação (401)
+			// 2. Define o EntryPoint customizado
 			.exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
 			
-			// 3. Define a política de sessão como STATELESS (Sem estado armazenado na memória do servidor)
+			// 3. Define a política de sessão como STATELESS
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			
-			// 4. Regras de Autorização e Proteção de Rotas
+			// 4. Regras de Autorização de Rotas
 			.authorizeHttpRequests(authorize -> authorize
-				// Rotas públicas: Cadastro de usuários e login não exigem Token
 				.requestMatchers(HttpMethod.POST, "/auth/login", "/usuarios").permitAll()
-				// Qualquer outra rota (exercicios, treinos, dietas) exige autenticaçãos
+				.requestMatchers("/error").permitAll()
 				.anyRequest().authenticated()
 			)
 			
-			// 5. Injeta o nosso filtro customizado de validação JWT antes do filtro nativo do Spring
+			// 5. Injeta o filtro customizado JWT antes do nativo do Spring
 			.addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
 			
 			.build();
 	}
 
 	/**
-	 * Expõe o Bean do AuthenticationManager para que os controllers possam processar logins programaticamente.
+	 * Expõe o Bean do AuthenticationManager de forma isolada.
 	 */
 	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+	public AuthenticationManager authenticationManager(
+			AuthenticationConfiguration configuration
+			) throws Exception {
 		return configuration.getAuthenticationManager();
 	}
 
 	/**
-	 * Define o BCryptPasswordEncoder como o mecanismo oficial de criptografia e hash de senhas.
+	 * Mecanismo oficial de criptografia e hash de senhas.
 	 */
 	@Bean
 	public PasswordEncoder passwordEncoder() {

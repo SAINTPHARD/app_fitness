@@ -1,9 +1,13 @@
 package com.appfitness.model.entity;
 
+import java.util.Collection;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,7 +21,7 @@ import model.enums.Objetivo;
 
 @Entity					// Indica que esta classe é uma entidade JPA, ou seja, que será mapeada para uma tabela no banco de dados.
 @Table(name = "usuarios")// Nome da tabela no banco de dados que esta entidade irá mapear. Neste caso, a tabela será chamada "usuarios".
-public class Usuario {
+public class Usuario implements UserDetails { // Implementa UserDetails para integração com Spring Security
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,12 +29,12 @@ public class Usuario {
 
 	private String nome;
 
-	@Column(unique = true)
+	@Column(unique = true, nullable = false)
 	private String email;
 
+	@Column(nullable = false)
 	private String senha;
 
-	// ALTERADO: wrappers para evitar erro de desserialização
 	private Integer idade;
 
 	private Double peso;
@@ -42,16 +46,6 @@ public class Usuario {
 	@Enumerated(EnumType.STRING)
 	private Objetivo objetivo;
 
-	// --- CONSTRUTORES ---
-
-	public Usuario() {
-	}
-
-	/**
-	 * Relacionamento entre Usuario, Dieta | Usuario e Treino:
-	 * - Um usuário pode ter várias dietas associadas a ele (OneToMany).
-	 * - Um usuário pode ter várias rotinas de treino associadas a ele (OneToMany).
-	 */
 	@JsonIgnore
 	@OneToMany(mappedBy = "usuario")
 	private List<Dieta> dietas;
@@ -59,6 +53,11 @@ public class Usuario {
 	@JsonIgnore
 	@OneToMany(mappedBy = "usuario")
 	private List<Treino> treinos;
+
+	// --- CONSTRUTORES ---
+
+	public Usuario() {
+	}
 
 	public Usuario(Long id,
 				   String nome,
@@ -79,6 +78,46 @@ public class Usuario {
 		this.altura = altura;
 		this.sexo = sexo;
 		this.objetivo = objetivo;
+	}
+
+	// --- MÉTODOS OBRIGATÓRIOS DO USERDETAILS (SPRING SECURITY) ---
+
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		// Define o nível de acesso do usuário. Todos os cadastrados ganham a permissão padrão "ROLE_USER"
+		return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+	}
+
+	@Override
+	public String getPassword() {
+		// Retorna a senha cadastrada para a validação do Spring Security
+		return this.senha;
+	}
+
+	@Override
+	public String getUsername() {
+		// Define que o identificador de login (username) principal do usuário será o e-mail
+		return this.email;
+	}
+
+	@Override
+	public boolean isAccountNonExpired() {
+		return true; // Conta ativa e não expirada
+	}
+
+	@Override
+	public boolean isAccountNonLocked() {
+		return true; // Conta livre e desbloqueada
+	}
+
+	@Override
+	public boolean isCredentialsNonExpired() {
+		return true; // Senha/Credenciais dentro do prazo de validade
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return true; // Usuário ativo e habilitado no sistema
 	}
 
 	// --- GETTERS E SETTERS ---

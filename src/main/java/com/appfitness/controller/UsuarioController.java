@@ -1,8 +1,6 @@
 package com.appfitness.controller;
 
 import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,31 +14,24 @@ import com.appfitness.model.entity.Usuario;
 import com.appfitness.service.UsuarioService;
 
 /** * Controlador REST para gerenciar usuários.
- *	 Responsável por expor endpoints REST para o frontend ou clientes externos :
- * - Receber requisições HTTP
- * - Validar dados de entrada
- * - Chamar o serviço para processar a lógica de negócio
- * - Retornar respostas HTTP adequadas
+ * @RestController: Indica que esta classe é um controlador REST, capaz de receber e responder a requisições HTTP.
+ * @RequestMapping("/usuarios"): Define a rota base para todos os endpoints deste controlador.
  * 
  */
 @RestController
 @RequestMapping("/usuarios")
 public class UsuarioController {
 
-	// 1. Injeção de dependência do serviço de usuário
-	//@Autowired
 	
 	private final UsuarioService usuarioService;
 	
-	// 2. Construtor para injeção de dependência (opcional, mas recomendado para testes)
+	// Injeção de dependência explícita via construtor (Padrão Sênior)
 	public UsuarioController(UsuarioService usuarioService) {
 		this.usuarioService = usuarioService;
 	}
 	
-	
 	/**
 	 * 1. Criar usuário
-	 * Metodo POST para criar um novo usuário no sistema.
 	 * http://localhost:8080/usuarios
 	 */
 	@PostMapping
@@ -49,8 +40,7 @@ public class UsuarioController {
 	}
 	
 	/**
-	 * Listar todos os usuários
-	 * Metodo GET para listar todos os usuários cadastrados no sistema.
+	 * 2. Listar todos os usuários
 	 * http://localhost:8080/usuarios
 	 */
 	@GetMapping
@@ -59,29 +49,26 @@ public class UsuarioController {
 	}
 	
 	/**
-	 * 3.Listar usuário por ID
-	 * Metodo GET para buscar um usuário específico pelo seu ID.
+	 * 3. Buscar usuário por ID
 	 * http://localhost:8080/usuarios/{id}
 	 */
 	@GetMapping("/{id}")
-	public Usuario ListarUsuarioPorId(@PathVariable Long id) {
-		return usuarioService.listarPorId(id);
+	public Usuario buscarUsuarioPorId(@PathVariable Long id) {
+		return usuarioService.buscarPorId(id);
 	}
 		
 	/**
 	 * 4. Atualizar usuário
-	 * Metodo PUT para atualizar as informações de um usuário existente.
 	 * http://localhost:8080/usuarios/{id}
 	 */
 	@PutMapping("/{id}")
 	public Usuario atualizarUsuario(@PathVariable Long id, 
-									@RequestBody Usuario usuario) {
+			@RequestBody Usuario usuario) {
 		return usuarioService.atualizar(id, usuario);
 	}
 	
 	/**
 	 * 5. Deletar usuário
-	 * Metodo DELETE para remover um usuário do sistema.
 	 * http://localhost:8080/usuarios/{id}
 	 */
 	@DeleteMapping("/{id}")

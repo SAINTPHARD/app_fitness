@@ -10,3 +10,4 @@ import com.appfitness.model.entity.Exercicio;
 public interface ExercicioRepository extends JpaRepository<Exercicio, Long> {
 
 }
+ 
