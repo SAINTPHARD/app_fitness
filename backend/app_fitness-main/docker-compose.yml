@@ -1,8 +1,11 @@
 # ============================================================================
-# Docker Compose - PostgreSQL + App Fitness
+# Docker Compose - Ecossistema Full Stack App Fitness
 # ============================================================================
-# Este arquivo orquestra a execução do PostgreSQL e da aplicação Spring Boot
-# juntos. Execute com: docker-compose up -d
+# Este arquivo orquestra a execução unificada do Banco de Dados PostgreSQL 16,
+# da API Backend Java Spring Boot e do Frontend React Vite + Nginx.
+#
+# Para rodar toda a estrutura, execute na raiz do projeto:
+# docker compose up -d --build
 
 version: '3.8'
 
@@ -12,134 +15,155 @@ version: '3.8'
 services:
 
   # ========================================================================
-  # SERVIÇO: PostgreSQL
+  # SERVIÇO 1: PostgreSQL (Banco de Dados)
   # ========================================================================
   postgres:
-    # Nome da imagem a ser construída a partir do Dockerfile
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # Utiliza a imagem oficial estável e leve do PostgreSQL 16 baseada em Alpine Linux
+    image: postgres:16-alpine
     
-    # Nome do container quando executado
+    # Nome do container quando executado no Docker Desktop
     container_name: appfitness-postgres
     
-    # Define a política de reinicialização automática
-    # unless-stopped: reinicia sempre, exceto se foi parado manualmente
-    restart: unless-stopped
+    # Define a política de reinicialização automática (sempre reinicia exceto se parado manualmente)
+    restart: always
     
-    # ====================================================================
-    # VARIÁVEIS DE AMBIENTE
-    # ====================================================================
-    # Herda as variáveis definidas no Dockerfile
-    # Também pode sobrescrevê-las aqui se necessário
+    # Carrega as variáveis de ambiente sensíveis a partir do arquivo .env centralizado na raiz
+    env_file:
+      - .env
+    
+    # Mapeia as variáveis carregadas do .env para as configurações internas exigidas pelo Postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-appfitness_db}
       POSTGRES_USER: ${POSTGRES_USER:-appfitness_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-appfitness_secure_password_123}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=pt_BR.UTF-8"
+      POSTGRES_INITDB_ARGS: ${POSTGRES_INITDB_ARGS:-"--encoding=UTF8 --locale=pt_BR.UTF-8"}
       TZ: America/Sao_Paulo
     
     # ====================================================================
     # VOLUMES - Persistência de Dados
     # ====================================================================
     volumes:
-      # Volume nomeado para dados do PostgreSQL
-      # Mapeia o diretório interno do container para um volume gerenciado pelo Docker
-      # Garante que os dados persistam entre reinicializações e rebuilds
+      # Mapeia o volume nomeado para proteger e persistir os dados da pós-graduação
       - postgres_data:/var/lib/postgresql/data
-      
-      # Volume para logs do PostgreSQL (opcional)
-      - postgres_logs:/var/log/postgresql
-      
-      # Cópia dos scripts de inicialização
+      # Volume para scripts de inicialização de tabelas e esquemas (se houver)
       - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
     
     # ====================================================================
-    # PORTAS - Mapeamento de Portas
+    # PORTAS - Mapeamento de Portas para acesso externo (ex: DBeaver, pgAdmin)
     # ====================================================================
-    # Formato: "porta_host:porta_container"
-    # Permite conectar ao PostgreSQL na máquina host na porta 5432
-    # Para usar porta diferente, mude para "5433:5432"
     ports:
       - "5432:5432"
     
     # ====================================================================
-    # LOGGING - Configuração de Logs
+    # HEALTHCHECK - Verificação de Integridade Crítica
     # ====================================================================
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    
-    # ====================================================================
-    # HEALTHCHECK - Verificação de Integridade (sobrescrita)
-    # ====================================================================
-    # Verifica se o PostgreSQL está pronto para receber conexões
+    # Testa ativamente se o banco já terminou de subir e está pronto para receber conexões.
+    # Isso impede que o Spring Boot inicialize antes da hora e tome "Connection Refused".
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U appfitness_user -d appfitness_db"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-appfitness_user} -d ${POSTGRES_DB:-appfitness_db}"]
+      interval: 5s
       timeout: 5s
       retries: 5
-      start_period: 40s
+    
+    # Conecta o banco de dados à rede isolada interna do ecossistema Fitness
+    networks:
+      - appfitness-network
+
+  # ========================================================================
+  # SERVIÇO 2: Backend (API Java Spring Boot)
+  # ========================================================================
+  backend:
+    # Constrói a imagem dinamicamente a partir do Dockerfile corrigido dentro da pasta backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    
+    # Nome do container quando executado no Docker Desktop
+    container_name: appfitness-backend
+    
+    # Reinicia automaticamente caso a aplicação falhe por alguma razão inesperada
+    restart: always
+    
+    # Expõe a API do Spring Boot na porta padrão do host do desenvolvedor
+    ports:
+      - "8080:8080"
+    
+    # Carrega as credenciais e configurações de banco de dados diretamente do .env da raiz
+    env_file:
+      - .env
     
     # ====================================================================
-    # NETWORKS - Redes de Comunicação
+    # CONTROLE DE SINCRONIZAÇÃO (DEPENDS_ON COM HEALTHCHECK)
     # ====================================================================
-    # Conecta o PostgreSQL à rede padrão para comunicação com outros serviços
+    # Sincronização definitiva: o contêiner do Java só sairá do estado de espera
+    # quando o Healthcheck do PostgreSQL responder que está 100% "healthy" (saudável).
+    depends_on:
+      postgres:
+        condition: service_healthy
+    
+    # Conecta o Backend à mesma rede para que consiga achar o banco usando o host 'postgres'
+    networks:
+      - appfitness-network
+
+  # ========================================================================
+  # SERVIÇO 3: Frontend (Interface React Vite + Servidor Nginx)
+  # ========================================================================
+  frontend:
+    # Constrói a imagem do frontend a partir do diretório e Dockerfile específicos
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    
+    # Nome do container quando executado no Docker Desktop
+    container_name: appfitness-frontend
+    
+    # Reinicia automaticamente o servidor se houver oscilações
+    restart: always
+    
+    # Mapeia a porta HTTP padrão (80) para você acessar apenas digitando http://localhost no navegador
+    ports:
+      - "80:80"
+    
+    # Injeta a URL da API capturada pelo arquivo .env para que o Axios saiba onde bater
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8080}
+    
+    # O Frontend aguarda o Backend estar de pé para garantir estabilidade no primeiro carregamento
+    depends_on:
+      - backend
+    
+    # Conecta à mesma rede compartilhada do ecossistema
     networks:
       - appfitness-network
 
 # ============================================================================
 # VOLUMES NOMEADOS
 # ============================================================================
-# Define volumes gerenciados pelo Docker que persistem os dados
+# Define e isola os volumes de armazenamento do Docker para não perder os dados salvos
 volumes:
-  # Volume para dados do PostgreSQL
   postgres_data:
-    driver: local
-  
-  # Volume para logs do PostgreSQL
-  postgres_logs:
     driver: local
 
 # ============================================================================
-# REDES CUSTOMIZADAS
+# REDES CUSTOMIZADAS (Isolamento de Infraestrutura)
 # ============================================================================
-# Define uma rede bridge para isolamento e melhor comunicação entre containers
+# Cria uma rede bridge exclusiva. Os contêineres se comunicam por ela usando os nomes 
+# dos serviços (o backend fala com 'postgres:5432' e o front fala com 'backend:8080')
 networks:
   appfitness-network:
     driver: bridge
 
 # ============================================================================
-# COMO USAR ESTE ARQUIVO
+# MANUAL DE COMANDOS DE OPERAÇÃO
 # ============================================================================
-# 
-# 1. Construir e iniciar o container:
-#    docker-compose up -d
 #
-# 2. Verificar status do container:
-#    docker-compose ps
+# 1. Iniciar toda a infraestrutura limpa e atualizada:
+#    docker compose up -d --build
 #
-# 3. Ver logs em tempo real:
-#    docker-compose logs -f postgres
+# 2. Derrubar e limpar os contêineres se houver travamento:
+#    docker compose down
 #
-# 4. Parar o container:
-#    docker-compose down
-#
-# 5. Remover volumes (cuidado - deleta dados!):
-#    docker-compose down -v
-#
-# 6. Conectar ao PostgreSQL com psql:
-#    docker-compose exec postgres psql -U appfitness_user -d appfitness_db
+# 3. Inspecionar os logs em tempo real para auditoria do Spring Boot:
+#    docker compose logs -f backend
 #
 # ============================================================================
-# VARIÁVEIS DE AMBIENTE (Arquivo .env)
-# ============================================================================
-# Crie um arquivo .env na mesma pasta para sobrescrever valores padrão:
-#
-# POSTGRES_DB=appfitness_db
-# POSTGRES_USER=appfitness_user
-# POSTGRES_PASSWORD=sua_senha_super_segura
-# 
-# O docker-compose lerá automaticamente as variáveis do arquivo .env

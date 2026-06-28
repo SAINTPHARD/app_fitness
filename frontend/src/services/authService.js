@@ -1,7 +1,4 @@
-import axios from 'axios';
-
-// URL base da sua API Spring Boot (onde habilitamos o CORS na porta 5173)
-const API_URL = 'http://localhost:8080/auth';
+import api from './api';
 
 /**
  * Serviço responsável pela comunicação de autenticação com o backend Java.
@@ -15,7 +12,7 @@ export const authService = {
    */
   login: async (email, senha) => {
     try {
-      const response = await axios.post(`${API_URL}/login`, { email, senha });
+      const response = await api.post('/auth/login', { email, senha });
       
       // Se o Spring retornar o token com sucesso
       if (response.data && response.data.token) {
@@ -43,4 +40,5 @@ export const authService = {
   getToken: () => {
     return localStorage.getItem('token');
   }
+
 };

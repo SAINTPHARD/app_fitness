@@ -1,0 +1,10 @@
+target
+*.log
+*.tmp
+*.bak
+*.swp
+.DS_Store
+.git
+.gitignore
+.dockerignore
+.env

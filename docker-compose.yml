@@ -1,0 +1,73 @@
+version: "3.8"
+
+services:
+  postgres:
+    env_file: .env
+    image: postgres:16-alpine
+    container_name: appfitness-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-appfitness_db}
+      POSTGRES_USER: ${POSTGRES_USER:-appfitness_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-appfitness_secure_password_123}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=pt_BR.UTF-8"
+      TZ: ${TZ:-America/Sao_Paulo}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/app_fitness-main/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-appfitness_user} -d ${POSTGRES_DB:-appfitness_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - appfitness-network
+
+  backend:
+    env_file: .env
+    build:
+      context: ./backend/app_fitness-main
+      dockerfile: Dockerfile
+    container_name: appfitness-backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/appfitness_db}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-appfitness_user}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-appfitness_secure_password_123}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
+      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL:-true}
+      TZ: ${TZ:-America/Sao_Paulo}
+    ports:
+      - "8080:8080"
+    networks:
+      - appfitness-network
+
+  frontend:
+    env_file: .env
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
+    container_name: appfitness-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+    networks:
+      - appfitness-network
+
+volumes:
+  postgres_data:
+
+networks:
+  appfitness-network:
+    driver: bridge
