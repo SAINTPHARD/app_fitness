@@ -33,8 +33,9 @@ public class UsuarioService {
 	// =====================================================
 	public Usuario salvar(Usuario usuario) {
 		String senhaOriginal = usuario.getSenha();
-		String senhaCriptografada = passwordEncoder.encode(senhaOriginal);
-		usuario.setSenha(senhaCriptografada);
+		if (senhaOriginal != null && !senhaOriginal.startsWith("$2a$") && !senhaOriginal.startsWith("$2b$") && !senhaOriginal.startsWith("$2y$")) {
+			usuario.setSenha(passwordEncoder.encode(senhaOriginal));
+		}
 		return repository.save(usuario);
 	}
 

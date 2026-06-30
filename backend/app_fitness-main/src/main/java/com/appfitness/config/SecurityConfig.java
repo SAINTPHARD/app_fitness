@@ -22,99 +22,133 @@ import com.appfitness.security.JwtAuthenticationEntryPoint;
 import com.appfitness.security.SecurityFilter;
 
 /**
- * Classe de Configuração Central do Spring Security.
- * O Spring lê esta classe ao iniciar para desenhar os portões de segurança da API.
+ * Configuração central de segurança da API utilizando Spring Security.
+ * O login e o cadastro são públicos, as demais rotas exigem validação via Token JWT.
  */
 @Configuration
-@EnableWebSecurity // Ativa a segurança web customizada do Spring nesta aplicação
+@EnableWebSecurity
 public class SecurityConfig {
 
-	/**
-	 * Configura a corrente de filtros de segurança (Security Filter Chain).
-	 * Cada requisição HTTP passa por este método para validação de regras.
-	 */
 	@Bean
 	public SecurityFilterChain securityFilterChain(
 			HttpSecurity http,
-			SecurityFilter securityFilter, // Filtro customizado que captura e valida o Token JWT
-			JwtAuthenticationEntryPoint authenticationEntryPoint // Trata requisições não autorizadas (Erro 401)
+			SecurityFilter securityFilter,
+			JwtAuthenticationEntryPoint authenticationEntryPoint
 			) throws Exception {
 		
 		return http
-			// 1. Desabilita a proteção CSRF, pois a autenticação via JWT é imune a ataques de sessão baseados em cookies
+			// 1. Ativa a configuração de CORS definida no método abaixo
+			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+			
+			// 2. Desabilita o CSRF (proteção baseada em cookies) já que a API é Stateless (JWT)
 			.csrf(csrf -> csrf.disable())
 			
-			// 2. Aponta o gerenciador de exceções para o nosso EntryPoint customizado (captura falhas de login)
+			// 3. Trata erros de autenticação disparando o EntryPoint personalizado
 			.exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
 			
-			// 3. Define o modelo de sessão como STATELESS (Sem Estado). A API não guarda sessões no servidor; cada requisição exige o token
+			// 4. Define a política de sessão como STATELESS (sem estado no servidor)
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			
-			// 4. Configuração das regras de acesso aos Endpoints (Portões de entrada da API)
+			// 5. Gerenciamento de permissões de rotas (Mapeamento de Endpoints)
 			.authorizeHttpRequests(authorize -> authorize
-				// CORREÇÃO CRUCIAL PARA CORS NO DOCKER: Libera todas as requisições de pré-voo (OPTIONS) do navegador
+				// Permite requisições de checagem prévia (Preflight OPTIONS) para evitar erros de CORS no front
 				.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 				
-				.requestMatchers("/h2-console/**").permitAll() // Permite acesso ao console H2 para testes
-				// Permite acesso público total para criar usuários e fazer login
-				.requestMatchers(HttpMethod.POST, "/auth/login", "/usuarios").permitAll()
-				// Permite que o Spring trate erros internos sem travar o tráfego do Docker
+				// Rota pública para Autenticação do Atleta (Evita o erro 403 Forbidden no Login)
+				.requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+				
+				// Rota pública para Autenticação alternativa (Caso use mapeamento direto sem o prefixo)
+				.requestMatchers(HttpMethod.POST, "/login").permitAll()
+				
+				// Rota pública para permitir novos cadastros de usuários
+				.requestMatchers(HttpMethod.POST, "/usuarios").permitAll()
+				
+				// Rota pública para o tratamento interno de erros do Spring Boot
 				.requestMatchers("/error").permitAll()
-				// Qualquer outra rota do sistema exige que o atleta esteja autenticado
+				
+				// Qualquer outra requisição do sistema exige autenticação por Token JWT
 				.anyRequest().authenticated()
 			)
 			
-			// 5. Acopla as regras do CORS para que o servidor Nginx do Frontend (porta 80) consiga conversar com a API (porta 8080)
-			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-			
-			// 6. Coloca o nosso filtro de validação JWT ANTES do filtro padrão de usuário e senha do Spring
+			// 6. Injeta o filtro de segurança customizado (SecurityFilter) antes do filtro padrão de usuário e senha
 			.addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
-			
-			// Compila a cadeia de segurança configurada acima
 			.build();
 	}
 
 	/**
 	 * Configuração de CORS (Cross-Origin Resource Sharing).
-	 * Define quais domínios externos e métodos podem consumir esta API de forma segura.
+	 * Permite que o frontend React rodando no Vite acesse os endpoints desta API.
 	 */
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
+
+		// Libera explicitamente as URLs locais usadas pelo seu React no VS Code
+		configuration.setAllowedOrigins(List.of(
+				"http://localhost:5173",
+				"http://127.0.0.1:5173"
+		));
 		
-		// Permite requisições vindas do endereço padrão onde o Docker roda o Frontend
-		configuration.setAllowedOrigins(List.of("http://localhost", "http://localhost:80", "http://127.0.0.1", "http://127.0.0.1:80"));
-		// Métodos HTTP permitidos para as operações do sistema Fitness
+		// Métodos HTTP permitidos para o ecossistema full-stack
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-		// Cabeçalhos HTTP aceitos nas requisições (crucial para enviar o "Authorization: Bearer <TOKEN>")
-		configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
-		// Permite o envio de cookies e credenciais de autenticação cross-origin
+		
+		// Cabeçalhos aceitos na requisição do Axios
+		configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin"));
+		
+		// Expõe o cabeçalho Authorization para que o frontend consiga ler o Token JWT retornado
+		configuration.setExposedHeaders(List.of("Authorization"));
+		
+		// Permite envio de credenciais (cookies, headers de autenticação)
 		configuration.setAllowCredentials(true);
-		// Tempo de cache (1 hora) para as requisições de pré-voo (Preflight Options)
+		
+		// Tempo de cache para a resposta de preflight (1 hora)
 		configuration.setMaxAge(3600L);
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		// Aplica as regras de CORS acima para todos os endpoints da API (/**)
 		source.registerCorsConfiguration("/**", configuration);
 		return source;
 	}
 
 	/**
-	 * Expõe o Bean do PasswordEncoder para o Spring.
-	 * Utiliza o algoritmo BCrypt para gerar hashes altamente seguros para as senhas dos atletas.
+	 * Criptografia e validação de senhas.
+	 * Suporta comparação adaptativa de hashes BCrypt e texto plano (para dados legados de teste).
 	 */
 	@Bean
 	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
+		BCryptPasswordEncoder bcrypt = new BCryptPasswordEncoder();
+
+		return new PasswordEncoder() {
+			@Override
+			public String encode(CharSequence rawPassword) {
+				// Criptografa a senha plana gerando o hash BCrypt padrão
+				return bcrypt.encode(rawPassword);
+			}
+
+			@Override
+			public boolean matches(CharSequence rawPassword, String encodedPassword) {
+				// Proteção contra nulos na checagem
+				if (encodedPassword == null || rawPassword == null) {
+					return false;
+				}
+
+				// Se a senha armazenada começar com prefixos tradicionais do BCrypt, valida de forma segura
+				if (encodedPassword.startsWith("$2a$")
+						|| encodedPassword.startsWith("$2b$")
+						|| encodedPassword.startsWith("$2y$")) {
+					return bcrypt.matches(rawPassword, encodedPassword);
+				}
+
+				// Fallback temporário: se não for hash, compara como texto puro (comum em cargas iniciais de dados)
+				return rawPassword.toString().equals(encodedPassword);
+			}
+		};
 	}
 
 	/**
-	 * Expõe o Bean do AuthenticationManager exigido na camada de Controller.
-	 * É o motor responsável por disparar o processo interno de autenticação no login.
+	 * Gerenciador de Autenticação padrão utilizado pelo Spring Security para processar o login.
 	 */
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-		// Captura o gerenciador padrão estruturado pelo ecossistema do Spring Security
 		return configuration.getAuthenticationManager();
 	}
 }

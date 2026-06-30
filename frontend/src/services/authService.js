@@ -1,44 +1,44 @@
 import api from './api';
 
-/**
- * Serviço responsável pela comunicação de autenticação com o backend Java.
- */
 export const authService = {
-  
-  /**
-   * Envia as credenciais do atleta e armazena o token JWT no navegador.
-   * @param {string} email 
-   * @param {string} senha 
-   */
-  login: async (email, senha) => {
+  login: async (email, password) => {
     try {
-      const response = await api.post('/auth/login', { email, senha });
-      
-      // Se o Spring retornar o token com sucesso
+      const response = await api.post('/auth/login', { email, password });
+
       if (response.data && response.data.token) {
-        // Armazena o token de forma segura no LocalStorage do navegador
         localStorage.setItem('token', response.data.token);
+        localStorage.setItem('userEmail', response.data.email || email);
       }
-      
+
       return response.data;
     } catch (error) {
-      // Captura o JSON de erro do seu GlobalExceptionHandler comercial
-      throw error.response ? error.response.data : new Error('Erro ao conectar com o servidor');
+      if (error.response) {
+        const message =
+          error.response.data?.message ||
+          error.response.data?.error ||
+          error.response.data?.mensagens?.join?.(' | ') ||
+          `Falha no login. Status HTTP ${error.response.status}.`;
+
+        throw {
+          status: error.response.status,
+          message,
+          data: error.response.data,
+        };
+      }
+
+      throw {
+        status: 0,
+        message: 'Não foi possível conectar ao servidor Spring Boot em http://localhost:8080.',
+      };
     }
   },
 
-  /**
-   * Limpa a sessão do atleta.
-   */
   logout: () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('userEmail');
   },
 
-  /**
-   * Recupera o token ativo para as próximas requisições privadas (Dietas/Treinos).
-   */
   getToken: () => {
     return localStorage.getItem('token');
-  }
-
+  },
 };
