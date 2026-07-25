@@ -1,0 +1,13 @@
+/* Estilo base compartilhado por todos os cartões da Home, via `composes`
+   do CSS Modules — evita repetir background/borda/sombra em cada arquivo. */
+.base {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}

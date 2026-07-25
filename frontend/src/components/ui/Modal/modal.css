@@ -1,0 +1,35 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.45);
+  padding: 1rem;
+}
+
+.modal {
+  width: min(100%, 540px);
+  border-radius: 1.5rem;
+  background: white;
+  box-shadow: 0 32px 80px rgba(15, 23, 42, 0.16);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.closeButton {
+  border: none;
+  background: transparent;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.body {
+  padding: 1.5rem;
+}

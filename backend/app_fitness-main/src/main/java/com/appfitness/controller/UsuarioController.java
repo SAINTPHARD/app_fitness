@@ -1,6 +1,7 @@
 package com.appfitness.controller;
 
 import java.util.List;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -56,7 +57,31 @@ public class UsuarioController {
 	public Usuario buscarUsuarioPorId(@PathVariable Long id) {
 		return usuarioService.buscarPorId(id);
 	}
-		
+
+	/**
+	 * 3b. Buscar o usuário autenticado (a partir do token JWT), sem precisar
+	 * o front-end saber o ID numérico — o e-mail no token já identifica quem
+	 * é, e o SecurityFilter já resolve a entidade Usuario completa (com id)
+	 * como principal a cada requisição autenticada.
+	 * http://localhost:8080/usuarios/me
+	 */
+	@GetMapping("/me")
+	public Usuario buscarUsuarioAutenticado(Authentication authentication) {
+		Usuario usuarioAutenticado = (Usuario) authentication.getPrincipal();
+		return usuarioService.buscarPorId(usuarioAutenticado.getId());
+	}
+
+	/**
+	 * 4b. Atualizar os dados do próprio usuário autenticado (perfil/onboarding),
+	 * sem exigir o ID na URL.
+	 * http://localhost:8080/usuarios/me
+	 */
+	@PutMapping("/me")
+	public Usuario atualizarUsuarioAutenticado(Authentication authentication, @RequestBody Usuario usuario) {
+		Usuario usuarioAutenticado = (Usuario) authentication.getPrincipal();
+		return usuarioService.atualizar(usuarioAutenticado.getId(), usuario);
+	}
+
 	/**
 	 * 4. Atualizar usuário
 	 * http://localhost:8080/usuarios/{id}

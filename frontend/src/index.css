@@ -1,21 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --bg-primary: #f4f7fd;
+  --bg-surface: #ffffff;
+  --bg-muted: #eef3fb;
+  --text-primary: #102a43;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border: #dbe2ef;
+  --brand: #2563eb;
+  --brand-soft: #e5efff;
+  --success: #16a34a;
+  --success-soft: #dcfce7;
+  --danger: #dc2626;
+  --danger-soft: #fee2e2;
+  --warning: #d97706;
+  --warning-soft: #fef3c7;
+  --radius-sm: 12px;
+  --radius: 24px;
+  --radius-lg: 28px;
+  --shadow-sm: 0 8px 20px rgba(15, 23, 42, 0.06);
+  --shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+}
+
+/* Tema escuro: sobrescreve os mesmos tokens usados em todo o app (Home,
+   Login, Perfil, Treino, Header) quando `useTema` marca `data-theme="dark"`
+   no <html>. Páginas construídas em Tailwind (Dieta) usam a estratégia
+   `darkMode: 'selector'` do tailwind.config.js sobre o mesmo atributo. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg-primary: #0b1120;
+  --bg-surface: #161f34;
+  --bg-muted: #1f2a44;
+  --text-primary: #e2e8f0;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border: #2a3654;
+  --brand-soft: #1e2f52;
+  --success-soft: #0f2e1d;
+  --danger-soft: #3a1620;
+  --warning-soft: #3a2a10;
+  --shadow-sm: 0 8px 20px rgba(0, 0, 0, 0.25);
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+
 * {
   box-sizing: border-box;
 }
 
-html,
-body,
-#root {
+html {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  scroll-behavior: smooth;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+body {
   margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, rgba(37, 99, 235, 0.08), transparent 32%),
+    var(--bg-primary);
+}
+
+#root {
   min-height: 100vh;
   width: 100%;
 }
 
-body {
-  background: #eef2f7;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
 button,
-input {
+input,
+textarea,
+select {
   font: inherit;
 }
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+.app-shell-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+}
+
+.app-shell-spinner {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  padding: 1rem 1.75rem;
+  box-shadow: var(--shadow);
+}
+

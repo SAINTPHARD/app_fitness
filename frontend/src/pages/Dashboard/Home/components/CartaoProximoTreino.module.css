@@ -1,0 +1,66 @@
+.cartao {
+  composes: base from './cartaoBase.module.css';
+}
+
+.cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.rotulo {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.diaLabel {
+  margin: 0.1rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.nomeTreino {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.horario {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.botao {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--brand);
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-align: center;
+  transition: background-color 0.15s ease;
+}
+
+.botao:hover {
+  background: #1d4ed8;
+}

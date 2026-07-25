@@ -3,6 +3,7 @@ import api from './api';
 export const authService = {
   login: async (email, password) => {
     try {
+      // O backend /auth/login espera o JSON { email, password }
       const response = await api.post('/auth/login', { email, password });
 
       if (response.data && response.data.token) {
@@ -16,19 +17,43 @@ export const authService = {
         const message =
           error.response.data?.message ||
           error.response.data?.error ||
-          error.response.data?.mensagens?.join?.(' | ') ||
-          `Falha no login. Status HTTP ${error.response.status}.`;
+          `Erro no servidor: ${error.response.status}`;
 
-        throw {
-          status: error.response.status,
-          message,
-          data: error.response.data,
-        };
+        throw { status: error.response.status, message };
       }
 
       throw {
         status: 0,
-        message: 'Não foi possível conectar ao servidor Spring Boot em http://localhost:8080.',
+        message: 'Servidor indisponível. Verifique se o Spring Boot está a correr na porta 8080.',
+      };
+    }
+  },
+
+  register: async (email, password, nome) => {
+    try {
+      // O backend de cadastro /usuarios usa a entidade Usuario,
+      // que demanda { nome, email, senha }.
+      const payload = {
+        nome,
+        email,
+        senha: password,
+      };
+
+      const response = await api.post('/usuarios', payload);
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        const message =
+          error.response.data?.message ||
+          error.response.data?.error ||
+          `Erro no servidor: ${error.response.status}`;
+
+        throw { status: error.response.status, message };
+      }
+
+      throw {
+        status: 0,
+        message: 'Servidor indisponível. Verifique se o Spring Boot está a correr na porta 8080.',
       };
     }
   },
@@ -38,7 +63,5 @@ export const authService = {
     localStorage.removeItem('userEmail');
   },
 
-  getToken: () => {
-    return localStorage.getItem('token');
-  },
+  getToken: () => localStorage.getItem('token'),
 };

@@ -1,0 +1,44 @@
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  animation: pulsar 1.4s ease-in-out infinite;
+}
+
+.bloco {
+  border-radius: var(--radius);
+  background: var(--bg-muted);
+}
+
+.hero {
+  height: 120px;
+}
+
+.gradeMetricas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1.25rem;
+}
+
+.gradeMetricas .bloco {
+  height: 110px;
+}
+
+.gradeGraficos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.gradeGraficos .bloco {
+  height: 260px;
+}
+
+@keyframes pulsar {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}

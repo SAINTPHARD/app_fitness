@@ -1,0 +1,28 @@
+.wrapper {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.label {
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.input {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.errorInput {
+  border-color: #dc2626;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 0.82rem;
+}

@@ -1,0 +1,50 @@
+.cartao {
+  composes: base from './cartaoBase.module.css';
+  gap: 0.6rem;
+}
+
+.rotulo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.emoji {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.valor {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.valorSecundario {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.barra {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bg-muted);
+  overflow: hidden;
+}
+
+.barraPreenchida {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--brand);
+  transition: width 0.4s ease;
+}
+
+.barraAlerta {
+  background: var(--danger);
+}

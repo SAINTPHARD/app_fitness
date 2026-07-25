@@ -1,0 +1,50 @@
+.perfilPage {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.profileCard {
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.profileCard h2 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.profileCard p {
+  margin: 0.5rem 0 0;
+  color: var(--text-muted);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.statsGrid article {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.25rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.statsGrid span {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.statsGrid strong {
+  color: var(--text-primary);
+  font-size: 1.3rem;
+}

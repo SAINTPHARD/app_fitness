@@ -1,0 +1,85 @@
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.heroCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1.75rem;
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.label {
+  display: inline-flex;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.titulo {
+  margin: 0.85rem 0 0;
+  font-size: 1.75rem;
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+
+.subtitulo {
+  margin: 0.75rem 0 0;
+  color: var(--text-secondary);
+  max-width: 42rem;
+}
+
+.heroStatus {
+  display: grid;
+  justify-content: end;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: var(--brand-soft);
+  border-radius: var(--radius-sm);
+  min-width: 10rem;
+  text-align: right;
+  color: var(--brand);
+  font-weight: 700;
+}
+
+.secaoTitulo {
+  margin: 0 0 -0.75rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.gradeMetricas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1.25rem;
+}
+
+.gradeWidgets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.gradeGraficos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+@media (max-width: 860px) {
+  .heroCard {
+    flex-direction: column;
+  }
+}

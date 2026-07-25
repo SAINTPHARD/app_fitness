@@ -1,20 +1,86 @@
-import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
+import LoginPage from './pages/Login';
+import OnboardingPage from './pages/Onboarding';
+import DashboardLayout from './pages/Dashboard';
+import HomePage from './pages/Dashboard/Home';
+import DietaPage from './pages/Dashboard/Dieta/PainelDieta';
+import TreinoPage from './pages/Dashboard/Treino';
+import EvolucaoPage from './pages/Dashboard/Evolucao';
+import RelatoriosPage from './pages/Dashboard/Relatorios';
+import PerfilPage from './pages/Dashboard/Perfil';
+import ConfiguracoesPage from './pages/Dashboard/Configuracoes';
 
 function AppRoutes() {
   const { signed, loading } = useAuth();
+  const profileComplete = localStorage.getItem('profile_complete') === 'true';
 
   if (loading) {
     return (
-      <div style={styles.loadingScreen}>
-        <div style={styles.loadingCard}>Carregando sessão...</div>
+      <div className="app-shell-loading">
+        <div className="app-shell-spinner">Carregando...</div>
       </div>
     );
   }
 
-  return signed ? <Dashboard /> : <Login />;
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            signed ? (
+              <Navigate to={profileComplete ? '/dashboard/inicio' : '/onboarding'} replace />
+            ) : (
+              <LoginPage />
+            )
+          }
+        />
+        <Route
+          path="/onboarding"
+          element={
+            signed ? (
+              profileComplete ? (
+                <Navigate to="/dashboard/inicio" replace />
+              ) : (
+                <OnboardingPage />
+              )
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            signed && profileComplete ? (
+              <DashboardLayout />
+            ) : (
+              <Navigate to={signed ? '/onboarding' : '/login'} replace />
+            )
+          }
+        >
+          <Route path="inicio" element={<HomePage />} />
+          <Route path="dieta" element={<DietaPage />} />
+          <Route path="treino" element={<TreinoPage />} />
+          <Route path="evolucao" element={<EvolucaoPage />} />
+          <Route path="relatorios" element={<RelatoriosPage />} />
+          <Route path="perfil" element={<PerfilPage />} />
+          <Route path="configuracoes" element={<ConfiguracoesPage />} />
+          <Route path="" element={<Navigate to="inicio" replace />} />
+        </Route>
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to={signed ? (profileComplete ? '/dashboard/inicio' : '/onboarding') : '/login'}
+              replace
+            />
+          }
+        />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default function App() {
@@ -24,22 +90,3 @@ export default function App() {
     </AuthProvider>
   );
 }
-
-const styles = {
-  loadingScreen: {
-    alignItems: 'center',
-    background: '#f3f4f6',
-    display: 'flex',
-    minHeight: '100vh',
-    justifyContent: 'center',
-  },
-  loadingCard: {
-    background: '#ffffff',
-    border: '1px solid #e5e7eb',
-    borderRadius: 8,
-    boxShadow: '0 16px 40px rgba(15, 23, 42, 0.08)',
-    color: '#334155',
-    fontFamily: 'Inter, system-ui, sans-serif',
-    padding: '24px 28px',
-  },
-};

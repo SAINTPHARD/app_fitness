@@ -1,136 +1,38 @@
-/* Estilizações do Dashboard */
-/* Layout Principal em Container Tela Cheia */
-.dashboard-layout {
-  display: flex;
+.dashboard {
+  /* Área principal em cinza muito claro (slate-100) para os cartões brancos
+     "flutuarem" com contraste, enquanto a sidebar ao lado fica quase preta.
+     A sidebar agora é `fixed` (recolhe/expande ao passar o mouse), então só
+     reservamos o espaço da largura RECOLHIDA (5rem + respiro) — quando ela
+     expande ao hover, sobrepõe o conteúdo em vez de empurrar o layout. */
   min-height: 100vh;
-  background-color: #f4f6f9;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
+  padding: 1.5rem 1.5rem 1.5rem 6.5rem;
+  background: #f1f5f9;
+  transition: background-color 0.2s ease;
 }
 
-/* 🚀 Estilização da Sidebar Lateral */
-.dashboard-sidebar {
-  width: 260px;
-  background-color: #1a202c; /* Cinza Escuro Premium */
-  color: #fff;
+/* A sidebar permanece escura nos dois temas (visual "premium" intencional);
+   só a área de conteúdo inverte quando o usuário liga o modo escuro. */
+:root[data-theme='dark'] .dashboard {
+  background: #0b1120;
+}
+
+.main {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 20px;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  gap: 1.5rem;
+  min-height: 100vh;
 }
 
-.sidebar-brand h2 {
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin-bottom: 30px;
-  text-align: center;
-  color: #38bdf8; /* Azul Fitness */
-}
-
-.sidebar-menu {
+.content {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  flex-grow: 1;
+  gap: 1.5rem;
+  padding: 0.5rem 0 1rem;
 }
 
-.menu-item {
-  color: #94a3b8;
-  text-decoration: none;
-  padding: 12px 15px;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.menu-item:hover, .menu-item.active {
-  background-color: #38bdf8;
-  color: #fff;
-  transform: translateX(5px);
-}
-
-.btn-logout {
-  width: 100%;
-  background-color: #ef4444; /* Vermelho Alerta */
-  color: white;
-  border: none;
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background 0.2s;
-}
-
-.btn-logout:hover {
-  background-color: #dc2626;
-}
-
-/* 🏢 Estilização do Bloco Central de Conteúdo */
-.dashboard-content {
-  flex-grow: 1;
-  padding: 40px;
-}
-
-.content-header h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 5px;
-}
-
-.content-header p {
-  color: #64748b;
-  margin-bottom: 30px;
-}
-
-/* ⚠️ Mensagens de Erro da API */
-.error-message {
-  background-color: #fee2e2;
-  color: #ef4444;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  border-left: 5px solid #ef4444;
-  font-weight: 500;
-}
-
-/* 📊 Grade de Cards Dinâmicos (Grid System) */
-.dashboard-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 25px;
-}
-
-.dashboard-card {
-  background: white;
-  padding: 25px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border-bottom: 4px solid transparent;
-}
-
-.card-alunos { border-color: #38bdf8; }
-.card-treinos { border-color: #10b981; } /* Verde Sucesso */
-
-.card-icon {
-  font-size: 2.5rem;
-  background: #f8fafc;
-  padding: 10px;
-  border-radius: 50%;
-}
-
-.card-info h2 {
-  font-size: 1rem;
-  color: #64748b;
-  margin: 0;
-}
-
-.card-value {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 5px 0 0 0;
-  color: #1e293b;
+@media (max-width: 860px) {
+  .dashboard {
+    padding: 1rem 1rem 1rem 6rem;
+  }
 }

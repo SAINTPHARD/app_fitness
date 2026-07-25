@@ -1,0 +1,217 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 0;
+}
+
+.greeting {
+  margin: 0;
+  color: #475569;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.motivationalPhrase {
+  margin: 0.2rem 0 0;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.quickActions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-right: 0.6rem;
+  margin-right: 0.2rem;
+  border-right: 1px solid #e2e8f0;
+}
+
+@media (max-width: 700px) {
+  .quickActions {
+    display: none;
+  }
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.iconButton:hover {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.dropdownContainer {
+  position: relative;
+}
+
+.dropdownPanel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 220px;
+  padding: 0.6rem;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.dropdownTitle {
+  margin: 0.2rem 0.5rem 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dropdownEmpty {
+  margin: 0;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: none;
+  background: none;
+  border-radius: 0.7rem;
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dropdownItem:hover {
+  background: #f1f5f9;
+}
+
+.dropdownItemDanger {
+  color: #dc2626;
+}
+
+.dropdownItemDanger:hover {
+  background: #fef2f2;
+}
+
+.profileCard {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.5rem 0.9rem 0.5rem 0.5rem;
+  border-radius: 1.25rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.profileAvatar {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #c7d2fe;
+  color: #312e81;
+  font-weight: 700;
+}
+
+.profileCard strong {
+  display: block;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.profileCard p {
+  margin: 0.1rem 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.profileChevron {
+  color: #94a3b8;
+}
+
+@media (max-width: 600px) {
+  .profileCard strong,
+  .profileCard p {
+    display: none;
+  }
+}
+
+/* Tema escuro: mesmos componentes, só trocando os tons claros fixos por
+   equivalentes escuros (o resto do app usa `var(--...)`, mas o Header foi
+   escrito com hex fixos desde o início — replicamos a mesma inversão aqui). */
+:root[data-theme='dark'] .greeting {
+  color: #cbd5e1;
+}
+
+:root[data-theme='dark'] .motivationalPhrase {
+  color: #64748b;
+}
+
+:root[data-theme='dark'] .quickActions {
+  border-color: #2a3654;
+}
+
+:root[data-theme='dark'] .iconButton,
+:root[data-theme='dark'] .profileCard,
+:root[data-theme='dark'] .dropdownPanel {
+  background: #161f34;
+  border-color: #2a3654;
+  color: #cbd5e1;
+}
+
+:root[data-theme='dark'] .iconButton:hover {
+  background: #1e2f52;
+  color: #93c5fd;
+}
+
+:root[data-theme='dark'] .dropdownTitle,
+:root[data-theme='dark'] .profileCard strong {
+  color: #f1f5f9;
+}
+
+:root[data-theme='dark'] .dropdownEmpty,
+:root[data-theme='dark'] .profileCard p {
+  color: #94a3b8;
+}
+
+:root[data-theme='dark'] .dropdownItem {
+  color: #e2e8f0;
+}
+
+:root[data-theme='dark'] .dropdownItem:hover {
+  background: #1e2f52;
+}
+
+:root[data-theme='dark'] .dropdownItemDanger:hover {
+  background: rgba(220, 38, 38, 0.15);
+}

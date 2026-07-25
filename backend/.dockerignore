@@ -8,3 +8,17 @@ target
 .gitignore
 .dockerignore
 .env
+.env.local
+.env.*.local
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+mvnw
+mvnw.cmd
+.idea
+*.iml
+*.iws
+*.ipr
+out/
+.vscode
+*.orig
+node_modules

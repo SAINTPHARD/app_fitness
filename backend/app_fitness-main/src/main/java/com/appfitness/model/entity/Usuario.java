@@ -32,6 +32,7 @@ public class Usuario implements UserDetails { // Implementa UserDetails para int
 	@Column(unique = true, nullable = false)
 	private String email;
 
+	@JsonIgnore
 	@Column(nullable = false)
 	private String senha;
 

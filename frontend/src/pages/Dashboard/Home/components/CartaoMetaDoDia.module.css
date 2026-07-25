@@ -1,0 +1,38 @@
+.cartao {
+  composes: base from './cartaoBase.module.css';
+  justify-content: center;
+}
+
+.rotulo {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.percentual {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--brand);
+}
+
+.barra {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--bg-muted);
+  overflow: hidden;
+}
+
+.barraPreenchida {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--brand);
+  transition: width 0.5s ease;
+}
+
+.legenda {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
