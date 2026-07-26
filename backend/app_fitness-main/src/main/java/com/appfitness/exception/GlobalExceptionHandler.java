@@ -40,4 +40,21 @@ public class GlobalExceptionHandler {
 
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erroResposta);
 	}
+
+	/**
+	 * Captura buscas por ID que não encontraram nada (Refeição, Alimento, etc.)
+	 * e responde com 404 Not Found, em vez do 500 genérico que uma
+	 * RuntimeException não tratada geraria.
+	 */
+	@ExceptionHandler(RecursoNaoEncontradoException.class)
+	public ResponseEntity<ErroRespostaDTO> handleRecursoNaoEncontrado(RecursoNaoEncontradoException ex) {
+		ErroRespostaDTO erroResposta = new ErroRespostaDTO(
+				LocalDateTime.now(),
+				HttpStatus.NOT_FOUND.value(),
+				"Recurso não encontrado",
+				List.of(ex.getMessage())
+		);
+
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erroResposta);
+	}
 }
