@@ -9,7 +9,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,9 +19,13 @@ import com.appfitness.dto.auth.TokenDTO;
 import com.appfitness.model.entity.Usuario;
 import com.appfitness.security.TokenService;
 
+// CORS é centralizado em `SecurityConfig.corsConfigurationSource()` — um
+// `@CrossOrigin` aqui só listando 5173 ficou desatualizado assim que o dev
+// server passou a rodar às vezes em 5174/5175, e é redundante de qualquer
+// forma (o filtro de segurança do Spring processa CORS antes do MVC chegar
+// neste controller). Removido para não confundir futuras investigações.
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = { "http://localhost:5173", "http://127.0.0.1:5173" })
 public class AuthController {
 
 	private final AuthenticationManager authenticationManager;

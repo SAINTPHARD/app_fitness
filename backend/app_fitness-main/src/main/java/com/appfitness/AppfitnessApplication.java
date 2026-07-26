@@ -1,22 +1,22 @@
 package com.appfitness;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
 /**
- * Clase principal de la aplicación Appfitness, que inicia el contexto de Spring Boot.
- * Esta clase contiene el método main que se ejecuta al iniciar la aplicación.
- * Anotada con @SpringBootApplication, que es una combinación de @Configuration, @
- * @SpringBootApplication -> definir as configurações de inicialização, escaneamento de componentes e configuração automática.
- * @EnableAutoConfiguration -> habilitar a configuração automática do Spring Boot com base nas dependências presentes no classpath.
- * @ComponentScan -> habilitar o escaneamento de componentes para detectar e registrar beans no
+ * Classe principal da aplicação Appfitness, responsável por iniciar o contexto do Spring Boot.
+ * <p>
+ * A anotação {@code @SpringBootApplication} é uma conveniência que adiciona:
+ * <ul>
+ *     <li>{@code @Configuration}: Marca a classe como uma fonte de definições de bean para o contexto da aplicação.</li>
+ *     <li>{@code @EnableAutoConfiguration}: Diz ao Spring Boot para começar a adicionar beans com base nas configurações do classpath, outros beans e várias propriedades.</li>
+ *     <li>{@code @ComponentScan}: Diz ao Spring para procurar outros componentes, configurações e serviços no pacote 'com.appfitness', permitindo que ele encontre os controllers.</li>
+ * </ul>
  */
 @SpringBootApplication
 public class AppfitnessApplication {
 
 	public static void main(String[] args) {
-		SpringApplication application = new SpringApplication(AppfitnessApplication.class);
-		application.setWebApplicationType(WebApplicationType.SERVLET);
-		application.run(args);
+		SpringApplication.run(AppfitnessApplication.class, args);
 	}
 }
