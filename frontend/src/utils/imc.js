@@ -1,9 +1,21 @@
+// Faixa plausível de IMC humano — qualquer resultado fora disso é sinal de
+// dado errado na origem (ex: altura salva em metros num campo que deveria
+// ser cm, como "1.82" em vez de "182"), não um IMC real. Sem essa trava, um
+// erro de unidade de medida vira um número absurdo tipo "240740.7" na tela.
+const IMC_PLAUSIVEL_MINIMO = 5;
+const IMC_PLAUSIVEL_MAXIMO = 100;
+
 /** Calcula o IMC (kg / m²) a partir do peso em kg e da altura em cm. */
 export function calcularImc(pesoKg, alturaCm) {
   const alturaMetros = Number(alturaCm) / 100;
   if (!pesoKg || !alturaMetros) return null;
 
-  return Number((Number(pesoKg) / (alturaMetros * alturaMetros)).toFixed(1));
+  const imc = Number(pesoKg) / (alturaMetros * alturaMetros);
+  if (!Number.isFinite(imc) || imc < IMC_PLAUSIVEL_MINIMO || imc > IMC_PLAUSIVEL_MAXIMO) {
+    return null;
+  }
+
+  return Number(imc.toFixed(1));
 }
 
 /** Classificação padrão da OMS para a faixa de IMC. */

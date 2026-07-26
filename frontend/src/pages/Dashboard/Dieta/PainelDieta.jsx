@@ -45,10 +45,14 @@ export default function PainelDieta() {
 
   const proximaRefeicao = obterProximaRefeicao(refeicoesDoDia);
 
-  const lidarComAdicaoDeAlimento = (idRefeicao, novoAlimento) => {
-    adicionarAlimento(idRefeicao, novoAlimento);
-    // Garante que a refeição fique expandida mostrando o alimento recém-adicionado.
-    setRefeicaoExpandidaId(idRefeicao);
+  const lidarComAdicaoDeAlimento = async (idRefeicao, novoAlimento) => {
+    // CORREÇÃO: `adicionarAlimento` agora pode criar a Refeição no backend
+    // sob demanda (quando ela ainda era só um rascunho local) e o ID real
+    // devolvido pelo banco pode diferir do ID local passado aqui — por isso
+    // aguardamos o retorno em vez de expandir o ID antigo, que deixaria de
+    // bater com `refeicao.id` depois da troca e faria o cartão fechar sozinho.
+    const idRefeicaoReal = await adicionarAlimento(idRefeicao, novoAlimento);
+    setRefeicaoExpandidaId(idRefeicaoReal);
   };
 
   const lidarComNovaRefeicao = (novaRefeicao) => {

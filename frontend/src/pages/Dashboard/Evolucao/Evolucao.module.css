@@ -12,11 +12,15 @@
 
 .eyebrow {
   margin: 0;
-  color: var(--text-muted);
+  color: #65a30d;
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+:root[data-theme='dark'] .eyebrow {
+  color: var(--brand);
 }
 
 .titulo {
@@ -46,26 +50,196 @@
   color: var(--text-primary);
 }
 
-.vazio {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  padding: 2rem 0;
-  text-align: center;
-}
-
-.gradeEmBreve {
+.resumoMedidas {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
 }
 
-.itemEmBreve {
-  padding: 1rem;
+.resumoMedidas article {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.9rem 1rem;
   border-radius: var(--radius-sm);
   background: var(--bg-muted);
-  color: var(--text-secondary);
+}
+
+.resumoMedidas span {
+  font-size: 0.8rem;
   font-weight: 600;
+  color: var(--text-muted);
+}
+
+.resumoMedidas strong {
+  font-size: 1.15rem;
+  color: var(--text-primary);
+}
+
+.formMedidas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.formMedidas label {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.formMedidas input {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--border);
+  background: var(--bg-muted);
+  color: var(--text-primary);
+}
+
+.formMedidas input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.2);
+}
+
+.botaoPrimario {
+  padding: 0.8rem 1rem;
+  border: none;
+  border-radius: 0.85rem;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.botaoSecundario {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 0.75rem;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.listaHistorico {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.listaHistorico h4 {
+  margin: 0 0 0.75rem;
   font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.listaHistorico ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.listaHistorico li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.listaHistorico strong {
+  color: var(--text-primary);
+}
+
+.fotosCabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.fotosCabecalho .cartaoTitulo {
+  margin: 0;
+}
+
+.erro {
+  margin: 0 0 0.75rem;
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.vazioFotos {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
   text-align: center;
+  color: var(--text-muted);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.vazioFotos p {
+  margin: 0;
+  max-width: 28rem;
+}
+
+.gradeFotos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.85rem;
+}
+
+.fotoItem {
+  margin: 0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg-muted);
+}
+
+.fotoItem img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.fotoItem figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.fotoItem button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.2rem;
+}
+
+.fotoItem button:hover {
+  color: var(--danger);
 }

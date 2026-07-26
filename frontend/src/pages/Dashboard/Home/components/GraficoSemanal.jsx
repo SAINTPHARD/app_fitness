@@ -8,7 +8,7 @@ import estilos from './GraficoSemanal.module.css';
 // os valores abaixo espelham os tokens de `index.css` (--border, --text-muted, --brand).
 const COR_GRADE = '#dbe2ef';
 const COR_TEXTO_EIXO = '#64748b';
-const COR_BARRA = '#2563eb';
+const COR_BARRA = '#a3e635';
 
 /**
  * Gráfico de barras com o total de calorias consumidas em cada um dos

@@ -4,15 +4,16 @@
 
 :root {
   color-scheme: light;
-  --bg-primary: #f4f7fd;
+  --bg-primary: #f4f6f2;
   --bg-surface: #ffffff;
-  --bg-muted: #eef3fb;
-  --text-primary: #102a43;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-  --border: #dbe2ef;
-  --brand: #2563eb;
-  --brand-soft: #e5efff;
+  --bg-muted: #eef2ea;
+  --text-primary: #18181b;
+  --text-secondary: #3f3f46;
+  --text-muted: #71717a;
+  --border: #d4d4d8;
+  --brand: #a3e635;
+  --brand-ink: #18181b;
+  --brand-soft: #ecfccb;
   --success: #16a34a;
   --success-soft: #dcfce7;
   --danger: #dc2626;
@@ -22,8 +23,8 @@
   --radius-sm: 12px;
   --radius: 24px;
   --radius-lg: 28px;
-  --shadow-sm: 0 8px 20px rgba(15, 23, 42, 0.06);
-  --shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+  --shadow-sm: 0 8px 20px rgba(24, 24, 27, 0.06);
+  --shadow: 0 24px 70px rgba(24, 24, 27, 0.08);
 }
 
 /* Tema escuro: sobrescreve os mesmos tokens usados em todo o app (Home,
@@ -32,14 +33,14 @@
    `darkMode: 'selector'` do tailwind.config.js sobre o mesmo atributo. */
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg-primary: #0b1120;
-  --bg-surface: #161f34;
-  --bg-muted: #1f2a44;
-  --text-primary: #e2e8f0;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --border: #2a3654;
-  --brand-soft: #1e2f52;
+  --bg-primary: #09090b;
+  --bg-surface: #18181b;
+  --bg-muted: #27272a;
+  --text-primary: #f4f4f5;
+  --text-secondary: #d4d4d8;
+  --text-muted: #a1a1aa;
+  --border: #3f3f46;
+  --brand-soft: #365314;
   --success-soft: #0f2e1d;
   --danger-soft: #3a1620;
   --warning-soft: #3a2a10;
@@ -52,7 +53,7 @@
 }
 
 html {
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: Outfit, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   scroll-behavior: smooth;
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -61,7 +62,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at top, rgba(37, 99, 235, 0.08), transparent 32%),
+  background: radial-gradient(circle at top, rgba(163, 230, 53, 0.12), transparent 32%),
     var(--bg-primary);
 }
 

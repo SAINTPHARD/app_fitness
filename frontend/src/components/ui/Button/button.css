@@ -7,8 +7,8 @@
 }
 
 .primary {
-  background: #2563eb;
-  color: white;
+  background: var(--brand);
+  color: var(--brand-ink);
 }
 
 .danger {
@@ -18,7 +18,11 @@
 
 .text {
   background: transparent;
-  color: #2563eb;
+  color: #65a30d;
+}
+
+:root[data-theme='dark'] .text {
+  color: var(--brand);
 }
 
 .button:hover:not(.disabled) {

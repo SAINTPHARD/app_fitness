@@ -3,7 +3,7 @@ import estilos from './GraficoEvolucaoPeso.module.css';
 
 const COR_TEXTO_EIXO = '#64748b';
 const COR_BORDA = '#dbe2ef';
-const COR_LINHA = '#2563eb';
+const COR_LINHA = '#a3e635';
 
 /**
  * Linha de evolução do peso, construída a partir do histórico local

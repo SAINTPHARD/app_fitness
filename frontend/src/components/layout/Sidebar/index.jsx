@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Crown, Home, LogOut, Salad, Dumbbell, User, TrendingUp, BarChart3, Settings } from 'lucide-react';
+import { Home, LogOut, Salad, Dumbbell, User, TrendingUp, BarChart3, Settings } from 'lucide-react';
 
 const navigation = [
   { label: 'Início', path: '/dashboard/inicio', icon: Home },
@@ -79,33 +79,11 @@ export default function Sidebar({ onLogout }) {
         })}
       </nav>
 
-      {/* Cartão "Upgrade to Pro": um segundo tom de escuro + borda sutil
-          para parecer um elemento premium "flutuando" dentro da sidebar. */}
-      <div className="mt-auto flex flex-col gap-3 rounded-2xl border border-zinc-700/60 bg-gradient-to-br from-zinc-800 to-zinc-900 p-4">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-lime-400 text-zinc-900">
-          <Crown size={18} strokeWidth={2.5} />
-        </span>
-        <Rotulo expandido={expandido} className="flex flex-col gap-3">
-          <div>
-            <p className="m-0 text-base font-bold text-white">Upgrade to Pro</p>
-            <p className="m-0 mt-1 text-sm leading-relaxed text-zinc-400">
-              Desbloqueie relatórios avançados e metas ilimitadas.
-            </p>
-          </div>
-          <button
-            type="button"
-            className="rounded-xl bg-lime-400 px-3 py-2 text-sm font-bold text-zinc-900 transition-transform hover:scale-[1.02] active:scale-[0.98]"
-          >
-            Fazer upgrade
-          </button>
-        </Rotulo>
-      </div>
-
       <button
         type="button"
         onClick={onLogout}
         title="Sair"
-        className="flex items-center justify-center gap-2 rounded-2xl bg-zinc-800 px-4 py-3 text-base font-bold text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
+        className="mt-auto flex items-center justify-center gap-2 rounded-2xl bg-zinc-800 px-4 py-3 text-base font-bold text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
       >
         <LogOut size={18} strokeWidth={2.5} className="shrink-0" />
         <Rotulo expandido={expandido}>Sair</Rotulo>

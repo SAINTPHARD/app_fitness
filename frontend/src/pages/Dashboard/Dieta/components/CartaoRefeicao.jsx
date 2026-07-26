@@ -55,7 +55,15 @@ export default function CartaoRefeicao({
     const gorduraNumerica = arredondar1Casa(rascunho.gordura);
 
     return {
-      id: idExistente ?? Date.now(),
+      // CORREÇÃO: nunca inventar um id para um alimento NOVO (antes: `id:
+      // idExistente ?? Date.now()`). O Alimento.id no backend é gerado por
+      // IDENTITY — mandar um id "de mentira" no corpo do POST faz o
+      // Hibernate enxergar o alimento como uma entidade já existente
+      // (detached) e tentar um UPDATE/merge em vez de um INSERT, quebrando o
+      // cascade e/ou fazendo o alimento nunca ser persistido de verdade. Ao
+      // editar (idExistente presente, vindo do alimento já salvo), o id é
+      // necessário e é incluído; ao criar, a chave nem aparece no objeto.
+      ...(idExistente != null && { id: idExistente }),
       nome: rascunho.nome.trim(),
       quantidade: String(rascunho.quantidade).trim(),
       calorias: calcularCaloriasPelosMacros(proteinaNumerica, carboidratosNumericos, gorduraNumerica),

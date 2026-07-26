@@ -14,6 +14,10 @@
   margin: 0;
   font-size: 2.25rem;
   font-weight: 800;
+  color: #65a30d;
+}
+
+:root[data-theme='dark'] .percentual {
   color: var(--brand);
 }
 

@@ -22,9 +22,13 @@
   padding: 0.35rem 0.8rem;
   border-radius: 999px;
   background: var(--brand-soft);
-  color: var(--brand);
+  color: #3f6212;
   font-size: 0.78rem;
   font-weight: 700;
+}
+
+:root[data-theme='dark'] .label {
+  color: var(--brand);
 }
 
 .titulo {
@@ -49,8 +53,12 @@
   border-radius: var(--radius-sm);
   min-width: 10rem;
   text-align: right;
-  color: var(--brand);
+  color: #3f6212;
   font-weight: 700;
+}
+
+:root[data-theme='dark'] .heroStatus {
+  color: var(--brand);
 }
 
 .secaoTitulo {

@@ -1,23 +1,29 @@
 import axios from 'axios';
 
+// Cria a instância base do Axios apontando para o seu Spring Boot
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080',
-  headers: {
-    'Content-Type': 'application/json',
+  baseURL: 'http://localhost:8080'
+});
+
+// ==========================================
+// 🛡️ INTERCEPTOR DE SEGURANÇA GLOBAL
+// ==========================================
+// Antes de qualquer requisição sair do React, ele pega o token e anexa no cabeçalho
+api.interceptors.request.use(
+  (config) => {
+    // Busca o token do cofre do navegador
+    const token = localStorage.getItem('token'); 
+
+    // Se o usuário estiver logado (tem token), adiciona no header
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return config;
   },
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-
-  if (token) {
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
+  (error) => {
+    return Promise.reject(error);
   }
-
-  return config;
-});
+);
 
 export default api;

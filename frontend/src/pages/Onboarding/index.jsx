@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fitnessApi } from '../../services/fitnessApi';
+import axios from 'axios'; // <-- IMPORTAMOS O AXIOS DIRETAMENTE
 import './onboarding.css';
 
 const TOTAL_ETAPAS = 4;
@@ -63,13 +63,18 @@ export default function OnboardingPage() {
     setDados((prev) => ({ ...prev, [campo]: valor }));
   };
 
-  // Validação mínima por etapa — evita avançar com campos vazios e, no passo
-  // final, evita mandar `NaN`/string vazia para os campos numéricos do backend.
   const etapaValida = () => {
     if (etapa === 1) return Boolean(dados.objetivo);
     if (etapa === 2) return Boolean(dados.nivelAtividade);
     if (etapa === 3) return Boolean(dados.sexo) && Boolean(dados.dataNascimento);
-    if (etapa === 4) return Number(dados.altura) > 0 && Number(dados.peso) > 0;
+    if (etapa === 4) {
+      const altura = Number(dados.altura);
+      const peso = Number(dados.peso);
+      // Faixas plausíveis (50-250cm, 20-300kg) — sem isso, alguém digitando
+      // "1.82" (pensando em metros) num campo de cm passava validação e
+      // gerava um IMC absurdo mais adiante (ex: 240740.7).
+      return altura >= 50 && altura <= 250 && peso >= 20 && peso <= 300;
+    }
     return true;
   };
 
@@ -91,7 +96,7 @@ export default function OnboardingPage() {
     evento.preventDefault();
 
     if (!etapaValida()) {
-      setError('Preencha altura e peso para concluir.');
+      setError('Altura deve estar entre 50 e 250cm e peso entre 20 e 300kg (dica: 1,82m = 182cm).');
       return;
     }
 
@@ -99,21 +104,32 @@ export default function OnboardingPage() {
     setError('');
 
     try {
-      // Lê o perfil atual primeiro para não sobrescrever nome/e-mail com
-      // valores vazios — o PUT do backend substitui o registro inteiro, não
-      // faz merge parcial (evita o "travamento" de perfil incompleto).
-      const perfilAtual = await fitnessApi.getProfile();
-
-      const payload = {
-        ...perfilAtual.data,
-        peso: Number(dados.peso) || 0,
-        altura: Number(dados.altura) || 0,
-        idade: calcularIdade(dados.dataNascimento) ?? perfilAtual.data?.idade ?? null,
-        objetivo: dados.objetivo,
-        sexo: dados.sexo || perfilAtual.data?.sexo || null,
+      // 1. CAPTURA O TOKEN SALVO NO LOGIN (A SOLUÇÃO DIRETA)
+      const token = localStorage.getItem('token');
+      
+      // 2. CONFIGURA O CABEÇALHO COM O "CRACHÁ" DE SEGURANÇA
+      const configSeguranca = {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       };
 
-      await fitnessApi.updateProfile(payload);
+      // 3. FAZ AS REQUISIÇÕES DIRETAMENTE COM O AXIOS (Passando o configSeguranca)
+      // Substituímos o 'fitnessApi.getProfile()' para garantir o envio do token
+      const respostaPerfil = await axios.get('http://localhost:8080/usuarios/me', configSeguranca);
+      const perfilAtual = respostaPerfil.data;
+
+      const payload = {
+        ...perfilAtual, // Spread direto nos dados recebidos
+        peso: Number(dados.peso) || 0,
+        altura: Number(dados.altura) || 0,
+        idade: calcularIdade(dados.dataNascimento) ?? perfilAtual?.idade ?? null,
+        objetivo: dados.objetivo,
+        sexo: dados.sexo || perfilAtual?.sexo || null,
+      };
+
+      // 4. ATUALIZA AS MÉTRICAS COM O TOKEN (Substituímos o 'fitnessApi.updateMetrics()')
+      await axios.put('http://localhost:8080/usuarios/me/metricas', payload, configSeguranca);
 
       // Preferências que o backend ainda não tem coluna para guardar.
       window.localStorage.setItem(
@@ -126,7 +142,10 @@ export default function OnboardingPage() {
       );
 
       localStorage.setItem('profile_complete', 'true');
+      
+      // 5. REDIRECIONAMENTO COM SUCESSO!
       navigate('/dashboard/inicio');
+      
     } catch (err) {
       const mensagem =
         err?.response?.data?.message ||
@@ -247,7 +266,10 @@ export default function OnboardingPage() {
                 <span>Altura (cm)</span>
                 <input
                   type="number"
-                  min="0"
+                  min="50"
+                  max="250"
+                  step="1"
+                  placeholder="Ex: 182"
                   value={dados.altura}
                   onChange={(e) => atualizarCampo('altura', e.target.value)}
                   className="input"
@@ -257,7 +279,8 @@ export default function OnboardingPage() {
                 <span>Peso atual (kg)</span>
                 <input
                   type="number"
-                  min="0"
+                  min="20"
+                  max="300"
                   step="0.1"
                   value={dados.peso}
                   onChange={(e) => atualizarCampo('peso', e.target.value)}

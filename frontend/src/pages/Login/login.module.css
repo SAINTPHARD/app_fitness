@@ -2,14 +2,14 @@
 .loginContainer {
   display: flex;
   min-height: 100vh;
-  background-color: #f8fafc;
-  font-family: system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-primary);
+  font-family: Outfit, system-ui, -apple-system, sans-serif;
 }
 
 /* Painel de Boas-vindas (Esquerda) */
 .welcomeSection {
   flex: 1;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); /* Fundo Dark Premium */
+  background: linear-gradient(135deg, #18181b 0%, #27272a 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -19,7 +19,7 @@
 
 @media (max-width: 900px) {
   .welcomeSection {
-    display: none; /* Oculta em dispositivos móveis para focar no formulário */
+    display: none;
   }
 }
 
@@ -29,8 +29,8 @@
 
 .logoIcon {
   font-size: 2.5rem;
-  background: #2563eb;
-  color: white;
+  background: #a3e635;
+  color: #18181b;
   padding: 0.5rem 1rem;
   border-radius: 0.75rem;
   display: inline-block;
@@ -45,7 +45,7 @@
 }
 
 .welcomeContent p {
-  color: #94a3b8;
+  color: #a1a1aa;
   font-size: 1.125rem;
   line-height: 1.75;
   margin-bottom: 2rem;
@@ -55,7 +55,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  color: #38bdf8;
+  color: #a3e635;
   font-weight: 500;
 }
 
@@ -66,7 +66,7 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background-color: #ffffff;
+  background-color: var(--bg-surface);
 }
 
 .card {
@@ -77,12 +77,12 @@
 .formTitle {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0 0 0.5rem 0;
 }
 
 .formSubtitle {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.95rem;
   margin: 0 0 2rem 0;
 }
@@ -101,50 +101,55 @@
 .input {
   width: 100%;
   padding: 0.85rem 1rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
-  background-color: #f8fafc;
+  background-color: var(--bg-muted);
+  color: var(--text-primary);
   font-size: 0.95rem;
   outline: none;
   transition: all 0.2s;
 }
 
 .input:focus {
-  border-color: #2563eb;
-  background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: #a3e635;
+  background-color: var(--bg-surface);
+  box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.2);
 }
 
 .submitBtn {
   width: 100%;
   padding: 0.85rem;
-  background-color: #2563eb;
-  color: white;
-  font-weight: 600;
+  background-color: #a3e635;
+  color: #18181b;
+  font-weight: 700;
   border: none;
   border-radius: 0.5rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: filter 0.2s;
   margin-top: 0.5rem;
 }
 
 .submitBtn:hover {
-  background-color: #1d4ed8;
+  filter: brightness(0.95);
 }
 
 .toggleText {
   text-align: center;
   margin-top: 1.5rem;
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .toggleLink {
-  color: #2563eb;
+  color: #65a30d;
   font-weight: 600;
   cursor: pointer;
 }
 
 .toggleLink:hover {
   text-decoration: underline;
+}
+
+:root[data-theme='dark'] .toggleLink {
+  color: #a3e635;
 }

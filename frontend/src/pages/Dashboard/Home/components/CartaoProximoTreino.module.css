@@ -16,6 +16,10 @@
   height: 36px;
   border-radius: var(--radius-sm);
   background: var(--brand-soft);
+  color: #3f6212;
+}
+
+:root[data-theme='dark'] .icone {
   color: var(--brand);
 }
 
@@ -54,13 +58,13 @@
   padding: 0.65rem 1rem;
   border-radius: var(--radius-sm);
   background: var(--brand);
-  color: white;
+  color: var(--brand-ink);
   font-weight: 700;
   font-size: 0.9rem;
   text-align: center;
-  transition: background-color 0.15s ease;
+  transition: filter 0.15s ease;
 }
 
 .botao:hover {
-  background: #1d4ed8;
+  filter: brightness(0.95);
 }

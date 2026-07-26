@@ -55,8 +55,8 @@
 }
 
 .iconButton:hover {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: var(--brand-soft);
+  color: #3f6212;
 }
 
 .dropdownContainer {

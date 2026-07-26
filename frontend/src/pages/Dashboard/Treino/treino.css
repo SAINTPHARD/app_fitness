@@ -1,5 +1,5 @@
 /* ==========================================================
-   ESTILIZAÇÃO DA PÁGINA DE TREINOS (Sincronizada com a Dieta)
+   ESTILIZAÇÃO DA PÁGINA DE TREINOS (lime/zinc + dark mode)
    ========================================================== */
 
 .treinoPage {
@@ -21,8 +21,8 @@
   display: inline-flex;
   padding: 0.4rem 0.8rem;
   border-radius: 999px;
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--brand-soft);
+  color: #3f6212;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -32,23 +32,23 @@
 .title {
   margin: 0.35rem 0 0;
   font-size: 2rem;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .btnPrincipal {
-  background: #2563eb;
-  color: white;
+  background: var(--brand);
+  color: var(--brand-ink);
   border: none;
   padding: 0.75rem 1.25rem;
   border-radius: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  transition: filter 0.2s, transform 0.1s;
+  box-shadow: 0 4px 12px rgba(163, 230, 53, 0.35);
 }
 
 .btnPrincipal:hover {
-  background: #1d4ed8;
+  filter: brightness(0.95);
   transform: translateY(-1px);
 }
 
@@ -62,27 +62,28 @@
 }
 
 .diaTab {
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
   padding: 0.85rem 1.15rem;
   border-radius: 1rem;
   cursor: pointer;
   min-width: 140px;
   text-align: left;
   transition: all 0.2s;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-primary);
 }
 
 .diaTab:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: var(--brand);
+  background: var(--bg-muted);
 }
 
 .diaTab.ativo {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: white;
-  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.25);
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-ink);
+  box-shadow: 0 6px 15px rgba(163, 230, 53, 0.35);
 }
 
 .diaLabel {
@@ -94,22 +95,22 @@
 .diaFoco {
   display: block;
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--text-muted);
   margin-top: 0.25rem;
 }
 
 .diaTab.ativo .diaFoco {
-  color: #dbeafe;
+  color: #3f6212;
 }
 
 /* Cartão de Estatísticas (Resumo do Dia) */
 .statsCard,
 .sessionCard {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
   border-radius: 1.25rem;
   padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--shadow-sm);
 }
 
 .statsCard {
@@ -121,7 +122,7 @@
 
 .statsCard p {
   margin: 0;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -131,12 +132,12 @@
   display: block;
   margin-top: 0.3rem;
   font-size: 1.5rem;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .badgeRestantes {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--brand-soft);
+  color: #3f6212;
   padding: 0.5rem 1rem;
   border-radius: 999px;
   font-weight: 700;
@@ -152,19 +153,19 @@
 
 .sessionContainer h3 {
   font-size: 1.25rem;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0 0 0.25rem 0;
 }
 
 .cardConcluido {
-  background: #f8fafc !important;
-  border-color: #cbd5e1 !important;
+  background: var(--bg-muted) !important;
+  border-color: var(--border) !important;
   opacity: 0.85;
 }
 
 .textoRiscado {
   text-decoration: line-through;
-  color: #64748b !important;
+  color: var(--text-muted) !important;
 }
 
 .exerciseRow {
@@ -177,13 +178,13 @@
 .exerciseRow p {
   margin: 0;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   font-size: 1.05rem;
 }
 
 .exerciseRow span {
   display: block;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.85rem;
   margin-top: 0.2rem;
 }
@@ -195,29 +196,30 @@
 }
 
 .cargaBadge {
-  background: #f1f5f9;
+  background: var(--bg-muted);
   padding: 0.35rem 0.75rem;
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #334155;
-  border: 1px solid #e2e8f0;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
 }
 
 .btnCheck {
-  background: #2563eb;
-  color: white;
+  background: var(--brand);
+  color: var(--brand-ink);
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: filter 0.2s;
 }
 
 .btnCheck.ativo {
-  background: #10b981;
+  background: var(--success);
+  color: white;
 }
 
 .btnCheck:hover {
@@ -232,6 +234,7 @@
   padding: 0.3rem;
   opacity: 0.5;
   transition: opacity 0.2s;
+  color: var(--text-primary);
 }
 
 .btnRemover:hover {
@@ -240,12 +243,12 @@
 
 /* Estado Vazio */
 .emptyStateCard {
-  background: white;
-  border: 2px dashed #cbd5e1;
+  background: var(--bg-surface);
+  border: 2px dashed var(--border);
   border-radius: 1.25rem;
   padding: 2.5rem;
   text-align: center;
-  color: #64748b;
+  color: var(--text-muted);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -253,24 +256,24 @@
 }
 
 .btnSecundario {
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   font-weight: 600;
   cursor: pointer;
-  color: #334155;
+  color: var(--text-secondary);
 }
 
 .btnSecundario:hover {
-  background: #e2e8f0;
+  border-color: var(--brand);
 }
 
 /* Modal do Catálogo */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(24, 24, 27, 0.65);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -280,7 +283,7 @@
 }
 
 .modalCatalogo {
-  background: white;
+  background: var(--bg-surface);
   width: 100%;
   max-width: 650px;
   max-height: 85vh;
@@ -288,8 +291,9 @@
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow);
   overflow-y: auto;
+  border: 1px solid var(--border);
 }
 
 .modalHeader {
@@ -302,7 +306,7 @@
 .modalHeader h3 {
   margin: 0;
   font-size: 1.25rem;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .btnClose {
@@ -310,11 +314,11 @@
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .modalSub {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.9rem;
   margin-bottom: 1.25rem;
 }
@@ -326,25 +330,25 @@
 }
 
 .grupoBox {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   overflow: hidden;
-  background: #f8fafc;
+  background: var(--bg-muted);
 }
 
 .grupoBoxHeader {
   padding: 0.85rem 1rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-primary);
   cursor: pointer;
   display: flex;
   justify-content: space-between;
-  background: white;
+  background: var(--bg-surface);
   transition: background 0.2s;
 }
 
 .grupoBoxHeader:hover {
-  background: #f8fafc;
+  background: var(--bg-muted);
 }
 
 .grupoBoxItens {
@@ -355,36 +359,50 @@
 }
 
 .itemExercicioCatalogo {
-  background: white;
+  background: var(--bg-surface);
   padding: 0.6rem 0.8rem;
   border-radius: 0.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
 }
 
 .subSugerido {
   display: block;
   font-size: 0.75rem;
-  color: #2563eb;
+  color: #65a30d;
   font-weight: 600;
   margin-top: 0.1rem;
 }
 
 .btnAddItem {
-  background: #2563eb;
-  color: white;
+  background: var(--brand);
+  color: var(--brand-ink);
   border: none;
   padding: 0.4rem 0.8rem;
   border-radius: 0.5rem;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
 .btnAddItem:hover {
-  background: #1d4ed8;
+  filter: brightness(0.95);
+}
+
+:root[data-theme='dark'] .label,
+:root[data-theme='dark'] .badgeRestantes {
+  color: var(--brand);
+}
+
+:root[data-theme='dark'] .diaTab.ativo .diaFoco {
+  color: #365314;
+}
+
+:root[data-theme='dark'] .subSugerido {
+  color: var(--brand);
 }
 
 @media (max-width: 768px) {
