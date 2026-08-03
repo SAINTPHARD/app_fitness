@@ -1,34 +1,23 @@
 import { formatarDataISO } from './calendario';
 import { somarMacrosDeAlimentos } from './macros';
 
-// Chave de localStorage usada por `useRefeicoes`. Lida aqui apenas em modo
-// LEITURA para agregar VÁRIOS dias de uma vez — `useRefeicoes` foi desenhado
-// para filtrar por um único dia selecionado no calendário, não por um
-// intervalo, então essa agregação vive à parte, num util puro.
-const CHAVE_REFEICOES = 'dieta-refeicoes';
-
 const ROTULOS_DIAS_CURTOS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-
-function lerTodasAsRefeicoesSalvas() {
-  if (typeof window === 'undefined') return [];
-
-  try {
-    const salvas = window.localStorage.getItem(CHAVE_REFEICOES);
-    return salvas ? JSON.parse(salvas) : [];
-  } catch {
-    return [];
-  }
-}
 
 /**
  * Monta a série dos últimos `quantidadeDias` (hoje incluso) com o total de
- * calorias consumidas em cada um, a partir dos dados reais já salvos na
- * Dieta. Dias sem nenhuma refeição registrada aparecem com o total zerado —
- * nenhum valor é inventado. Usado tanto pelo gráfico semanal da Home quanto
- * pelo da própria Dieta.
+ * calorias consumidas em cada um, a partir dos dados reais vindos do
+ * backend (`refeicoesPorDia`, obtido via `useHistoricoRefeicoes` — ver
+ * comentário lá sobre a correção da causa raiz). Dias sem nenhuma refeição
+ * registrada aparecem com o total zerado — nenhum valor é inventado. Usado
+ * tanto pelo gráfico semanal da Home quanto pelo da própria Dieta.
+ *
+ * CORREÇÃO: esta função lia diretamente de uma chave de localStorage
+ * ('dieta-refeicoes') que ninguém mais escreve desde que `useRefeicoes`
+ * passou a usar a API real — por isso virou um parâmetro puro em vez de
+ * fazer I/O escondido, ficando testável e sempre em sincronia com o que a
+ * Dieta realmente mostra.
  */
-export function obterResumoSemanalDeCalorias(quantidadeDias = 7) {
-  const todasRefeicoes = lerTodasAsRefeicoesSalvas();
+export function obterResumoSemanalDeCalorias(refeicoesPorDia, quantidadeDias = 7) {
   const hoje = new Date();
 
   return Array.from({ length: quantidadeDias }, (_, indice) => {
@@ -36,12 +25,12 @@ export function obterResumoSemanalDeCalorias(quantidadeDias = 7) {
     dataDoDia.setDate(hoje.getDate() - (quantidadeDias - 1 - indice));
     const iso = formatarDataISO(dataDoDia);
 
-    const refeicoesDesseDia = todasRefeicoes.filter((refeicao) => refeicao.data === iso);
+    const refeicoesDesseDia = refeicoesPorDia?.get(iso) || [];
     const totalCalorias = refeicoesDesseDia.reduce(
       (total, refeicao) => total + somarMacrosDeAlimentos(refeicao.alimentos).calorias,
       0
     );
 
-    return { dia: ROTULOS_DIAS_CURTOS[dataDoDia.getDay()], iso, calorias: totalCalorias };
+    return { dia: ROTULOS_DIAS_CURTOS[dataDoDia.getDay()], iso, calorias: Math.round(totalCalorias) };
   });
 }

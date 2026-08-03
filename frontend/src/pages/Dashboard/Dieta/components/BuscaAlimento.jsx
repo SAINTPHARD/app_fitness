@@ -1,15 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
-import { buscarAlimentos } from '../utils/tabelaAlimentos'; 
-import { buscarAlimentosExternos } from '../../../../services/openFoodFactsApi';
+import { buscarAlimentos } from '../utils/tabelaAlimentos';
+import { buscarAlimentosExternos, BuscaExternaIndisponivelError } from '../../../../services/openFoodFactsApi';
 
 export default function BuscaAlimento({ valor, aoDigitar, aoSelecionar }) {
   const [sugestoesVisiveis, setSugestoesVisiveis] = useState(false);
   const [sugestoes, setSugestoes] = useState([]);
   const [aCarregar, setACarregar] = useState(false);
+  const [buscaExternaIndisponivel, setBuscaExternaIndisponivel] = useState(false);
 
   const timerBuscaRef = useRef(null);
 
   useEffect(() => {
+    setBuscaExternaIndisponivel(false);
+
     if (!valor || valor.trim().length < 2) {
       setSugestoes([]);
       return;
@@ -21,14 +24,15 @@ export default function BuscaAlimento({ valor, aoDigitar, aoSelecionar }) {
     const resultadosLocais = buscarAlimentos(valor).map(item => ({
       ...item,
       isLocal: true,
-      idUnico: `local-${item.id}` 
+      idUnico: `local-${item.id}`
     }));
-    
+
     // Coloca logo a estrela na tela sem esperar pelo debounce ou pela internet!
     setSugestoes(resultadosLocais);
 
     // ==========================================
-    // 2. BUSCA DA INTERNET (Espera o utilizador parar de digitar)
+    // 2. BUSCA DA INTERNET (Espera o utilizador parar de digitar — debounce
+    //    de 600ms já existente, evita bater a API a cada tecla)
     // ==========================================
     if (timerBuscaRef.current) clearTimeout(timerBuscaRef.current);
 
@@ -43,13 +47,20 @@ export default function BuscaAlimento({ valor, aoDigitar, aoSelecionar }) {
 
         // Quando a internet responder, nós JUNTAMOS os dados novos com os locais que já estão na tela!
         setSugestoes(prevLocais => [...prevLocais, ...resultadosExternosFormatados]);
-        
       } catch (error) {
-        console.error("Erro na busca externa:", error);
+        console.error('Erro na busca externa:', error);
+        // CORREÇÃO: antes o erro só ia pro console e a busca externa ficava
+        // "muda" — o usuário via a lista local (se houvesse) sem entender
+        // por que os resultados da internet nunca apareciam. Timeout,
+        // instabilidade de rede e erros CORS/5xx da Open Food Facts agora
+        // viram uma mensagem clara em vez de falha silenciosa.
+        if (error instanceof BuscaExternaIndisponivelError || !error?.response) {
+          setBuscaExternaIndisponivel(true);
+        }
       } finally {
         setACarregar(false);
       }
-    }, 600); // 600ms de debounce para não sobrecarregar a API
+    }, 600);
 
     return () => clearTimeout(timerBuscaRef.current);
   }, [valor]);
@@ -79,8 +90,13 @@ export default function BuscaAlimento({ valor, aoDigitar, aoSelecionar }) {
         )}
       </div>
 
-      {sugestoesVisiveis && sugestoes.length > 0 && (
+      {sugestoesVisiveis && (sugestoes.length > 0 || buscaExternaIndisponivel) && (
         <ul className="absolute z-10 m-0 mt-1 flex max-h-48 w-full list-none flex-col gap-0.5 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+          {buscaExternaIndisponivel && (
+            <li className="rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 dark:bg-amber-400/10 dark:text-amber-300">
+              Busca externa indisponível, cadastre manualmente.
+            </li>
+          )}
           {sugestoes.map((alimento) => {
             const infoCalorias = alimento.isLocal 
               ? `≈${alimento.pesoReferenciaG}g/un` 

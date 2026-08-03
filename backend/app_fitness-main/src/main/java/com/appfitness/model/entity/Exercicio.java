@@ -1,5 +1,8 @@
 package com.appfitness.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -13,6 +16,7 @@ import jakarta.persistence.Table;
  */
 @Entity						// é uma entidade JPA, e que será mapeada para uma tabela no banco de dados.
 @Table(name = "exercicios")	// Especifica o nome da tabela no banco de dados que esta entidade irá mapear.
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Exercicio {
 
 	// 1. Atributos da entidade Exercicio (id, nome, descricao, duracao, etc)
@@ -26,7 +30,8 @@ public class Exercicio {
 	private Integer duracao;		// Duração do exercício em minutos, ex: 30
 	private String descricao;	// Descrição detalhada do exercício
 	
-	// Associações 
+	// Associações
+	@JsonIgnore
 	@ManyToOne						// Especifica que (muitos exercícios podem estar associados a um único treino)
 	@JoinColumn(name = "treino_id")	// Especifica a coluna de junção para o relacionamento Many-to-One.
 	private Treino treino;			// Relacionamento Many-to-One com a entidade Treino

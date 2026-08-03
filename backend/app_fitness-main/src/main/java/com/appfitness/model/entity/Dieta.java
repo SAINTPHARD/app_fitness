@@ -2,6 +2,9 @@ package com.appfitness.model.entity;
 
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -32,6 +35,7 @@ import jakarta.validation.constraints.Size;
  */
 @Entity
 @Table(name = "dietas")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Dieta {
 
 	// 1. Atributos da entidade Dieta
@@ -74,7 +78,7 @@ public class Dieta {
 	 * Relacionamento entre Dieta e Usuario:
 	 * 
 	 */
-	//@JsonIgnore 
+	@JsonIgnore
 	@ManyToOne	// Muitas dietas podem estar associadas a um usuário.
 	@JoinColumn(name = "usuario_id") // Especifica a coluna de junção no banco de dados para o relacionamento entre Dieta e Usuario.
 	private Usuario usuario; // A dieta está associada a um usuário específico, indicando a quem pertence essa dieta.

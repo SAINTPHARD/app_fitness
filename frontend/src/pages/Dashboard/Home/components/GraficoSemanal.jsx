@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { obterResumoSemanalDeCalorias } from '../../Dieta/utils/resumoSemanal';
+import { useHistoricoRefeicoes } from '../../../../hooks/useHistoricoRefeicoes';
 import estilos from './GraficoSemanal.module.css';
 
 // Cores fixas (em vez de `var(--...)`) porque atributos SVG dentro do
@@ -13,11 +14,14 @@ const COR_BARRA = '#a3e635';
 /**
  * Gráfico de barras com o total de calorias consumidas em cada um dos
  * últimos 7 dias — construído inteiramente a partir dos dados reais já
- * salvos na Dieta (`dieta-refeicoes`); dias sem refeições aparecem com a
- * barra zerada, nenhum valor é inventado.
+ * salvos na Dieta, buscados de verdade no backend via
+ * `useHistoricoRefeicoes` (ver esse hook para o histórico da correção —
+ * antes isto lia uma chave de localStorage órfã e mostrava dados zerados);
+ * dias sem refeições aparecem com a barra zerada, nenhum valor é inventado.
  */
 export default function GraficoSemanal() {
-  const dados = useMemo(() => obterResumoSemanalDeCalorias(), []);
+  const { refeicoesPorDia } = useHistoricoRefeicoes(7);
+  const dados = useMemo(() => obterResumoSemanalDeCalorias(refeicoesPorDia, 7), [refeicoesPorDia]);
   const temAlgumDado = dados.some((ponto) => ponto.calorias > 0);
 
   return (

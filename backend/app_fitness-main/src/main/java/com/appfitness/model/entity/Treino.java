@@ -1,5 +1,8 @@
 package com.appfitness.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -13,7 +16,8 @@ import jakarta.persistence.Table;
  * Relaciona-se com a tabela de usuários via Many-to-One.
  */
 @Entity							 // Indica que esta classe é uma entidade JPA, ou seja, que será mapeada para uma tabela no banco de dados.
-@Table(name = "treinos") 		 // Nome da tabela no banco de dados que esta entidade irá mapear. Neste caso, a tabela será chamada "treinos".	
+@Table(name = "treinos") 		 // Nome da tabela no banco de dados que esta entidade irá mapear. Neste caso, a tabela será chamada "treinos".
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Treino {
 
 	@Id
@@ -32,6 +36,7 @@ public class Treino {
 	 * - A entidade Treino tem uma relação Many-to-One com a entidade Usuario,
 	 * indicando que muitos treinos podem estar associados a um único usuário.
 	 */
+	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name = "usuario_id")
 	private Usuario usuario;      // Chave estrangeira que liga ao Atleta
@@ -107,9 +112,5 @@ public class Treino {
 
 	public void setUsuario(Usuario usuario) {
 		this.usuario = usuario;
-	}
-
-	public Object getDificuldade() {
-		return null;
 	}
 }

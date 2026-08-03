@@ -3,7 +3,7 @@ import { useMetas } from '../../Dieta/hooks/useMetas';
 import { useRefeicoes } from '../../Dieta/hooks/useRefeicoes';
 import { useHidratacao } from '../../Dieta/hooks/useHidratacao';
 import { obterDataDeHojeISO } from '../../Dieta/utils/calendario';
-import { calcularPercentual } from '../../Dieta/utils/progresso';
+import { calcularPercentual, calcularMetaDoDiaPercentual } from '../../Dieta/utils/progresso';
 import { obterProximaRefeicao } from '../../Dieta/utils/proximaRefeicao';
 
 /**
@@ -15,7 +15,7 @@ export function useResumoNutricionalHoje() {
   const hojeISO = obterDataDeHojeISO();
 
   const { metas } = useMetas();
-  const { refeicoesDoDia, totaisDoDia } = useRefeicoes(hojeISO);
+  const { refeicoesDoDia, totaisDoDia, adicionarRefeicao, removerRefeicao } = useRefeicoes(hojeISO);
   const { copos, metaCopos, totalMl, metaMl } = useHidratacao(hojeISO);
 
   const percentuais = useMemo(
@@ -29,16 +29,9 @@ export function useResumoNutricionalHoje() {
     [totaisDoDia, metas, totalMl, metaMl]
   );
 
-  // "Meta do dia": média dos percentuais que já têm alguma meta definida —
-  // metas ainda não configuradas (0) ficam de fora da média para não punir
-  // o usuário por algo que ele nem preencheu ainda.
-  const metaDoDiaPercentual = useMemo(() => {
-    const percentuaisValidos = Object.values(percentuais).filter((valor) => valor > 0);
-    if (percentuaisValidos.length === 0) return 0;
-
-    const soma = percentuaisValidos.reduce((total, valor) => total + valor, 0);
-    return Math.round(soma / percentuaisValidos.length);
-  }, [percentuais]);
+  // "Meta do dia": ver `calcularMetaDoDiaPercentual` (extraída para
+  // utils/progresso.js como função pura testável).
+  const metaDoDiaPercentual = useMemo(() => calcularMetaDoDiaPercentual(percentuais), [percentuais]);
 
   const proximaRefeicao = useMemo(() => obterProximaRefeicao(refeicoesDoDia), [refeicoesDoDia]);
 
@@ -50,5 +43,7 @@ export function useResumoNutricionalHoje() {
     agua: { copos, metaCopos, totalMl, metaMl },
     proximaRefeicao,
     refeicoesDoDia,
+    adicionarRefeicao,
+    removerRefeicao,
   };
 }

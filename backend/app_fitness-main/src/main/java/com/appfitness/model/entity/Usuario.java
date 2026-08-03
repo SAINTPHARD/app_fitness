@@ -8,6 +8,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,9 +22,16 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import model.enums.Objetivo;
 
-@Entity					// Indica que esta classe é uma entidade JPA, ou seja, que será mapeada para uma tabela no banco de dados.
-@Table(name = "usuarios")// Nome da tabela no banco de dados que esta entidade irá mapear. Neste caso, a tabela será chamada "usuarios".
-public class Usuario implements UserDetails { // Implementa UserDetails para integração com Spring Security
+/**
+ * Classe de entidade para representar um Usuário no sistema.
+ * Implementa UserDetails para integração com Spring Security.
+ * @Entity indica que esta classe é uma entidade JPA, mapeada para a tabela "usuarios".
+ * @Table(name = "usuarios") especifica o nome da tabela no banco de dados.
+ */
+@Entity
+@Table(name = "usuarios")
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Usuario implements UserDetails {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,16 +42,13 @@ public class Usuario implements UserDetails { // Implementa UserDetails para int
 	@Column(unique = true, nullable = false)
 	private String email;
 
-	@JsonIgnore
+	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	@Column(nullable = false)
 	private String senha;
 
 	private Integer idade;
-
 	private Double peso;
-
 	private Double altura;
-
 	private Character sexo;
 
 	@Enumerated(EnumType.STRING)
@@ -60,16 +67,7 @@ public class Usuario implements UserDetails { // Implementa UserDetails para int
 	public Usuario() {
 	}
 
-	public Usuario(Long id,
-				   String nome,
-				   String email,
-				   String senha,
-				   Integer idade,
-				   Double peso,
-				   Double altura,
-				   Character sexo,
-				   Objetivo objetivo) {
-
+	public Usuario(Long id, String nome, String email, String senha, Integer idade, Double peso, Double altura, Character sexo, Objetivo objetivo) {
 		this.id = id;
 		this.nome = nome;
 		this.email = email;
@@ -84,44 +82,48 @@ public class Usuario implements UserDetails { // Implementa UserDetails para int
 	// --- MÉTODOS OBRIGATÓRIOS DO USERDETAILS (SPRING SECURITY) ---
 
 	@Override
+	@JsonIgnore
 	public Collection<? extends GrantedAuthority> getAuthorities() {
-		// Define o nível de acesso do usuário. Todos os cadastrados ganham a permissão padrão "ROLE_USER"
 		return List.of(new SimpleGrantedAuthority("ROLE_USER"));
 	}
 
 	@Override
+	@JsonIgnore
 	public String getPassword() {
-		// Retorna a senha cadastrada para a validação do Spring Security
 		return this.senha;
 	}
 
 	@Override
+	@JsonIgnore
 	public String getUsername() {
-		// Define que o identificador de login (username) principal do usuário será o e-mail
 		return this.email;
 	}
 
 	@Override
+	@JsonIgnore
 	public boolean isAccountNonExpired() {
-		return true; // Conta ativa e não expirada
+		return true;
 	}
 
 	@Override
+	@JsonIgnore
 	public boolean isAccountNonLocked() {
-		return true; // Conta livre e desbloqueada
+		return true;
 	}
 
 	@Override
+	@JsonIgnore
 	public boolean isCredentialsNonExpired() {
-		return true; // Senha/Credenciais dentro do prazo de validade
+		return true;
 	}
 
 	@Override
+	@JsonIgnore
 	public boolean isEnabled() {
-		return true; // Usuário ativo e habilitado no sistema
+		return true;
 	}
 
-	// --- GETTERS E SETTERS ---
+	// --- GETTERS E SETTERS (COM NULL-SAFETY) ---
 
 	public Long getId() {
 		return id;
@@ -155,8 +157,9 @@ public class Usuario implements UserDetails { // Implementa UserDetails para int
 		this.senha = senha;
 	}
 
+	// 🚀 CORREÇÕES AQUI: Previne NullPointerException nos cálculos
 	public Integer getIdade() {
-		return idade;
+		return (idade != null) ? idade : 25; // 25 anos por padrão
 	}
 
 	public void setIdade(Integer idade) {
@@ -164,7 +167,7 @@ public class Usuario implements UserDetails { // Implementa UserDetails para int
 	}
 
 	public Double getPeso() {
-		return peso;
+		return (peso != null) ? peso : 70.0; // 70 kg por padrão
 	}
 
 	public void setPeso(Double peso) {
@@ -172,7 +175,7 @@ public class Usuario implements UserDetails { // Implementa UserDetails para int
 	}
 
 	public Double getAltura() {
-		return altura;
+		return (altura != null) ? altura : 170.0; // 170 cm por padrão
 	}
 
 	public void setAltura(Double altura) {
@@ -180,7 +183,7 @@ public class Usuario implements UserDetails { // Implementa UserDetails para int
 	}
 
 	public Character getSexo() {
-		return sexo;
+		return (sexo != null) ? sexo : 'M'; // 'M' por padrão
 	}
 
 	public void setSexo(Character sexo) {

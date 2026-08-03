@@ -1,5 +1,43 @@
 import api from './api';
 
+function extrairValorSelecionado(valor) {
+  if (valor && typeof valor === 'object') {
+    return valor.value ?? valor.label ?? '';
+  }
+
+  return valor ?? '';
+}
+
+function normalizarString(valor) {
+  return String(extrairValorSelecionado(valor)).trim();
+}
+
+function normalizarNumero(valor) {
+  const numero = Number(extrairValorSelecionado(valor));
+  return Number.isFinite(numero) ? numero : 0;
+}
+
+function normalizarRefeicao(refeicao) {
+  return {
+    ...refeicao,
+    nome: normalizarString(refeicao?.nome),
+    horario: normalizarString(refeicao?.horario),
+    data: normalizarString(refeicao?.data),
+  };
+}
+
+function normalizarAlimento(alimento) {
+  return {
+    ...alimento,
+    nome: normalizarString(alimento?.nome),
+    quantidade: normalizarString(alimento?.quantidade),
+    calorias: normalizarNumero(alimento?.calorias),
+    proteina: normalizarNumero(alimento?.proteina),
+    carboidratos: normalizarNumero(alimento?.carboidratos),
+    gordura: normalizarNumero(alimento?.gordura),
+  };
+}
+
 // O backend não tem um recurso "/profile" — o perfil do usuário autenticado
 // vive em `/usuarios/me` (resolvido a partir do token JWT, sem precisar o
 // front-end saber o ID numérico). Ver `UsuarioController.buscarUsuarioAutenticado`
@@ -33,24 +71,48 @@ export const fitnessApi = {
   // Não é preciso enviar o usuário: o backend identifica quem é dono da
   // refeição a partir do token JWT (ver RefeicaoController.criar).
   criarRefeicao: async (refeicao) => {
-    const response = await api.post(`/refeicoes`, refeicao);
+    const response = await api.post(`/refeicoes`, normalizarRefeicao(refeicao));
     return response.data;
   },
 
-  // Adiciona um alimento a uma refeição existente (POST)
+  atualizarRefeicao: async (idRefeicao, refeicao) => {
+    const response = await api.put(`/refeicoes/${idRefeicao}`, normalizarRefeicao(refeicao));
+    return response.data;
+  },
+
+  // Adiciona um alimento a uma refeição existente — inclusive já concluída.
+  // (POST). Retorna a REFEIÇÃO inteira (itens + totalCalorias recalculado),
+  // não só o alimento criado — ver RefeicaoService.adicionarAlimento.
   adicionarAlimento: async (idRefeicao, alimento) => {
-    const response = await api.post(`/refeicoes/${idRefeicao}/alimentos`, alimento);
+    const response = await api.post(`/refeicoes/${idRefeicao}/alimentos`, normalizarAlimento(alimento));
     return response.data;
   },
 
   // Atualiza os dados de um alimento (ex: mudou de 100g para 150g) (PUT)
   atualizarAlimento: async (idRefeicao, idAlimento, alimentoAtualizado) => {
-    const response = await api.put(`/refeicoes/${idRefeicao}/alimentos/${idAlimento}`, alimentoAtualizado);
+    const response = await api.put(
+      `/refeicoes/${idRefeicao}/alimentos/${idAlimento}`,
+      normalizarAlimento(alimentoAtualizado)
+    );
     return response.data;
   },
 
   // Remove um alimento da refeição (DELETE)
   removerAlimento: async (idRefeicao, idAlimento) => {
-    await api.delete(`/refeicoes/${idRefeicao}/alimentos/${idAlimento}`);
-  }
+    const response = await api.delete(`/refeicoes/${idRefeicao}/alimentos/${idAlimento}`);
+    return response.data;
+  },
+
+  // Marca uma refeição como concluída (PATCH — altera só o status, não a
+  // refeição inteira). Ver RefeicaoController.concluirRefeicao no Spring Boot.
+  concluirRefeicao: async (idRefeicao) => {
+    const response = await api.patch(`/refeicoes/${idRefeicao}/concluir`);
+    return response.data;
+  },
+
+  // Remove uma refeição inteira (e seus alimentos, via cascade no backend).
+  // Ver RefeicaoController.deletar / RefeicaoService.deletar.
+  removerRefeicao: async (idRefeicao) => {
+    await api.delete(`/refeicoes/${idRefeicao}`);
+  },
 };

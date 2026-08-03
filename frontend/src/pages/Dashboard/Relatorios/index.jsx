@@ -12,6 +12,7 @@ import {
   YAxis,
 } from 'recharts';
 import { baixarCsv, montarCsvRelatorio, obterDadosRelatorio } from './utils/agregarRelatorio';
+import { useHistoricoRefeicoes } from '../../../hooks/useHistoricoRefeicoes';
 import estilos from './styles.module.css';
 
 const PERIODOS = [
@@ -26,7 +27,15 @@ const COR_EIXO = '#71717a';
 export default function RelatoriosPage() {
   const [periodo, setPeriodo] = useState(30);
 
-  const { serie, resumo } = useMemo(() => obterDadosRelatorio(periodo), [periodo]);
+  // CORREÇÃO: `obterDadosRelatorio` lia refeições de uma chave de
+  // localStorage órfã ('dieta-refeicoes') que `useRefeicoes` não escreve
+  // mais desde que passou a usar a API real — ver `useHistoricoRefeicoes`
+  // para o diagnóstico completo. Agora busca de verdade no backend.
+  const { refeicoesPorDia, carregando: carregandoHistorico } = useHistoricoRefeicoes(periodo);
+  const { serie, resumo } = useMemo(
+    () => obterDadosRelatorio(refeicoesPorDia, periodo),
+    [refeicoesPorDia, periodo]
+  );
   const seriePeso = useMemo(() => serie.filter((d) => d.peso != null), [serie]);
 
   const exportarCsv = () => {
@@ -71,7 +80,12 @@ export default function RelatoriosPage() {
 
       <div className={estilos.gradeResumo}>
         <article>
-          <span>Kcal média / dia</span>
+          {/* CORREÇÃO (P2.9): rótulo agora deixa explícito que a média é
+              só dos dias com registro — `kcalMedia` (agregarRelatorio.js)
+              soma e divide apenas por `diasComCalorias`, não pelos N dias
+              inteiros do período, então um período com poucos dias
+              registrados não tem a média "diluída" por zeros. */}
+          <span>Kcal média (dias com registro)</span>
           <strong>{resumo.kcalMedia || '---'}</strong>
         </article>
         <article>
@@ -94,7 +108,11 @@ export default function RelatoriosPage() {
         </article>
       </div>
 
-      {resumo.diasComRegistro === 0 ? (
+      {carregandoHistorico ? (
+        <div className={estilos.cartaoVazio}>
+          <h3>Carregando relatório…</h3>
+        </div>
+      ) : resumo.diasComRegistro === 0 ? (
         <div className={estilos.cartaoVazio}>
           <h3>Sem dados neste período</h3>
           <p>Registre refeições, água ou peso para gerar o relatório automaticamente.</p>

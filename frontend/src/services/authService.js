@@ -8,6 +8,9 @@ export const authService = {
 
       if (response.data && response.data.token) {
         localStorage.setItem('token', response.data.token);
+        if (response.data.refreshToken) {
+          localStorage.setItem('refreshToken', response.data.refreshToken);
+        }
         localStorage.setItem('userEmail', response.data.email || email);
       }
 
@@ -29,7 +32,7 @@ export const authService = {
     }
   },
 
-  register: async (email, password, nome) => {
+  register: async ({ email, password, nome }) => {
     try {
       // O backend de cadastro /usuarios usa a entidade Usuario,
       // que demanda { nome, email, senha }.
@@ -60,6 +63,7 @@ export const authService = {
 
   logout: () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('userEmail');
   },
 

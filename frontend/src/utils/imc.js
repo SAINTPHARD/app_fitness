@@ -5,6 +5,20 @@
 const IMC_PLAUSIVEL_MINIMO = 5;
 const IMC_PLAUSIVEL_MAXIMO = 100;
 
+/**
+ * Corrige o caso concreto que motivou a trava de IMC acima: um registro
+ * antigo com a altura salva em METROS (ex: "1.8") no campo que hoje é
+ * tratado como centímetros. Qualquer valor positivo e menor ou igual a 3 só
+ * pode ser metros — a menor altura humana adulta plausível em cm é ~50, e
+ * ninguém mede 3cm ou 3m — então multiplicamos por 100 para trazer de volta
+ * à unidade certa. Valores já em cm (>3) voltam inalterados.
+ */
+export function normalizarAlturaCm(altura) {
+  const numero = Number(altura);
+  if (!Number.isFinite(numero) || numero <= 0) return null;
+  return numero <= 3 ? Number((numero * 100).toFixed(1)) : numero;
+}
+
 /** Calcula o IMC (kg / m²) a partir do peso em kg e da altura em cm. */
 export function calcularImc(pesoKg, alturaCm) {
   const alturaMetros = Number(alturaCm) / 100;

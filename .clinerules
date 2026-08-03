@@ -1,0 +1,31 @@
+# Contexto do Projeto
+- **Aplicação:** App Fullstack de Dieta e Fitness (Plano Alimentar, Consumo de Água, IMC, Gráficos de Evolução, Módulo de Treino/Hipertrofia, Onboarding).
+- **Objetivo Acadêmico:** Projeto de Pós-Graduação (PUC-Rio). Mantenha explicações e comentários no código em Português (PT-BR).
+- **Stack Frontend:** React.js, Vite, JavaScript, Tailwind CSS.
+- **Stack Backend:** Java 21+, Spring Boot 3+ (Spring Security JWT, Spring Data JPA).
+- **Banco de Dados:** PostgreSQL.
+
+# Diretrizes do Frontend (React)
+- **Design System:** Mantenha a interface limpa e responsiva, seguindo o padrão visual de blocos/cards (Tailwind) já estabelecido no Dashboard.
+- **Integração de API:** NUNCA use `fetch` puro ou `axios` solto para rotas autenticadas. SEMPRE importe a instância central configurada (ex: `api` de `api.js` ou `fitnessApi.js`) que já possui o Interceptor com o Token JWT (`Authorization: Bearer`).
+- **Prevenção de Erros:** Garanta que variáveis de ID (como `idRefeicao` ou `idAlimento`) não sejam enviadas como `undefined` nas requisições. 
+- **Gerenciamento de Estado:** Atualize o estado local do React após operações de POST/PUT/DELETE para refletir as mudanças na tela imediatamente, sem a necessidade de recarregar a página.
+
+# Diretrizes do Backend (Java / Spring Boot)
+- **Arquitetura em Camadas (Strict):** - `Controller`: Exclusivo para roteamento HTTP. Deve SEMPRE retornar `ResponseEntity<?>` com o status correto (200 OK, 201 Created, 204 No Content).
+  - `Service`: Centraliza a regra de negócio. SEMPRE utilize `@Transactional` em métodos que modificam o banco de dados.
+  - `Repository`: Interfaces do Spring Data JPA. Use Query Methods claros.
+- **Mapeamento JPA e Relacionamentos:**
+  - Em relacionamentos bidirecionais (ex: Refeicao 1 -> N Alimento), SEMPRE garanta a associação no Service antes de salvar (ex: `alimento.setRefeicao(refeicao)`).
+  - Use `cascade = CascadeType.ALL` e `orphanRemoval = true` nas coleções filhas.
+- **Serialização JSON (Jackson):**
+  - PREVINA Loops Infinitos rigorosamente: Utilize `@JsonManagedReference` do lado "Pai" e `@JsonBackReference` (ou `@JsonIgnore`) do lado "Filho".
+  - **Contrato Front/Back:** Utilize `@JsonProperty("nomeNoReact")` se o nome do atributo no Java divergir do esperado pelo Frontend.
+- **Segurança e CORS:**
+  - É ESTRITAMENTE PROIBIDO o uso da anotação `@CrossOrigin` nos Controllers. Toda a configuração de CORS e bloqueio de rotas deve ser gerenciada EXCLUSIVAMENTE de forma global na classe `SecurityConfig`.
+- **Tratamento de Exceções:** Não retorne `500 Internal Server Error` para dados não encontrados. Lance exceções de domínio (ex: `RecursoNaoEncontradoException`) para acionar o Global Exception Handler e retornar `404 Not Found`.
+
+# Regras Gerais de Desenvolvimento
+- Escreva código limpo, modular e altamente validado (ex: `@NotNull`, `@PositiveOrZero` para aceitar valores como 0, `@NotBlank`).
+- Evite atualizar parcialmente (partial update) sobrescrevendo campos com `null`. Verifique se o dado existe antes de aplicar um `.set()`.
+- Respeite o pacote base da aplicação Java (`com.appfitness`).

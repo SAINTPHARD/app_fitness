@@ -62,15 +62,7 @@ public class UsuarioService {
     public Usuario atualizar(Long id, Usuario dadosNovos) {
         Usuario usuarioExistente = buscarPorId(id);
 
-        // Atualiza nome e e-mail apenas se informados (protege contra partial updates do onboarding)
-        if (dadosNovos.getNome() != null && !dadosNovos.getNome().isBlank()) {
-            usuarioExistente.setNome(dadosNovos.getNome());
-        }
-        if (dadosNovos.getEmail() != null && !dadosNovos.getEmail().isBlank()) {
-            usuarioExistente.setEmail(dadosNovos.getEmail());
-        }
-
-        // Atualização de métricas corporais (peso, altura, objetivo, etc.)
+     // Atualização de métricas corporais (peso, altura, idade, sexo e objetivo)
         if (dadosNovos.getPeso() != null) {
             usuarioExistente.setPeso(dadosNovos.getPeso());
         }
@@ -80,10 +72,13 @@ public class UsuarioService {
         if (dadosNovos.getIdade() != null) {
             usuarioExistente.setIdade(dadosNovos.getIdade());
         }
+        // Adicionado para garantir que o sexo preenchido no onboarding seja salvo
+        if (dadosNovos.getSexo() != null) {
+            usuarioExistente.setSexo(dadosNovos.getSexo());
+        }
         if (dadosNovos.getObjetivo() != null) {
             usuarioExistente.setObjetivo(dadosNovos.getObjetivo());
         }
-
         // Atualiza a senha se uma nova senha for fornecida
         if (dadosNovos.getSenha() != null && !dadosNovos.getSenha().isBlank()) {
             usuarioExistente.setSenha(passwordEncoder.encode(dadosNovos.getSenha()));

@@ -19,6 +19,15 @@ export default function TreinoPage() {
     setModalAberto(false);
   };
 
+  // CORREÇÃO (P3.15): remoção de exercício era imediata — um toque errado
+  // no ícone de lixeira (comum em mobile, onde ele fica perto do botão de
+  // concluir) apagava o exercício sem confirmação nem forma de desfazer.
+  const confirmarRemocaoExercicio = (idExercicio, nomeExercicio) => {
+    if (window.confirm(`Remover "${nomeExercicio}" da ficha de ${diaAtualInfo?.label}?`)) {
+      removerExercicio(diaSelecionado, idExercicio);
+    }
+  };
+
   const diaAtualInfo = DIAS_SEMANA.find((d) => d.id === diaSelecionado);
 
   return (
@@ -85,7 +94,7 @@ export default function TreinoPage() {
                   </button>
                   <button
                     className="btnRemover"
-                    onClick={() => removerExercicio(diaSelecionado, ex.id)}
+                    onClick={() => confirmarRemocaoExercicio(ex.id, ex.nome)}
                     title="Remover exercício"
                   >
                     🗑️

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { obterHistoricoDiario } from '../utils/historicoDiario';
+import { useHistoricoRefeicoes } from '../../../../hooks/useHistoricoRefeicoes';
 
 const COLUNAS = [
   { chave: 'dataFormatada', rotulo: 'Data' },
@@ -24,7 +25,14 @@ const PERIODOS = [
  */
 export default function HistoricoTabela({ historicoPeso }) {
   const [periodoDias, setPeriodoDias] = useState(7);
-  const linhas = useMemo(() => obterHistoricoDiario(historicoPeso, periodoDias), [historicoPeso, periodoDias]);
+  // CORREÇÃO: refeições agora vêm de verdade do backend (`useHistoricoRefeicoes`)
+  // em vez da chave de localStorage órfã que `obterHistoricoDiario` lia antes
+  // — ver esse hook para o diagnóstico completo dessa família de bugs.
+  const { refeicoesPorDia, carregando } = useHistoricoRefeicoes(periodoDias);
+  const linhas = useMemo(
+    () => obterHistoricoDiario(historicoPeso, refeicoesPorDia, periodoDias),
+    [historicoPeso, refeicoesPorDia, periodoDias]
+  );
 
   return (
     <div className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-xl shadow-slate-200/50 dark:bg-zinc-800 dark:shadow-none">
@@ -50,7 +58,9 @@ export default function HistoricoTabela({ historicoPeso }) {
         </div>
       </div>
 
-      {linhas.length > 0 ? (
+      {carregando ? (
+        <p className="m-0 py-8 text-center text-sm text-slate-400 dark:text-zinc-500">Carregando histórico…</p>
+      ) : linhas.length > 0 ? (
         <div className="-mx-2 overflow-x-auto">
           <table className="w-full min-w-[560px] border-collapse text-sm">
             <thead>

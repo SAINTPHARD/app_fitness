@@ -1,42 +1,48 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import api from '../../../../services/api'; // Ajuste o caminho se necessário para o seu api.js
 
-const CHAVE_ARMAZENAMENTO = 'dieta-metas';
-const METAS_PADRAO = { calorias: 0, proteinas: 0, carboidratos: 0, gorduras: 0 };
-
-function lerMetasSalvas() {
-  if (typeof window === 'undefined') return METAS_PADRAO;
-
-  try {
-    const metasSalvas = window.localStorage.getItem(CHAVE_ARMAZENAMENTO);
-    return metasSalvas ? { ...METAS_PADRAO, ...JSON.parse(metasSalvas) } : METAS_PADRAO;
-  } catch {
-    return METAS_PADRAO;
-  }
-}
-
-/**
- * Custom hook responsável por toda a lógica de negócio das metas diárias
- * (calorias, proteínas, carboidratos e gorduras): leitura inicial, persistência
- * em localStorage e atualização — mantendo os componentes visuais (PainelDieta,
- * ModalMetas) livres de detalhes de armazenamento.
- */
 export function useMetas() {
-  const [metas, setMetas] = useState(lerMetasSalvas);
+  const [metas, setMetas] = useState({
+    calorias: 2000,
+    proteinas: 150,
+    carboidratos: 250,
+    gorduras: 65,
+  });
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    window.localStorage.setItem(CHAVE_ARMAZENAMENTO, JSON.stringify(metas));
-  }, [metas]);
+  // Busca as metas reais do utilizador autenticado na API
+  const carregarMetas = async () => {
+    try {
+      const response = await api.get('/usuarios/me'); // Ou a rota que traz o perfil logado
+      const usuario = response.data;
 
-  // Recebe o rascunho já validado (ver `validarMetas`) e normaliza para número
-  // antes de gravar no estado — o componente de UI nunca precisa saber disso.
-  const atualizarMetas = (novasMetas) => {
-    setMetas({
-      calorias: Number(novasMetas.calorias) || 0,
-      proteinas: Number(novasMetas.proteinas) || 0,
-      carboidratos: Number(novasMetas.carboidratos) || 0,
-      gorduras: Number(novasMetas.gorduras) || 0,
-    });
+      // Se o backend já calcula as metas com base no TMB/Objetivo, use-as:
+      setMetas({
+        calorias: usuario.metaCalorias || usuario.calorias || 2000,
+        proteinas: usuario.metaProteinas || usuario.proteinas || 150,
+        carboidratos: usuario.metaCarboidratos || usuario.carboidratos || 250,
+        gorduras: usuario.metaGorduras || usuario.gorduras || 65,
+      });
+    } catch (error) {
+      console.error("Erro ao carregar metas do usuário", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return { metas, atualizarMetas };
+  useEffect(() => {
+    carregarMetas();
+  }, []);
+
+  const atualizarMetas = async (novasMetas) => {
+    try {
+      // Envia as novas metas para o backend persistir
+      await api.put('/usuarios/me/metas', novasMetas); // Ajuste para a sua rota real se houver
+      setMetas(novasMetas);
+    } catch (error) {
+      console.error("Erro ao atualizar metas", error);
+    }
+  };
+
+  return { metas, atualizarMetas, loading, recarregarMetas: carregarMetas };
 }

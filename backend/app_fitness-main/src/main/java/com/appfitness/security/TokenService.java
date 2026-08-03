@@ -24,12 +24,23 @@ public class TokenService {
     @Value("${jwt.expiration:86400000}")
     private long expirationMillis;
 
+    @Value("${jwt.refresh-expiration:604800000}")
+    private long refreshExpirationMillis;
+
     /**
      * Gera um token JWT com o e-mail do usuário no subject.
      */
     public String gerarToken(Usuario usuario) {
+        return gerarToken(usuario, expirationMillis, "access");
+    }
+
+    public String gerarRefreshToken(Usuario usuario) {
+        return gerarToken(usuario, refreshExpirationMillis, "refresh");
+    }
+
+    private String gerarToken(Usuario usuario, long duracaoMillis, String tipo) {
         Date now = new Date();
-        Date expiresAt = new Date(now.getTime() + expirationMillis);
+        Date expiresAt = new Date(now.getTime() + duracaoMillis);
 
    
         /**
@@ -40,6 +51,7 @@ public class TokenService {
 
         return JWT.create()
                 .withSubject(usuario.getEmail())
+                .withClaim("tipo", tipo)
                 .withIssuedAt(now)
                 .withExpiresAt(expiresAt)
                 .sign(algorithm);
@@ -53,6 +65,16 @@ public class TokenService {
             Algorithm algorithm = Algorithm.HMAC256(secret);
             JWT.require(algorithm).build().verify(token);
             return true;
+        } catch (JWTVerificationException ex) {
+            return false;
+        }
+    }
+
+    public boolean isRefreshTokenValido(String token) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secret);
+            DecodedJWT decoded = JWT.require(algorithm).build().verify(token);
+            return "refresh".equals(decoded.getClaim("tipo").asString());
         } catch (JWTVerificationException ex) {
             return false;
         }

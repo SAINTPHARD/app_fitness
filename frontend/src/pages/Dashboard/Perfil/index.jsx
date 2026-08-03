@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fitnessApi } from '../../../services/fitnessApi';
-import { calcularImc, classificarImc } from '../../../utils/imc';
+import { calcularImc, classificarImc, normalizarAlturaCm } from '../../../utils/imc';
 import { obterDataDeHojeISO } from '../Dieta/utils/calendario';
 import AtualizacaoPesoCard from '../AtualizacaoPesoCard';
 import './perfil.css';
@@ -48,7 +48,22 @@ export default function PerfilPage() {
   const carregarPerfil = async () => {
     try {
       const response = await fitnessApi.getProfile();
-      const dados = response.data || {};
+      let dados = response.data || {};
+
+      // CORREÇÃO (mesma migração de `usePerfilResumo`): se a altura salva
+      // ainda está em metros, corrige para cm antes de exibir no formulário
+      // e persiste a correção no backend — a página de Perfil é onde o
+      // usuário mais provavelmente vai notar "Altura: 1.8 cm" errado, então
+      // vale ter a mesma blindagem aqui mesmo com o hook compartilhado já
+      // cobrindo Home/Dieta/Evolução.
+      const alturaNormalizada = normalizarAlturaCm(dados.altura);
+      if (alturaNormalizada !== null && alturaNormalizada !== Number(dados.altura)) {
+        dados = { ...dados, altura: alturaNormalizada };
+        fitnessApi
+          .updateProfile({ ...dados, altura: alturaNormalizada })
+          .catch((erroMigracao) => console.error('Falha ao migrar altura salva em metros para cm:', erroMigracao));
+      }
+
       setProfile(dados);
       setFormulario({
         nome: dados.nome || '',

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/authService';
+import { notificarErro } from '../../utils/notificacoes';
 import styles from './login.module.css';
 
 export default function LoginPage() {
@@ -24,14 +25,20 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSignUp && formData.password !== formData.confirmPassword) {
-      alert("As senhas não coincidem!");
+      notificarErro('As senhas não coincidem!');
       return;
     }
     
     try {
       if (isSignUp) {
+        const nome = `${formData.firstName} ${formData.lastName}`.trim();
+
         // 1. Cadastra o usuário
-        await authService.register(formData);
+        await authService.register({
+          nome,
+          email: formData.email,
+          password: formData.password,
+        });
         
         // 2. LOGO APÓS cadastrar, faz o login automático com as mesmas credenciais
         await authService.login(formData.email, formData.password);
@@ -44,7 +51,7 @@ export default function LoginPage() {
         navigate('/dashboard/inicio');
       }
     } catch (err) {
-      alert("Erro ao entrar: " + err.message);
+      notificarErro(`Erro ao entrar: ${err.message}`);
     }
   };
 

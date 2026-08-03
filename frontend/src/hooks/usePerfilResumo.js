@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fitnessApi } from '../services/fitnessApi';
 import { obterDataDeHojeISO } from '../pages/Dashboard/Dieta/utils/calendario';
-import { calcularImc, classificarImc } from '../utils/imc';
+import { calcularImc, classificarImc, normalizarAlturaCm } from '../utils/imc';
 
 const CHAVE_HISTORICO_PESO = 'home-historico-peso';
 const MAXIMO_PONTOS_HISTORICO = 30;
@@ -42,7 +42,27 @@ export function usePerfilResumo() {
         const resposta = await fitnessApi.getProfile();
         if (cancelado) return;
 
-        const dadosPerfil = resposta.data || {};
+        let dadosPerfil = resposta.data || {};
+
+        // CORREÇÃO (migração de dados existentes): registros antigos podem
+        // ter a altura salva em metros (ex: "1.8") no campo que hoje é
+        // sempre tratado como centímetros — sintoma visível era o IMC
+        // vindo um número absurdo ou `null` (barrado pela trava em
+        // `calcularImc`). Detectamos e corrigimos aqui, na única leitura de
+        // perfil compartilhada por Home/Dieta/Evolução, e persistimos a
+        // correção de volta no backend (silenciosamente, sem exigir que o
+        // usuário abra o formulário de Perfil e resalve) para o dado errado
+        // não continuar se propagando.
+        const alturaNormalizada = normalizarAlturaCm(dadosPerfil.altura);
+        if (alturaNormalizada !== null && alturaNormalizada !== Number(dadosPerfil.altura)) {
+          dadosPerfil = { ...dadosPerfil, altura: alturaNormalizada };
+          fitnessApi
+            .updateProfile({ ...dadosPerfil, altura: alturaNormalizada })
+            .catch((erroMigracao) =>
+              console.error('Falha ao migrar altura salva em metros para cm:', erroMigracao)
+            );
+        }
+
         setPerfil(dadosPerfil);
 
         const pesoAtual = Number(dadosPerfil.peso);

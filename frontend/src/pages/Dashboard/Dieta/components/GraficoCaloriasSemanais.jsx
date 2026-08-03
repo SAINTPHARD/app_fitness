@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { obterResumoSemanalDeCalorias } from '../utils/resumoSemanal';
+import { useHistoricoRefeicoes } from '../../../../hooks/useHistoricoRefeicoes';
 
 const COR_TEXTO_EIXO = '#94a3b8';
 const COR_BORDA = '#dbe2ef';
@@ -10,9 +11,15 @@ const COR_LINHA = '#a3e635';
  * Linha com o total de calorias dos últimos 7 dias — mesma fonte de dados
  * do gráfico de barras da Home (`obterResumoSemanalDeCalorias`), aqui como
  * linha para casar com o restante dos gráficos da Dieta.
+ *
+ * CORREÇÃO (P2.11 — badge do cabeçalho em "0 kcal" enquanto o gráfico
+ * mostrava um pico real): os dados agora vêm de `useHistoricoRefeicoes`
+ * (busca real no backend), não mais de uma chave de localStorage órfã. Ver
+ * o comentário nesse hook para o diagnóstico completo.
  */
 export default function GraficoCaloriasSemanais() {
-  const dados = useMemo(() => obterResumoSemanalDeCalorias(), []);
+  const { refeicoesPorDia, carregando } = useHistoricoRefeicoes(7);
+  const dados = useMemo(() => obterResumoSemanalDeCalorias(refeicoesPorDia, 7), [refeicoesPorDia]);
   const temAlgumDado = dados.some((ponto) => ponto.calorias > 0);
   const ultimoValor = dados[dados.length - 1]?.calorias || 0;
 
@@ -22,12 +29,14 @@ export default function GraficoCaloriasSemanais() {
         <h3 className="m-0 text-base font-bold text-slate-800 dark:text-zinc-50">Calorias dos últimos 7 dias</h3>
         {temAlgumDado && (
           <span className="rounded-full bg-lime-100 px-2.5 py-1 text-xs font-bold text-lime-700 dark:bg-lime-400/10 dark:text-lime-300">
-            {ultimoValor} kcal
+            Hoje: {ultimoValor} kcal
           </span>
         )}
       </div>
 
-      {temAlgumDado ? (
+      {carregando ? (
+        <p className="m-0 py-8 text-center text-sm text-slate-400 dark:text-zinc-500">Carregando histórico…</p>
+      ) : temAlgumDado ? (
         <div className="-mx-2">
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={dados} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>

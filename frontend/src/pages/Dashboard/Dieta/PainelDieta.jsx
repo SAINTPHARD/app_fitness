@@ -5,9 +5,6 @@ import ModalMetas from './components/ModalMetas';
 import CartaoMetaDiaria from './components/CartaoMetaDiaria';
 import WidgetHidratacao from './components/WidgetHidratacao';
 import CartaoMetricaMacro from './components/CartaoMetricaMacro';
-import CartaoProximaRefeicao from './components/CartaoProximaRefeicao';
-import CartaoPesoAtual from './components/CartaoPesoAtual';
-import IndicadorImc from './components/IndicadorImc';
 import CartaoRefeicao from './components/CartaoRefeicao';
 import FormularioNovaRefeicao from './components/FormularioNovaRefeicao';
 import BotaoFlutuanteNovaRefeicao from './components/BotaoFlutuanteNovaRefeicao';
@@ -21,8 +18,10 @@ import { useMetas } from './hooks/useMetas';
 import { useRefeicoes } from './hooks/useRefeicoes';
 import { usePerfilResumo } from '../../../hooks/usePerfilResumo';
 import { obterDataDeHojeISO } from './utils/calendario';
-import { obterProximaRefeicao } from './utils/proximaRefeicao';
 import { calcularPercentual, metaExcedida } from './utils/progresso';
+
+const formatar1Casa = (valor) => (Number(valor) || 0).toFixed(1);
+const formatarCalorias = (valor) => Math.round(Number(valor) || 0);
 
 export default function PainelDieta() {
   // `pronto` só vira `true` depois do primeiro efeito no cliente. Isso evita
@@ -39,11 +38,23 @@ export default function PainelDieta() {
   const [refeicaoExpandidaId, setRefeicaoExpandidaId] = useState(null);
 
   const { metas, atualizarMetas } = useMetas();
-  const { refeicoesDoDia, totaisDoDia, adicionarAlimento, removerAlimento, editarAlimento, adicionarRefeicao } =
-    useRefeicoes(dataSelecionadaISO);
-  const { perfil, imc, classificacaoImc, historicoPeso, variacaoPeso } = usePerfilResumo();
-
-  const proximaRefeicao = obterProximaRefeicao(refeicoesDoDia);
+  const {
+    refeicoesDoDia,
+    totaisDoDia,
+    loading: carregandoRefeicoes,
+    erro: erroRefeicoes,
+    adicionarAlimento,
+    removerAlimento,
+    editarAlimento,
+    adicionarRefeicao,
+    editarRefeicao,
+    removerRefeicao,
+    concluirRefeicao,
+    recarregar: recarregarRefeicoes,
+  } = useRefeicoes(dataSelecionadaISO);
+  // Peso/IMC não vivem mais aqui — só na página de Perfil. `historicoPeso`
+  // continua sendo usado pelo gráfico de evolução, mais abaixo.
+  const { historicoPeso } = usePerfilResumo();
 
   const lidarComAdicaoDeAlimento = async (idRefeicao, novoAlimento) => {
     // CORREÇÃO: `adicionarAlimento` agora pode criar a Refeição no backend
@@ -51,13 +62,28 @@ export default function PainelDieta() {
     // devolvido pelo banco pode diferir do ID local passado aqui — por isso
     // aguardamos o retorno em vez de expandir o ID antigo, que deixaria de
     // bater com `refeicao.id` depois da troca e faria o cartão fechar sozinho.
-    const idRefeicaoReal = await adicionarAlimento(idRefeicao, novoAlimento);
-    setRefeicaoExpandidaId(idRefeicaoReal);
+    // `adicionarAlimento` agora relança em caso de falha (ver useRefeicoes) —
+    // deixamos subir para o `catch` de quem chamou este handler
+    // (CartaoRefeicao.salvarRefeicao), que já mostra sua própria mensagem de
+    // erro; aqui só evitamos um "unhandled rejection" quando a chamada não
+    // vem de dentro daquele fluxo (ex: erro de rede inesperado).
+    try {
+      const idRefeicaoReal = await adicionarAlimento(idRefeicao, novoAlimento);
+      setRefeicaoExpandidaId(idRefeicaoReal);
+    } catch {
+      // O toast global (interceptor do Axios) já avisou o usuário; nada
+      // mais a fazer aqui além de não deixar a Promise rejeitar sem dono.
+    }
   };
 
-  const lidarComNovaRefeicao = (novaRefeicao) => {
-    adicionarRefeicao(novaRefeicao);
-    setCriandoRefeicao(false);
+  const lidarComNovaRefeicao = async (novaRefeicao) => {
+    try {
+      await adicionarRefeicao(novaRefeicao);
+    } catch {
+      // Toast global já cobre o aviso de erro (ver services/api.js).
+    } finally {
+      setCriandoRefeicao(false);
+    }
   };
 
   const alternarExpansao = (idRefeicao) => {
@@ -101,9 +127,28 @@ export default function PainelDieta() {
       {/* Barra de calendário semanal: troca o dia exibido em todo o painel. */}
       <BarraCalendario dataSelecionadaISO={dataSelecionadaISO} aoSelecionarDia={setDataSelecionadaISO} />
 
+      {/* CORREÇÃO: `useRefeicoes` já capturava o erro de `buscarRefeicoesDoDia`
+          (ex: 500 do backend) em estado `erro`, mas nada aqui lia esse estado
+          — a falha ficava só no console, e a tela mostrava silenciosamente as
+          3 refeições padrão vazias como se o dia realmente não tivesse nada
+          registrado. Agora o usuário vê que os dados podem estar
+          desatualizados e pode tentar de novo. */}
+      {erroRefeicoes && !carregandoRefeicoes && (
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300">
+          <span>{erroRefeicoes}</span>
+          <button
+            type="button"
+            onClick={recarregarRefeicoes}
+            className="shrink-0 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-rose-700 shadow-sm hover:bg-rose-100 dark:bg-zinc-800 dark:text-rose-300"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      )}
+
       {/* Anel colorido com o cálculo automático de quanto ainda resta na
           meta diária de calorias — fica logo no topo do plano alimentar. */}
-      <CartaoMetaDiaria meta={metas.calorias || 0} consumido={totaisDoDia.calorias} />
+      <CartaoMetaDiaria meta={metas.calorias || 0} consumido={formatarCalorias(totaisDoDia.calorias)} />
 
       {/* 4 cartões de macro. */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -111,7 +156,7 @@ export default function PainelDieta() {
           icone={Flame}
           corIcone="bg-red-100 text-red-500 dark:bg-red-500/10 dark:text-red-300"
           rotulo="Calorias"
-          consumido={totaisDoDia.calorias}
+          consumido={formatarCalorias(totaisDoDia.calorias)}
           meta={metas.calorias || 0}
           unidade=" kcal"
           percentual={percentuais.calorias}
@@ -121,7 +166,7 @@ export default function PainelDieta() {
           icone={Drumstick}
           corIcone="bg-blue-100 text-blue-500 dark:bg-blue-500/10 dark:text-blue-300"
           rotulo="Proteínas"
-          consumido={`${totaisDoDia.proteina}g`}
+          consumido={`${formatar1Casa(totaisDoDia.proteina)}g`}
           meta={metas.proteinas || 0}
           unidade="g"
           percentual={percentuais.proteina}
@@ -131,7 +176,7 @@ export default function PainelDieta() {
           icone={Wheat}
           corIcone="bg-amber-100 text-amber-500 dark:bg-amber-500/10 dark:text-amber-300"
           rotulo="Carboidratos"
-          consumido={`${totaisDoDia.carboidratos}g`}
+          consumido={`${formatar1Casa(totaisDoDia.carboidratos)}g`}
           meta={metas.carboidratos || 0}
           unidade="g"
           percentual={percentuais.carboidratos}
@@ -141,7 +186,7 @@ export default function PainelDieta() {
           icone={DropletIcon}
           corIcone="bg-pink-100 text-pink-500 dark:bg-pink-500/10 dark:text-pink-300"
           rotulo="Gorduras"
-          consumido={`${totaisDoDia.gordura}g`}
+          consumido={`${formatar1Casa(totaisDoDia.gordura)}g`}
           meta={metas.gorduras || 0}
           unidade="g"
           percentual={percentuais.gordura}
@@ -149,14 +194,11 @@ export default function PainelDieta() {
         />
       </div>
 
-      {/* Água, próxima refeição, e peso+IMC empilhados na terceira coluna. */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+      {/* Hidratação: peso/IMC saíram daqui (só na página de Perfil) e o
+          card de "refeições concluídas" foi removido — a lista de refeições
+          do dia logo abaixo já mostra o status de cada uma. */}
+      <div className="mx-auto w-full lg:max-w-md">
         <WidgetHidratacao dataSelecionadaISO={dataSelecionadaISO} />
-        <CartaoProximaRefeicao refeicao={proximaRefeicao} />
-        <div className="flex flex-col gap-6">
-          <CartaoPesoAtual peso={perfil?.peso} historicoPeso={historicoPeso} variacaoPeso={variacaoPeso} />
-          <IndicadorImc imc={imc} classificacao={classificacaoImc} />
-        </div>
       </div>
 
       {/* Refeições do dia (accordion) + resumo nutricional/distribuição de macros. */}
@@ -180,6 +222,9 @@ export default function PainelDieta() {
                   aoAdicionarAlimento={lidarComAdicaoDeAlimento}
                   aoRemoverAlimento={removerAlimento}
                   aoEditarAlimento={editarAlimento}
+                  aoEditarRefeicao={editarRefeicao}
+                  aoRemoverRefeicao={removerRefeicao}
+                  aoConcluir={concluirRefeicao}
                 />
               ))}
             </div>

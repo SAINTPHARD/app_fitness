@@ -16,3 +16,19 @@ export function metaExcedida(consumido, meta) {
 export function formatarCalorias(valor) {
   return Number(valor) > 0 ? `${valor} kcal` : '—';
 }
+
+/**
+ * "Meta do dia": média dos percentuais de indicadores que já têm alguma
+ * meta definida (calorias, macros e água). Extraída de
+ * `useResumoNutricionalHoje` para ser uma função pura testável — antes o
+ * card "Meta do dia" simplesmente reaproveitava por engano o percentual de
+ * água (P2.6), ignorando calorias/macros apesar do texto descritivo do
+ * card prometer os três. Metas ainda não configuradas (percentual 0) ficam
+ * de fora da média para não punir o usuário por algo que ele nem preencheu.
+ */
+export function calcularMetaDoDiaPercentual(percentuais) {
+  const valores = Object.values(percentuais || {}).filter((valor) => valor > 0);
+  if (valores.length === 0) return 0;
+  const soma = valores.reduce((total, valor) => total + valor, 0);
+  return Math.round(soma / valores.length);
+}

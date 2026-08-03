@@ -56,6 +56,9 @@ public class SecurityConfig {
 				
 				// Rota pública para Autenticação do Atleta (Evita o erro 403 Forbidden no Login)
 				.requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+
+				// Rota pública para renovar access tokens usando refresh token
+				.requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
 				
 				// Rota pública para Autenticação alternativa (Caso use mapeamento direto sem o prefixo)
 				.requestMatchers(HttpMethod.POST, "/login").permitAll()
@@ -141,15 +144,9 @@ public class SecurityConfig {
 					return false;
 				}
 
-				// Se a senha armazenada começar com prefixos tradicionais do BCrypt, valida de forma segura
-				if (encodedPassword.startsWith("$2a$")
-						|| encodedPassword.startsWith("$2b$")
-						|| encodedPassword.startsWith("$2y$")) {
-					return bcrypt.matches(rawPassword, encodedPassword);
-				}
-
-				// Fallback temporário: se não for hash, compara como texto puro (comum em cargas iniciais de dados)
-				return rawPassword.toString().equals(encodedPassword);
+				// Produção: apenas comparação segura via BCrypt. Removido o fallback de
+				// texto puro — toda senha em base deve estar com hash BCrypt antes do deploy.
+				return bcrypt.matches(rawPassword, encodedPassword);
 			}
 		};
 	}

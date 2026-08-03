@@ -6,6 +6,8 @@ const LINHAS = [
   { chave: 'gordura', rotulo: 'Gorduras', corBarra: 'bg-gradient-to-r from-pink-500 to-rose-400' },
 ];
 
+const formatar1Casa = (valor) => (Number(valor) || 0).toFixed(1);
+
 /**
  * Resumo compacto dos 3 macros: valor consumido/meta lado a lado com o
  * percentual, e uma barra logo abaixo — complementa os 4 cartões do topo
@@ -26,7 +28,7 @@ export default function ResumoNutricional({ totais, metas, percentuais }) {
           <div className="mb-1.5 flex items-center justify-between text-sm">
             <span className="font-semibold text-slate-700 dark:text-zinc-200">{rotulo}</span>
             <span className="text-slate-500 dark:text-zinc-400">
-              {totais[chave]}g / {metas[chave === 'proteina' ? 'proteinas' : chave] || 0}g
+              {formatar1Casa(totais?.[chave])}g / {metas?.[chave === 'proteina' ? 'proteinas' : chave] || 0}g
             </span>
           </div>
           <div className="flex items-center gap-2">

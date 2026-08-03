@@ -1,12 +1,11 @@
 package com.appfitness.controller;
 
-import java.util.List;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import com.appfitness.exception.AcessoNegadoException;
 import com.appfitness.model.entity.Usuario;
 import com.appfitness.service.UsuarioService;
 
@@ -38,20 +37,15 @@ public class UsuarioController {
     }
 
     /**
-     * 2. Listar todos os usuários
-     * URL: GET http://localhost:8080/usuarios
-     */
-    @GetMapping
-    public ResponseEntity<List<Usuario>> listarUsuarios() {
-        return ResponseEntity.ok(usuarioService.listarTodos());
-    }
-
-    /**
-     * 3. Buscar usuário por ID
+     * 3. Buscar usuário por ID (somente o próprio usuário autenticado — previne IDOR)
      * URL: GET http://localhost:8080/usuarios/{id}
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> buscarUsuarioPorId(@PathVariable Long id) {
+    public ResponseEntity<Usuario> buscarUsuarioPorId(@PathVariable Long id, Authentication authentication) {
+        Usuario usuarioLogado = extrairUsuarioAutenticado(authentication);
+        if (!usuarioLogado.getId().equals(id)) {
+            throw new AcessoNegadoException("Você não tem permissão para acessar dados de outro usuário.");
+        }
         return ResponseEntity.ok(usuarioService.buscarPorId(id));
     }
 
@@ -92,22 +86,31 @@ public class UsuarioController {
     }
 
     /**
-     * 4. Atualizar usuário por ID
+     * 4. Atualizar usuário por ID (somente o próprio usuário autenticado — previne IDOR)
      * URL: PUT http://localhost:8080/usuarios/{id}
      */
     @PutMapping("/{id}")
     public ResponseEntity<Usuario> atualizarUsuario(
-            @PathVariable Long id, 
-            @RequestBody Usuario usuario) {
+            @PathVariable Long id,
+            @RequestBody Usuario usuario,
+            Authentication authentication) {
+        Usuario usuarioLogado = extrairUsuarioAutenticado(authentication);
+        if (!usuarioLogado.getId().equals(id)) {
+            throw new AcessoNegadoException("Você não tem permissão para alterar dados de outro usuário.");
+        }
         return ResponseEntity.ok(usuarioService.atualizar(id, usuario));
     }
 
     /**
-     * 5. Deletar usuário por ID
+     * 5. Deletar usuário por ID (somente o próprio usuário autenticado — previne IDOR)
      * URL: DELETE http://localhost:8080/usuarios/{id}
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarUsuario(@PathVariable Long id) {
+    public ResponseEntity<Void> deletarUsuario(@PathVariable Long id, Authentication authentication) {
+        Usuario usuarioLogado = extrairUsuarioAutenticado(authentication);
+        if (!usuarioLogado.getId().equals(id)) {
+            throw new AcessoNegadoException("Você não tem permissão para excluir outro usuário.");
+        }
         usuarioService.deletar(id);
         return ResponseEntity.noContent().build(); // Retorna 204 No Content
     }

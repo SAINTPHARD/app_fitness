@@ -1,7 +1,12 @@
 import { formatarDataISO } from '../../Dieta/utils/calendario';
 import { somarMacrosDeAlimentos } from '../../Dieta/utils/macros';
 
-const CHAVE_REFEICOES = 'dieta-refeicoes';
+// 'dieta-refeicoes' foi removida daqui: era uma chave de localStorage órfã
+// (ver `useHistoricoRefeicoes` para o histórico completo dessa correção) —
+// as refeições agora chegam como parâmetro `refeicoesPorDia`, já buscadas
+// de verdade no backend. Água, peso e treino continuam em localStorage
+// porque `useHidratacao`/`usePerfilResumo`/`useFichasTreino` realmente
+// escrevem nessas chaves.
 const CHAVE_HIDRATACAO = 'dieta-hidratacao';
 const CHAVE_HISTORICO_PESO = 'home-historico-peso';
 const CHAVE_TREINO = 'treino-fichas-por-dia';
@@ -22,11 +27,10 @@ function formatarDataCurta(iso) {
 }
 
 /**
- * Agrega dieta, água, peso e treinos concluídos nos últimos `dias` dias
- * a partir dos dados já persistidos no localStorage.
+ * Agrega dieta (real, vinda do backend via `refeicoesPorDia`), água, peso e
+ * treinos concluídos nos últimos `dias` dias.
  */
-export function obterDadosRelatorio(dias = 30) {
-  const refeicoes = lerJSON(CHAVE_REFEICOES, []);
+export function obterDadosRelatorio(refeicoesPorDia, dias = 30) {
   const hidratacao = lerJSON(CHAVE_HIDRATACAO, {});
   const historicoPeso = lerJSON(CHAVE_HISTORICO_PESO, []);
   const fichas = lerJSON(CHAVE_TREINO, {});
@@ -45,7 +49,7 @@ export function obterDadosRelatorio(dias = 30) {
     data.setDate(hoje.getDate() - i);
     const iso = formatarDataISO(data);
 
-    const refeicoesDoDia = refeicoes.filter((r) => r.data === iso);
+    const refeicoesDoDia = refeicoesPorDia?.get(iso) || [];
     const macros = refeicoesDoDia.reduce(
       (acc, refeicao) => {
         const m = somarMacrosDeAlimentos(refeicao.alimentos || []);

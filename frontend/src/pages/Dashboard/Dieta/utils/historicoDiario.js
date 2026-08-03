@@ -1,11 +1,11 @@
 import { formatarDataISO } from './calendario';
 import { somarMacrosDeAlimentos } from './macros';
 
-// Mesmas chaves usadas por `useRefeicoes` e `useHidratacao` — lidas aqui em
-// modo LEITURA para juntar os três "bancos" que já existem (refeições,
-// hidratação e o histórico de peso de `usePerfilResumo`) numa única linha
-// por dia, para a tabela de Histórico.
-const CHAVE_REFEICOES = 'dieta-refeicoes';
+// Chave usada por `useHidratacao` — lida aqui em modo LEITURA para juntar
+// hidratação ao restante da linha de histórico. As refeições NÃO vêm mais
+// de localStorage: ver `useHistoricoRefeicoes` (busca real no backend) e o
+// comentário lá sobre por que a chave antiga 'dieta-refeicoes' estava
+// órfã desde a migração de `useRefeicoes` para a API do Spring Boot.
 const CHAVE_HIDRATACAO = 'dieta-hidratacao';
 
 function lerJSON(chave, valorPadrao) {
@@ -27,13 +27,13 @@ function formatarDataParaExibicao(data) {
 
 /**
  * Monta uma linha de histórico por dia (últimos `quantidadeDias`, hoje
- * incluso), combinando refeições (calorias/macros), hidratação e o peso
- * registrado naquele dia (se houver, vindo de `usePerfilResumo`). Dias sem
- * nenhum dado são filtrados fora pelo chamador — aqui só construímos os
- * números reais, sem inventar nada.
+ * incluso), combinando refeições reais do backend (`refeicoesPorDia`, de
+ * `useHistoricoRefeicoes`), hidratação e o peso registrado naquele dia (se
+ * houver, vindo de `usePerfilResumo`). Dias sem nenhum dado são filtrados
+ * fora pelo chamador — aqui só construímos os números reais, sem inventar
+ * nada.
  */
-export function obterHistoricoDiario(historicoPeso, quantidadeDias = 7) {
-  const todasRefeicoes = lerJSON(CHAVE_REFEICOES, []);
+export function obterHistoricoDiario(historicoPeso, refeicoesPorDia, quantidadeDias = 7) {
   const hidratacaoPorDia = lerJSON(CHAVE_HIDRATACAO, {});
   const pesoPorDia = new Map(historicoPeso.map((ponto) => [ponto.data, ponto.peso]));
 
@@ -44,7 +44,7 @@ export function obterHistoricoDiario(historicoPeso, quantidadeDias = 7) {
     dataDoDia.setDate(hoje.getDate() - indice);
     const iso = formatarDataISO(dataDoDia);
 
-    const refeicoesDesseDia = todasRefeicoes.filter((refeicao) => refeicao.data === iso);
+    const refeicoesDesseDia = refeicoesPorDia?.get(iso) || [];
     const totais = refeicoesDesseDia.reduce(
       (acumulado, refeicao) => {
         const macros = somarMacrosDeAlimentos(refeicao.alimentos);
@@ -63,10 +63,16 @@ export function obterHistoricoDiario(historicoPeso, quantidadeDias = 7) {
     return {
       iso,
       dataFormatada: formatarDataParaExibicao(dataDoDia),
-      calorias: totais.calorias,
-      proteina: totais.proteina,
-      carboidratos: totais.carboidratos,
-      gordura: totais.gordura,
+      // CORREÇÃO (P1.5 — "113.19999999999999" na tabela de Histórico): a
+      // soma de vários `alimento.proteina`/`carboidratos`/`gordura` em ponto
+      // flutuante quase sempre produz uma dízima binária residual. Cada
+      // outro lugar que soma macros (CartaoRefeicao, useRefeicoes) já
+      // arredonda o resultado antes de guardar/exibir — esta função era a
+      // exceção que vazava o valor cru direto pra tabela.
+      calorias: Math.round(totais.calorias),
+      proteina: Math.round(totais.proteina * 10) / 10,
+      carboidratos: Math.round(totais.carboidratos * 10) / 10,
+      gordura: Math.round(totais.gordura * 10) / 10,
       aguaLitros: Number(((copos * 250) / 1000).toFixed(1)),
       peso: pesoPorDia.has(iso) ? pesoPorDia.get(iso) : null,
       temDados: totais.calorias > 0 || copos > 0 || pesoPorDia.has(iso),

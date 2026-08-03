@@ -1,41 +1,28 @@
 import { formatarDataISO } from './calendario';
 import { somarMacrosDeAlimentos } from './macros';
 
-// Mesma chave usada por `useRefeicoes` — lida aqui em modo LEITURA para
-// derivar uma métrica de engajamento (streak) que nenhum hook existente
-// calculava.
-const CHAVE_REFEICOES = 'dieta-refeicoes';
-
-function lerTodasAsRefeicoesSalvas() {
-  if (typeof window === 'undefined') return [];
-
-  try {
-    const salvas = window.localStorage.getItem(CHAVE_REFEICOES);
-    return salvas ? JSON.parse(salvas) : [];
-  } catch {
-    return [];
-  }
-}
-
 /**
  * Sequência de dias consecutivos (streak) com pelo menos uma refeição
- * registrada, contando a partir de hoje para trás. Puramente derivado de
- * dados reais já salvos — nenhum contador fictício ou incrementado à parte.
+ * registrada, contando a partir de hoje para trás. Recebe os dados reais já
+ * buscados do backend (`refeicoesPorDia`, de `useHistoricoRefeicoes`) — ver
+ * o comentário nesse hook sobre a correção da causa raiz: esta função lia
+ * antes de uma chave de localStorage órfã que `useRefeicoes` não escreve
+ * mais, então o streak nunca refletia refeições registradas de verdade.
  */
-export function obterSequenciaDeDias() {
-  const todasRefeicoes = lerTodasAsRefeicoesSalvas();
-
-  const diasComRegistro = new Set(
-    todasRefeicoes
-      .filter((refeicao) => somarMacrosDeAlimentos(refeicao.alimentos).calorias > 0)
-      .map((refeicao) => refeicao.data)
-  );
-
+export function obterSequenciaDeDias(refeicoesPorDia) {
   let sequencia = 0;
   const cursor = new Date();
 
-  // Anda de trás para frente a partir de hoje enquanto houver registro no dia.
-  while (diasComRegistro.has(formatarDataISO(cursor))) {
+  while (true) {
+    const iso = formatarDataISO(cursor);
+    const refeicoesDoDia = refeicoesPorDia?.get(iso);
+    if (refeicoesDoDia === undefined) break; // fora do período buscado
+
+    const temRegistro = refeicoesDoDia.some(
+      (refeicao) => somarMacrosDeAlimentos(refeicao.alimentos).calorias > 0
+    );
+    if (!temRegistro) break;
+
     sequencia += 1;
     cursor.setDate(cursor.getDate() - 1);
   }

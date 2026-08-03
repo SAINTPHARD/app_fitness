@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -42,6 +43,22 @@ public class GlobalExceptionHandler {
 	}
 
 	/**
+	 * Captura JSON malformado ou payload ilegível e responde com 400 claro,
+	 * evitando que erros de parser virem 500 para o cliente.
+	 */
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<ErroRespostaDTO> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+		ErroRespostaDTO erroResposta = new ErroRespostaDTO(
+				LocalDateTime.now(),
+				HttpStatus.BAD_REQUEST.value(),
+				"JSON inválido",
+				List.of("Verifique o corpo da requisição e envie um JSON válido.")
+		);
+
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erroResposta);
+	}
+
+	/**
 	 * Captura buscas por ID que não encontraram nada (Refeição, Alimento, etc.)
 	 * e responde com 404 Not Found, em vez do 500 genérico que uma
 	 * RuntimeException não tratada geraria.
@@ -56,5 +73,37 @@ public class GlobalExceptionHandler {
 		);
 
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erroResposta);
+	}
+
+	/**
+	 * Captura tentativas de acessar/alterar um recurso que pertence a outro
+	 * usuário (ex: refeição de outra conta) e responde com 403 Forbidden.
+	 */
+	@ExceptionHandler(AcessoNegadoException.class)
+	public ResponseEntity<ErroRespostaDTO> handleAcessoNegado(AcessoNegadoException ex) {
+		ErroRespostaDTO erroResposta = new ErroRespostaDTO(
+				LocalDateTime.now(),
+				HttpStatus.FORBIDDEN.value(),
+				"Acesso negado",
+				List.of(ex.getMessage())
+		);
+
+		return ResponseEntity.status(HttpStatus.FORBIDDEN).body(erroResposta);
+	}
+
+	/**
+	 * Captura tentativas de adicionar um Alimento duplicado (mesmo nome e
+	 * quantidade) a uma Refeição e responde com 409 Conflict.
+	 */
+	@ExceptionHandler(AlimentoDuplicadoException.class)
+	public ResponseEntity<ErroRespostaDTO> handleAlimentoDuplicado(AlimentoDuplicadoException ex) {
+		ErroRespostaDTO erroResposta = new ErroRespostaDTO(
+				LocalDateTime.now(),
+				HttpStatus.CONFLICT.value(),
+				"Alimento duplicado",
+				List.of(ex.getMessage())
+		);
+
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(erroResposta);
 	}
 }

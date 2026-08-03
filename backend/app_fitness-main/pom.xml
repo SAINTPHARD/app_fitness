@@ -12,7 +12,7 @@
 		<relativePath /> </parent>
 
 	<groupId>com.appfitness</groupId>                       <artifactId>appfitness</artifactId>                     <version>0.0.1-SNAPSHOT</version>                       <name>appfitness</name>                                 <description>API de Gestao de Dieta e Treino Full Stack</description> <properties>
-		<java.version>25</java.version>
+		<java.version>21</java.version>
 	</properties>
 
 	<dependencies>
@@ -31,7 +31,15 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
-		
+
+		<!-- Necessário para o WebClient usado por GeminiVisionService (chamada
+		     HTTP à API do Google Gemini) — spring-boot-starter-web sozinho não
+		     traz o WebClient, só o RestTemplate/servlet stack. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>

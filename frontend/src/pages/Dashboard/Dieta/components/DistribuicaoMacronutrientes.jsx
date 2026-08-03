@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
 
 const CORES = { proteina: '#22c55e', carboidratos: '#eab308', gordura: '#a855f7' };
+const numeroSeguro = (valor) => Number(valor) || 0;
+const formatar1Casa = (valor) => numeroSeguro(valor).toFixed(1);
 
 /**
  * Distribuição relativa dos 3 macros consumidos hoje (% em gramas de cada
@@ -10,15 +12,16 @@ const CORES = { proteina: '#22c55e', carboidratos: '#eab308', gordura: '#a855f7'
  * entre si.
  */
 export default function DistribuicaoMacronutrientes({ totais }) {
-  const totalGramas = totais.proteina + totais.carboidratos + totais.gordura;
+  const totalGramas =
+    numeroSeguro(totais?.proteina) + numeroSeguro(totais?.carboidratos) + numeroSeguro(totais?.gordura);
 
   const dados = useMemo(() => {
     if (totalGramas <= 0) return [];
 
     return [
-      { chave: 'proteina', rotulo: 'Proteínas', gramas: totais.proteina },
-      { chave: 'carboidratos', rotulo: 'Carboidratos', gramas: totais.carboidratos },
-      { chave: 'gordura', rotulo: 'Gorduras', gramas: totais.gordura },
+      { chave: 'proteina', rotulo: 'Proteínas', gramas: numeroSeguro(totais?.proteina) },
+      { chave: 'carboidratos', rotulo: 'Carboidratos', gramas: numeroSeguro(totais?.carboidratos) },
+      { chave: 'gordura', rotulo: 'Gorduras', gramas: numeroSeguro(totais?.gordura) },
     ].filter((fatia) => fatia.gramas > 0);
   }, [totais, totalGramas]);
 
@@ -46,7 +49,7 @@ export default function DistribuicaoMacronutrientes({ totais }) {
                 <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: CORES[fatia.chave] }} />
                 <span className="font-semibold text-slate-700 dark:text-zinc-200">{fatia.rotulo}</span>
                 <span className="text-slate-400 dark:text-zinc-500">
-                  {fatia.gramas}g ({Math.round((fatia.gramas / totalGramas) * 100)}%)
+                  {formatar1Casa(fatia.gramas)}g ({Math.round((fatia.gramas / totalGramas) * 100)}%)
                 </span>
               </li>
             ))}

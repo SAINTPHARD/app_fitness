@@ -2,7 +2,6 @@ import CartaoMetrica from './components/CartaoMetrica';
 import CartaoMetaDoDia from './components/CartaoMetaDoDia';
 import CartaoProximoTreino from './components/CartaoProximoTreino';
 import CardTimelineDieta from './components/CardTimelineDieta';
-import CartaoSequencia from './components/CartaoSequencia';
 import GraficoSemanal from './components/GraficoSemanal';
 import GraficoEvolucaoPeso from './components/GraficoEvolucaoPeso';
 import EsqueletoHome from './components/EsqueletoHome';
@@ -10,10 +9,21 @@ import { usePerfilResumo } from '../../../hooks/usePerfilResumo';
 import { useResumoNutricionalHoje } from './hooks/useResumoNutricionalHoje';
 import estilos from './Home.module.css';
 
+const formatar1Casa = (valor) => (Number(valor) || 0).toFixed(1);
+const formatarCalorias = (valor) => String(Math.round(Number(valor) || 0));
+
 export default function HomePage() {
-  const { perfil, carregando, imc, classificacaoImc, historicoPeso, variacaoPeso } = usePerfilResumo();
-  const { metas, totaisDoDia, percentuais, metaDoDiaPercentual, agua, refeicoesDoDia } =
-    useResumoNutricionalHoje();
+  const { carregando, historicoPeso, variacaoPeso } = usePerfilResumo();
+  const {
+    metas,
+    totaisDoDia,
+    percentuais,
+    metaDoDiaPercentual,
+    agua,
+    refeicoesDoDia,
+    adicionarRefeicao,
+    removerRefeicao,
+  } = useResumoNutricionalHoje();
 
   // Blindagem de UI: enquanto o perfil ainda está sendo buscado no backend,
   // mostramos o esqueleto em vez de cartões zerados/piscando.
@@ -42,7 +52,7 @@ export default function HomePage() {
         <CartaoMetrica
           emoji="🔥"
           rotulo="Calorias"
-          valorPrincipal={totaisDoDia.calorias}
+          valorPrincipal={formatarCalorias(totaisDoDia.calorias)}
           valorSecundario={`/ ${metas.calorias || 0} kcal`}
           percentual={percentuais.calorias}
           alerta={percentuais.calorias >= 100}
@@ -50,21 +60,21 @@ export default function HomePage() {
         <CartaoMetrica
           emoji="💪"
           rotulo="Proteína"
-          valorPrincipal={`${totaisDoDia.proteina}g`}
+          valorPrincipal={`${formatar1Casa(totaisDoDia.proteina)}g`}
           valorSecundario={`/ ${metas.proteinas || 0}g`}
           percentual={percentuais.proteina}
         />
         <CartaoMetrica
           emoji="🍚"
           rotulo="Carboidratos"
-          valorPrincipal={`${totaisDoDia.carboidratos}g`}
+          valorPrincipal={`${formatar1Casa(totaisDoDia.carboidratos)}g`}
           valorSecundario={`/ ${metas.carboidratos || 0}g`}
           percentual={percentuais.carboidratos}
         />
         <CartaoMetrica
           emoji="🥑"
           rotulo="Gordura"
-          valorPrincipal={`${totaisDoDia.gordura}g`}
+          valorPrincipal={`${formatar1Casa(totaisDoDia.gordura)}g`}
           valorSecundario={`/ ${metas.gorduras || 0}g`}
           percentual={percentuais.gordura}
         />
@@ -75,16 +85,18 @@ export default function HomePage() {
           valorSecundario={`/ ${(agua.metaMl / 1000).toFixed(1)}L`}
           percentual={percentuais.agua}
         />
-        <CartaoMetrica emoji="⚖️" rotulo="Peso atual" valorPrincipal={perfil?.peso ? `${perfil.peso} kg` : '---'} />
-        <CartaoMetrica emoji="📏" rotulo="IMC" valorPrincipal={imc ?? '---'} valorSecundario={classificacaoImc} />
       </div>
 
-      {/* Widgets de ação rápida: o que vem a seguir e como o dia está indo. */}
+      {/* Widgets de ação rápida: o que vem a seguir e como o dia está indo.
+          Peso/IMC saíram daqui — ficam só na página de Perfil. */}
       <div className={estilos.gradeWidgets}>
         <CartaoProximoTreino />
-        <CardTimelineDieta refeicoes={refeicoesDoDia} />
+        <CardTimelineDieta
+          refeicoes={refeicoesDoDia}
+          aoAdicionarRefeicao={adicionarRefeicao}
+          aoRemoverRefeicao={removerRefeicao}
+        />
         <CartaoMetaDoDia percentual={metaDoDiaPercentual} />
-        <CartaoSequencia />
       </div>
 
       {/* Gráficos: tendência semanal de calorias e evolução do peso. */}

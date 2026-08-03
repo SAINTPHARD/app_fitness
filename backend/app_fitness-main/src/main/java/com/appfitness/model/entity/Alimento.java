@@ -2,7 +2,8 @@ package com.appfitness.model.entity;
 
 import java.math.BigDecimal;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Column;
@@ -23,6 +24,7 @@ import jakarta.validation.constraints.PositiveOrZero;
  */
 @Entity
 @Table(name = "alimentos")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Alimento {
 
 	@Id
@@ -64,10 +66,10 @@ public class Alimento {
 	/**
 	 * Relacionamento entre Alimento e Refeicao:
 	 * - Muitos alimentos podem pertencer a uma mesma refeição (ManyToOne).
-	 * - @JsonBackReference evita o loop infinito de serialização do Jackson,
-	 * já que Refeicao possui a lista de Alimentos anotada com @JsonManagedReference.
+	 * @JsonIgnore é usado para evitar referência circular durante a serialização JSON, 
+	 * pois Refeicao também referencia Alimento.
 	 */
-	@JsonBackReference
+	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name = "refeicao_id")
 	private Refeicao refeicao;

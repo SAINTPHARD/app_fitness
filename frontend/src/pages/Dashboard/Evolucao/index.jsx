@@ -12,6 +12,18 @@ const MAX_HISTORICO_MEDIDAS = 30;
 
 const MEDIDAS_VAZIAS = { cintura: '', braco: '', perna: '', gordura: '' };
 
+// Faixas fisiologicamente plausíveis para um adulto — impedem valores como
+// "cintura: 900cm" de entrar no histórico só porque o campo aceitava
+// qualquer número positivo. Limites generosos de propósito (cobrem casos
+// extremos reais) — o objetivo é barrar erro de digitação, não validar
+// clinicamente a medida.
+const LIMITES_MEDIDAS = {
+  cintura: { min: 30, max: 200, rotulo: 'Cintura' },
+  braco: { min: 10, max: 80, rotulo: 'Braço' },
+  perna: { min: 20, max: 100, rotulo: 'Perna' },
+  gordura: { min: 2, max: 70, rotulo: 'Gordura corporal' },
+};
+
 function lerJSON(chave, padrao) {
   if (typeof window === 'undefined') return padrao;
   try {
@@ -34,6 +46,7 @@ export default function EvolucaoPage() {
   const [fotos, setFotos] = useState(() => lerJSON(CHAVE_FOTOS, []));
   const [formMedidas, setFormMedidas] = useState(MEDIDAS_VAZIAS);
   const [erroFoto, setErroFoto] = useState('');
+  const [erroMedidas, setErroMedidas] = useState('');
 
   useEffect(() => {
     window.localStorage.setItem(CHAVE_MEDIDAS, JSON.stringify(historicoMedidas));
@@ -47,6 +60,8 @@ export default function EvolucaoPage() {
 
   const salvarMedidas = (evento) => {
     evento.preventDefault();
+    setErroMedidas('');
+
     const registro = {
       data: obterDataDeHojeISO(),
       cintura: formMedidas.cintura ? Number(formMedidas.cintura) : null,
@@ -56,6 +71,17 @@ export default function EvolucaoPage() {
     };
 
     if (!registro.cintura && !registro.braco && !registro.perna && !registro.gordura) return;
+
+    // CORREÇÃO (P2.10): nenhum campo tinha limite superior — só `min="0"` —
+    // então nada impedia registrar "cintura: 900cm" por erro de digitação e
+    // esse valor entrava no histórico/gráfico como se fosse real.
+    for (const [campo, { min, max, rotulo }] of Object.entries(LIMITES_MEDIDAS)) {
+      const valor = registro[campo];
+      if (valor != null && (valor < min || valor > max)) {
+        setErroMedidas(`${rotulo} deve estar entre ${min} e ${max}${campo === 'gordura' ? '%' : 'cm'}.`);
+        return;
+      }
+    }
 
     setHistoricoMedidas((anterior) => {
       const semHoje = anterior.filter((item) => item.data !== registro.data);
@@ -102,6 +128,9 @@ export default function EvolucaoPage() {
   };
 
   const removerFoto = (id) => {
+    // CORREÇÃO (P3.15): remoção era imediata e irreversível — um clique
+    // acidental no ícone de lixeira apagava a foto sem chance de desfazer.
+    if (!window.confirm('Remover esta foto de progresso? Essa ação não pode ser desfeita.')) return;
     setFotos((anterior) => anterior.filter((foto) => foto.id !== id));
   };
 
@@ -145,7 +174,8 @@ export default function EvolucaoPage() {
             <input
               type="number"
               step="0.1"
-              min="0"
+              min={LIMITES_MEDIDAS.cintura.min}
+              max={LIMITES_MEDIDAS.cintura.max}
               value={formMedidas.cintura}
               onChange={(e) => setFormMedidas((p) => ({ ...p, cintura: e.target.value }))}
             />
@@ -155,7 +185,8 @@ export default function EvolucaoPage() {
             <input
               type="number"
               step="0.1"
-              min="0"
+              min={LIMITES_MEDIDAS.braco.min}
+              max={LIMITES_MEDIDAS.braco.max}
               value={formMedidas.braco}
               onChange={(e) => setFormMedidas((p) => ({ ...p, braco: e.target.value }))}
             />
@@ -165,7 +196,8 @@ export default function EvolucaoPage() {
             <input
               type="number"
               step="0.1"
-              min="0"
+              min={LIMITES_MEDIDAS.perna.min}
+              max={LIMITES_MEDIDAS.perna.max}
               value={formMedidas.perna}
               onChange={(e) => setFormMedidas((p) => ({ ...p, perna: e.target.value }))}
             />
@@ -175,12 +207,13 @@ export default function EvolucaoPage() {
             <input
               type="number"
               step="0.1"
-              min="0"
-              max="100"
+              min={LIMITES_MEDIDAS.gordura.min}
+              max={LIMITES_MEDIDAS.gordura.max}
               value={formMedidas.gordura}
               onChange={(e) => setFormMedidas((p) => ({ ...p, gordura: e.target.value }))}
             />
           </label>
+          {erroMedidas && <p className={estilos.erro}>{erroMedidas}</p>}
           <button type="submit" className={estilos.botaoPrimario}>
             Registrar medidas
           </button>
