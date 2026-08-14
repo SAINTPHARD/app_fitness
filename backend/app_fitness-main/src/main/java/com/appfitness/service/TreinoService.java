@@ -1,105 +1,120 @@
 package com.appfitness.service;
 
 import java.util.List;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.appfitness.exception.AcessoNegadoException;
+import com.appfitness.exception.RecursoNaoEncontradoException;
 import com.appfitness.model.entity.Treino;
-import com.appfitness.model.entity.Usuario; // Importação da entidade Usuario
+import com.appfitness.model.entity.Usuario;
 import com.appfitness.repository.TreinoRepository;
-import com.appfitness.repository.UsuarioRepository; // Importação do repositório de Usuario
 
 /**
  * Classe de serviço para a entidade Treino.
  * Responsável por implementar a lógica de negócios relacionada aos treinos.
+ *
+ * CORREÇÃO (refatoração da tela de execução de treino): esta classe não
+ * escopava NENHUMA operação por usuário — qualquer pessoa autenticada podia
+ * ler/editar/apagar o treino de outra conta só adivinhando o ID (IDOR), e
+ * `listarTodos()` devolvia os treinos de todo mundo. Reescrita seguindo o
+ * mesmo padrão já usado em `RefeicaoService` (buscarPorIdEUsuario,
+ * listarPorUsuario, validarProprietario).
  */
-@Service // Diz que é um componente de service usado para encapsular a lógica de negócios.
+@Service
 public class TreinoService {
 
-	// 1. Injeção de dependência via Construtor (Boa prática exigida na PUC-Rio)
 	private final TreinoRepository treinoRepository;
-	private final UsuarioRepository usuarioRepository; // Injeção do repositório de usuário para buscar dados completos
-	
-	// Construtor atualizado recebendo ambos os repositórios
-	public TreinoService(TreinoRepository treinoRepository, UsuarioRepository usuarioRepository) {
+
+	public TreinoService(TreinoRepository treinoRepository) {
 		this.treinoRepository = treinoRepository;
-		this.usuarioRepository = usuarioRepository;
 	}
-	
-	// --- MÉTODOS CRUD (Create, Read, Update, Delete) ---
-	
+
 	/**
-	 * 1. CREATE: Salva um novo treino no sistema.
-	 * Padronizado para 'salvar' para casar com a chamada do seu Controller.
-	 * Ajustado para carregar os dados do Usuário antes de persistir no PostgreSQL.
+	 * 1. CREATE: Salva um novo treino para o usuário autenticado.
+	 * O dono nunca vem do corpo da requisição — sempre do token JWT (ver
+	 * `TreinoController.criarTreino`), o mesmo motivo documentado em
+	 * `RefeicaoController.criar`.
 	 */
-	public Treino salvar(Treino treino) {
-		vincularUsuario(treino);
+	@Transactional
+	public Treino salvar(Treino treino, Usuario usuarioAutenticado) {
+		treino.setUsuario(usuarioAutenticado);
+		if (treino.getExercicios() != null) {
+			treino.getExercicios().forEach(exercicio -> exercicio.setTreino(treino));
+		}
 		return treinoRepository.save(treino);
 	}
-	
-	private void vincularUsuario(Treino treino) {
-		// Verifica se o JSON enviado possui um vínculo de usuário com ID preenchido
-		if (treino.getUsuario() != null && treino.getUsuario().getId() != null) {
-			Long usuarioId = treino.getUsuario().getId();
-			
-			// Busca o atleta completo no banco de dados
-			Usuario usuarioCompleto = usuarioRepository.findById(usuarioId)
-					.orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + usuarioId));
-			
-			// Vincula o objeto preenchido ao treino antes do salvamento
-			treino.setUsuario(usuarioCompleto);
-		} else {
-			throw new RuntimeException("Não é possível salvar um treino sem um Usuário associado.");
-		}
-	}
-	
+
 	/**
-	 * 2. READ: Obtém um treino por ID.
-	 * Se não encontrar, lança uma exceção limpa.
+	 * 2. READ: Obtém um treino por ID, com os exercícios já carregados.
 	 */
+	@Transactional(readOnly = true)
 	public Treino buscarPorId(Long id) {
-		return treinoRepository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Treino não encontrado com ID: " + id));
+		return treinoRepository.findByIdComExercicios(id)
+				.orElseThrow(() -> new RecursoNaoEncontradoException("Treino não encontrado com ID: " + id));
 	}
-	
+
 	/**
-	 * 3. UPDATE: Atualiza um treino existente.
-	 * Padronizado o nome do método para condizer com o Controller.
+	 * 2b. READ (escopado): valida que o treino pertence ao usuário autenticado.
 	 */
-	public Treino atualizar(Long id, Treino treinoAtualizado) {
-		// Busca o treino existente usando o método acima (que já trata o erro)
-		Treino treino = buscarPorId(id); 
-		
-		// Atualiza os campos corretos mapeados na entidade Treino
+	@Transactional(readOnly = true)
+	public Treino buscarPorIdEUsuario(Long id, Usuario usuarioAutenticado) {
+		Treino treino = buscarPorId(id);
+		validarProprietario(treino, usuarioAutenticado);
+		return treino;
+	}
+
+	/**
+	 * Busca (ou devolve vazio) a ficha do usuário para um dia da semana —
+	 * usada pelo frontend para montar a tela por aba de dia sem precisar
+	 * saber o ID do Treino de antemão. Não cria nada aqui: a criação
+	 * "sob demanda" acontece só quando o usuário adiciona o primeiro
+	 * exercício ao dia (mesmo padrão de `Refeicao` com `persistida: false`
+	 * no frontend).
+	 */
+	@Transactional(readOnly = true)
+	public Treino buscarPorDia(Usuario usuarioAutenticado, String diaSemana) {
+		return treinoRepository.findByUsuarioAndDiaSemana(usuarioAutenticado, diaSemana).orElse(null);
+	}
+
+	/**
+	 * 3. UPDATE: Atualiza um treino existente do usuário autenticado.
+	 */
+	@Transactional
+	public Treino atualizar(Long id, Treino treinoAtualizado, Usuario usuarioAutenticado) {
+		Treino treino = buscarPorIdEUsuario(id, usuarioAutenticado);
+
 		treino.setNomeTreino(treinoAtualizado.getNomeTreino());
 		treino.setTipoTreino(treinoAtualizado.getTipoTreino());
 		treino.setDuracao(treinoAtualizado.getDuracao());
 		treino.setIntensidade(treinoAtualizado.getIntensidade());
 		treino.setFrequencia(treinoAtualizado.getFrequencia());
-		treino.setUsuario(treinoAtualizado.getUsuario());
-		vincularUsuario(treino);
-		
+
 		return treinoRepository.save(treino);
 	}
-	
+
 	/**
-	 * 4. DELETE: Exclui um treino por ID.
-	 * Padronizado o nome do método para 'deletar'.
+	 * 4. DELETE: Exclui um treino do usuário autenticado.
 	 */
-	public void deletar(Long id) {
-		// Verificar se existe antes de tentar deletar
-		/**
-		 * @Treino : é a entidade que representa o treino no sistema,
-		 * @treino : é a variável que armazena o treino encontrado no banco de dados usando o método buscarPorId(id).
-		 * @buscarPorId(id); : é o método que busca um treino pelo seu ID. Ele retorna o treino encontrado ou lança uma exceção se não for encontrado.
-		 */
-		Treino treino = buscarPorId(id);
+	@Transactional
+	public void deletar(Long id, Usuario usuarioAutenticado) {
+		Treino treino = buscarPorIdEUsuario(id, usuarioAutenticado);
 		treinoRepository.delete(treino);
 	}
-	
+
 	/**
-	 * 5. READ ALL: Listar todos os treinos cadastrados no sistema.
+	 * 5. READ ALL (escopado): lista as fichas do usuário autenticado.
 	 */
-	public List<Treino> listarTodos() {
-		return treinoRepository.findAll();
+	@Transactional(readOnly = true)
+	public List<Treino> listarPorUsuario(Usuario usuarioAutenticado) {
+		return treinoRepository.findByUsuarioComExercicios(usuarioAutenticado);
+	}
+
+	private void validarProprietario(Treino treino, Usuario usuarioAutenticado) {
+		Long idDono = treino.getUsuario() != null ? treino.getUsuario().getId() : null;
+		if (idDono == null || !idDono.equals(usuarioAutenticado.getId())) {
+			throw new AcessoNegadoException("Este treino não pertence ao usuário autenticado.");
+		}
 	}
 }

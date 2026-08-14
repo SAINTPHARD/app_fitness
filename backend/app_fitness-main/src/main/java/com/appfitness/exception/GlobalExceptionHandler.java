@@ -106,4 +106,70 @@ public class GlobalExceptionHandler {
 
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(erroResposta);
 	}
+
+	/**
+	 * Captura tentativas de adicionar um Exercício duplicado (mesmo nome) a
+	 * uma ficha de Treino e responde com 409 Conflict.
+	 */
+	@ExceptionHandler(ExercicioDuplicadoException.class)
+	public ResponseEntity<ErroRespostaDTO> handleExercicioDuplicado(ExercicioDuplicadoException ex) {
+		ErroRespostaDTO erroResposta = new ErroRespostaDTO(
+				LocalDateTime.now(),
+				HttpStatus.CONFLICT.value(),
+				"Exercício duplicado",
+				List.of(ex.getMessage())
+		);
+
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(erroResposta);
+	}
+
+	/**
+	 * Captura violações de regra de negócio de treino/série que não vêm de
+	 * `@Valid` (ex: concluir série sem repetições). Responde com 400.
+	 */
+	@ExceptionHandler(DadosInvalidosException.class)
+	public ResponseEntity<ErroRespostaDTO> handleDadosInvalidos(DadosInvalidosException ex) {
+		ErroRespostaDTO erroResposta = new ErroRespostaDTO(
+				LocalDateTime.now(),
+				HttpStatus.BAD_REQUEST.value(),
+				"Dados inválidos",
+				List.of(ex.getMessage())
+		);
+
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erroResposta);
+	}
+
+	/**
+	 * Captura ações destrutivas que exigem confirmação explícita (ex:
+	 * excluir uma Série já concluída). Responde com 409.
+	 */
+	@ExceptionHandler(ConfirmacaoNecessariaException.class)
+	public ResponseEntity<ErroRespostaDTO> handleConfirmacaoNecessaria(ConfirmacaoNecessariaException ex) {
+		ErroRespostaDTO erroResposta = new ErroRespostaDTO(
+				LocalDateTime.now(),
+				HttpStatus.CONFLICT.value(),
+				"Confirmação necessária",
+				List.of(ex.getMessage())
+		);
+
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(erroResposta);
+	}
+
+	/**
+	 * Captura ausência/invalidez de autenticação (token JWT ausente ou
+	 * `Authentication.getPrincipal()` que não é um `Usuario`) e responde com
+	 * 401, em vez do 500 genérico que uma `RuntimeException` não tratada
+	 * geraria.
+	 */
+	@ExceptionHandler(UsuarioNaoAutenticadoException.class)
+	public ResponseEntity<ErroRespostaDTO> handleUsuarioNaoAutenticado(UsuarioNaoAutenticadoException ex) {
+		ErroRespostaDTO erroResposta = new ErroRespostaDTO(
+				LocalDateTime.now(),
+				HttpStatus.UNAUTHORIZED.value(),
+				"Usuário não autenticado",
+				List.of(ex.getMessage())
+		);
+
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(erroResposta);
+	}
 }
