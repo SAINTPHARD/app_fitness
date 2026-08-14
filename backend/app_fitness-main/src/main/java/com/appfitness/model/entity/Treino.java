@@ -1,14 +1,19 @@
 package com.appfitness.model.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 /**
@@ -29,7 +34,15 @@ public class Treino {
 	private Integer duracao;      // Em minutos
 	private String intensidade;   // Ex: "Alta"
 	private String frequencia;    // Ex: "3x por semana"
-	
+
+	/**
+	 * Dia da semana ao qual esta ficha pertence ("segunda".."domingo") — o
+	 * frontend organiza o treino em abas por dia (ver `diasSemana.js`); cada
+	 * combinação (usuario, diaSemana) tem no máximo uma ficha "ativa"
+	 * (ver `TreinoService.obterOuCriarPorDia`).
+	 */
+	private String diaSemana;
+
 	/**
 	 * Relacionamento entre Treino e Usuario:
 	 * - Um usuário pode ter várias rotinas de treino associadas a ele  (ManyToOne).
@@ -41,7 +54,15 @@ public class Treino {
 	@JoinColumn(name = "usuario_id")
 	private Usuario usuario;      // Chave estrangeira que liga ao Atleta
 
-	
+	/**
+	 * Exercícios desta ficha. Mesmo padrão de `Refeicao.alimentos`: cascade
+	 * total + orphanRemoval, para o frontend poder ler `treino.exercicios`
+	 * junto com o treino numa única resposta.
+	 */
+	@OneToMany(mappedBy = "treino", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Exercicio> exercicios = new ArrayList<>();
+
+
 	// Construtor vazio (Obrigatório para JPA/Hibernate)
 	public Treino() {
 	}
@@ -54,6 +75,22 @@ public class Treino {
 		this.intensidade = intensidade;
 		this.frequencia = frequencia;
 		this.usuario = usuario;
+	}
+
+	public String getDiaSemana() {
+		return diaSemana;
+	}
+
+	public void setDiaSemana(String diaSemana) {
+		this.diaSemana = diaSemana;
+	}
+
+	public List<Exercicio> getExercicios() {
+		return exercicios;
+	}
+
+	public void setExercicios(List<Exercicio> exercicios) {
+		this.exercicios = exercicios;
 	}
 
 	// --- GETTERS E SETTERS ---
