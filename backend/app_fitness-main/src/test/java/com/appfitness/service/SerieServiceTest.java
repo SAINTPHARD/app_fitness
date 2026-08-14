@@ -6,8 +6,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -41,13 +39,16 @@ class SerieServiceTest {
 	@Mock
 	private ExercicioService exercicioService;
 
+	@Mock
+	private SerieInsercaoService serieInsercaoService;
+
 	private SerieService serieService;
 
 	private Usuario usuario;
 
 	@BeforeEach
 	void setUp() {
-		serieService = new SerieService(serieRepository, sessaoTreinoService, exercicioService);
+		serieService = new SerieService(serieRepository, sessaoTreinoService, exercicioService, serieInsercaoService);
 		usuario = new Usuario();
 		usuario.setId(10L);
 	}
@@ -86,7 +87,7 @@ class SerieServiceTest {
 		assertThatThrownBy(() -> serieService.registrarSerie(100L, dto, usuario))
 				.isInstanceOf(DadosInvalidosException.class);
 
-		verify(serieRepository, never()).save(any(Serie.class));
+		verifyNoInteractions(serieInsercaoService);
 	}
 
 	@Test
@@ -100,7 +101,7 @@ class SerieServiceTest {
 		when(sessaoTreinoService.buscarPorIdEUsuario(100L, usuario)).thenReturn(sessao);
 		when(exercicioService.buscarPorIdEUsuario(exercicio.getId(), usuario)).thenReturn(exercicio);
 		when(serieRepository.countBySessao_IdAndExercicio_Id(100L, exercicio.getId())).thenReturn(0L);
-		when(serieRepository.save(any(Serie.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(serieInsercaoService.inserir(any(Serie.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
 		Serie resultado = serieService.registrarSerie(100L, dto, usuario);
 
@@ -121,8 +122,7 @@ class SerieServiceTest {
 		Serie resultado = serieService.registrarSerie(50L, dto, usuario);
 
 		assertThat(resultado).isSameAs(existente);
-		verifyNoInteractions(sessaoTreinoService, exercicioService);
-		verify(serieRepository, never()).save(any(Serie.class));
+		verifyNoInteractions(sessaoTreinoService, exercicioService, serieInsercaoService);
 	}
 
 	@Test
@@ -142,7 +142,8 @@ class SerieServiceTest {
 		when(sessaoTreinoService.buscarPorIdEUsuario(100L, usuario)).thenReturn(sessao);
 		when(exercicioService.buscarPorIdEUsuario(exercicio.getId(), usuario)).thenReturn(exercicio);
 		when(serieRepository.countBySessao_IdAndExercicio_Id(100L, exercicio.getId())).thenReturn(0L);
-		when(serieRepository.save(any(Serie.class))).thenThrow(new DataIntegrityViolationException("chave duplicada"));
+		when(serieInsercaoService.inserir(any(Serie.class)))
+				.thenThrow(new DataIntegrityViolationException("chave duplicada"));
 
 		Serie resultado = serieService.registrarSerie(100L, dto, usuario);
 
@@ -161,7 +162,8 @@ class SerieServiceTest {
 		when(sessaoTreinoService.buscarPorIdEUsuario(100L, usuario)).thenReturn(sessao);
 		when(exercicioService.buscarPorIdEUsuario(exercicio.getId(), usuario)).thenReturn(exercicio);
 		when(serieRepository.countBySessao_IdAndExercicio_Id(100L, exercicio.getId())).thenReturn(0L);
-		when(serieRepository.save(any(Serie.class))).thenThrow(new DataIntegrityViolationException("erro real"));
+		when(serieInsercaoService.inserir(any(Serie.class)))
+				.thenThrow(new DataIntegrityViolationException("erro real"));
 
 		assertThatThrownBy(() -> serieService.registrarSerie(100L, dto, usuario))
 				.isInstanceOf(DataIntegrityViolationException.class);

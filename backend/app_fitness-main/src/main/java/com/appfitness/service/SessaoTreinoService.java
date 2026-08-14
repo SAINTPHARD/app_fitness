@@ -40,10 +40,13 @@ public class SessaoTreinoService {
 
 	private final SessaoTreinoRepository sessaoTreinoRepository;
 	private final SerieRepository serieRepository;
+	private final SessaoTreinoInsercaoService sessaoTreinoInsercaoService;
 
-	public SessaoTreinoService(SessaoTreinoRepository sessaoTreinoRepository, SerieRepository serieRepository) {
+	public SessaoTreinoService(SessaoTreinoRepository sessaoTreinoRepository, SerieRepository serieRepository,
+			SessaoTreinoInsercaoService sessaoTreinoInsercaoService) {
 		this.sessaoTreinoRepository = sessaoTreinoRepository;
 		this.serieRepository = serieRepository;
+		this.sessaoTreinoInsercaoService = sessaoTreinoInsercaoService;
 	}
 
 	@Transactional
@@ -54,7 +57,12 @@ public class SessaoTreinoService {
 		}
 
 		try {
-			return sessaoTreinoRepository.save(new SessaoTreino(treino, usuarioAutenticado, data));
+			// Delegado a um bean separado com `REQUIRES_NEW` — mesmo motivo
+			// documentado em `SerieInsercaoService`: o INSERT (via
+			// `saveAndFlush`) roda numa transação física própria, então uma
+			// violação da constraint única aqui não deixa ESTA transação
+			// (que fez a consulta acima) marcada como rollback-only.
+			return sessaoTreinoInsercaoService.inserir(new SessaoTreino(treino, usuarioAutenticado, data));
 		} catch (DataIntegrityViolationException ex) {
 			// Corrida entre duas requisições simultâneas para o mesmo
 			// (treino, data): a constraint única `uk_sessao_treino_data`

@@ -3,9 +3,9 @@ package com.appfitness.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -33,6 +33,9 @@ class SessaoTreinoServiceTest {
 	@Mock
 	private SerieRepository serieRepository;
 
+	@Mock
+	private SessaoTreinoInsercaoService sessaoTreinoInsercaoService;
+
 	private SessaoTreinoService sessaoTreinoService;
 
 	private Usuario usuario;
@@ -41,7 +44,7 @@ class SessaoTreinoServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		sessaoTreinoService = new SessaoTreinoService(sessaoTreinoRepository, serieRepository);
+		sessaoTreinoService = new SessaoTreinoService(sessaoTreinoRepository, serieRepository, sessaoTreinoInsercaoService);
 		usuario = new Usuario();
 		usuario.setId(10L);
 		treino = new Treino();
@@ -59,7 +62,7 @@ class SessaoTreinoServiceTest {
 		SessaoTreino resultado = sessaoTreinoService.obterOuCriarSessaoDoDia(treino, usuario, data);
 
 		assertThat(resultado).isSameAs(existente);
-		verify(sessaoTreinoRepository, never()).save(any(SessaoTreino.class));
+		verifyNoInteractions(sessaoTreinoInsercaoService);
 	}
 
 	@Test
@@ -70,7 +73,7 @@ class SessaoTreinoServiceTest {
 		when(sessaoTreinoRepository.findByTreinoAndData(treino, data))
 				.thenReturn(Optional.empty())
 				.thenReturn(Optional.of(criadaPelaOutraRequisicao));
-		when(sessaoTreinoRepository.save(any(SessaoTreino.class)))
+		when(sessaoTreinoInsercaoService.inserir(any(SessaoTreino.class)))
 				.thenThrow(new DataIntegrityViolationException("uk_sessao_treino_data"));
 
 		SessaoTreino resultado = sessaoTreinoService.obterOuCriarSessaoDoDia(treino, usuario, data);
@@ -82,7 +85,7 @@ class SessaoTreinoServiceTest {
 	@Test
 	void deveRelancarExcecaoQuandoSaveFalhaESessaoNaoEncontradaNemNaSegundaConsulta() {
 		when(sessaoTreinoRepository.findByTreinoAndData(treino, data)).thenReturn(Optional.empty());
-		when(sessaoTreinoRepository.save(any(SessaoTreino.class)))
+		when(sessaoTreinoInsercaoService.inserir(any(SessaoTreino.class)))
 				.thenThrow(new DataIntegrityViolationException("erro real"));
 
 		assertThatThrownBy(() -> sessaoTreinoService.obterOuCriarSessaoDoDia(treino, usuario, data))

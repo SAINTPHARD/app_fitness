@@ -39,12 +39,14 @@ public class SerieService {
 	private final SerieRepository serieRepository;
 	private final SessaoTreinoService sessaoTreinoService;
 	private final ExercicioService exercicioService;
+	private final SerieInsercaoService serieInsercaoService;
 
 	public SerieService(SerieRepository serieRepository, SessaoTreinoService sessaoTreinoService,
-			ExercicioService exercicioService) {
+			ExercicioService exercicioService, SerieInsercaoService serieInsercaoService) {
 		this.serieRepository = serieRepository;
 		this.sessaoTreinoService = sessaoTreinoService;
 		this.exercicioService = exercicioService;
+		this.serieInsercaoService = serieInsercaoService;
 	}
 
 	/**
@@ -94,7 +96,13 @@ public class SerieService {
 		}
 
 		try {
-			return serieRepository.save(serie);
+			// Delegado a um bean separado com `REQUIRES_NEW`: o INSERT (e o
+			// flush que o dispara de fato no banco) acontece numa transação
+			// física própria. Se a constraint única de `idempotencyKey` for
+			// violada, só ESSA transação é desfeita — esta aqui (que já leu
+			// sessão/exercício) continua saudável, então a consulta de
+			// recuperação abaixo não roda numa transação rollback-only.
+			return serieInsercaoService.inserir(serie);
 		} catch (DataIntegrityViolationException ex) {
 			// Corrida entre duas requisições com a mesma idempotencyKey: a
 			// constraint única do banco rejeitou o segundo INSERT depois que
