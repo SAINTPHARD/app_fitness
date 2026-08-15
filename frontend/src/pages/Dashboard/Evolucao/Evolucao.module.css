@@ -153,14 +153,79 @@
 
 .listaHistorico li {
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
   font-size: 0.85rem;
   color: var(--text-muted);
 }
 
+.listaHistorico li > span:first-child {
+  display: grid;
+  gap: 0.15rem;
+}
+
 .listaHistorico strong {
   color: var(--text-primary);
+}
+
+.linhaHistorico {
+  min-height: 2.25rem;
+}
+
+.acoesHistorico,
+.confirmacaoInline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.botaoIcone,
+.confirmacaoInline button,
+.formEdicaoHistorico button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.8rem;
+  min-height: 1.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--bg-muted);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.botaoIcone:hover,
+.confirmacaoInline button:hover,
+.formEdicaoHistorico button:hover {
+  color: var(--text-primary);
+  border-color: var(--brand);
+}
+
+.confirmacaoInline {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.formEdicaoHistorico {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.formEdicaoHistorico input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.45rem 0.55rem;
+  border-radius: 0.55rem;
+  border: 1px solid var(--border);
+  background: var(--bg-muted);
+  color: var(--text-primary);
+  font-size: 0.8rem;
 }
 
 .fotosCabecalho {
@@ -179,6 +244,12 @@
   margin: 0 0 0.75rem;
   color: var(--danger);
   font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.estadoTexto {
+  margin: 0;
+  color: var(--text-muted);
   font-weight: 600;
 }
 
