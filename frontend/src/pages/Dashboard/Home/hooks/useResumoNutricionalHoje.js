@@ -3,7 +3,7 @@ import { useMetas } from '../../Dieta/hooks/useMetas';
 import { useRefeicoes } from '../../Dieta/hooks/useRefeicoes';
 import { useHidratacao } from '../../Dieta/hooks/useHidratacao';
 import { obterDataDeHojeISO } from '../../Dieta/utils/calendario';
-import { calcularPercentual, calcularMetaDoDiaPercentual } from '../../Dieta/utils/progresso';
+import { calcularPercentual, calcularPercentualReal, calcularMetaDoDiaPercentual } from '../../Dieta/utils/progresso';
 import { obterProximaRefeicao } from '../../Dieta/utils/proximaRefeicao';
 
 /**
@@ -16,7 +16,7 @@ export function useResumoNutricionalHoje() {
 
   const { metas } = useMetas();
   const { refeicoesDoDia, totaisDoDia, adicionarRefeicao, removerRefeicao } = useRefeicoes(hojeISO);
-  const { copos, metaCopos, totalMl, metaMl } = useHidratacao(hojeISO);
+  const { registros, totalMl, metaMl } = useHidratacao(hojeISO);
 
   const percentuais = useMemo(
     () => ({
@@ -24,7 +24,7 @@ export function useResumoNutricionalHoje() {
       proteina: calcularPercentual(totaisDoDia.proteina, metas.proteinas),
       carboidratos: calcularPercentual(totaisDoDia.carboidratos, metas.carboidratos),
       gordura: calcularPercentual(totaisDoDia.gordura, metas.gorduras),
-      agua: calcularPercentual(totalMl, metaMl),
+      agua: calcularPercentualReal(totalMl, metaMl),
     }),
     [totaisDoDia, metas, totalMl, metaMl]
   );
@@ -40,7 +40,7 @@ export function useResumoNutricionalHoje() {
     totaisDoDia,
     percentuais,
     metaDoDiaPercentual,
-    agua: { copos, metaCopos, totalMl, metaMl },
+    agua: { registros, totalMl, metaMl },
     proximaRefeicao,
     refeicoesDoDia,
     adicionarRefeicao,

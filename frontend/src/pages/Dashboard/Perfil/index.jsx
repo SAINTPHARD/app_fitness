@@ -18,14 +18,24 @@ function rotuloObjetivo(valor) {
   return OBJETIVOS.find((item) => item.valor === valor)?.label || valor || '---';
 }
 
-function registrarPesoNoHistorico(peso) {
+async function registrarPesoNoHistorico(peso) {
   const pesoNumero = Number(peso);
-  if (!pesoNumero || pesoNumero <= 0 || typeof window === 'undefined') return;
+  if (!pesoNumero || pesoNumero <= 0) return;
+
+  const hojeISO = obterDataDeHojeISO();
+
+  try {
+    await fitnessApi.criarPeso({ data: hojeISO, peso: pesoNumero });
+    return;
+  } catch (erroBackend) {
+    console.error('Falha ao registrar peso no backend:', erroBackend);
+  }
+
+  if (typeof window === 'undefined') return;
 
   try {
     const salvo = window.localStorage.getItem(CHAVE_HISTORICO_PESO);
     const historico = salvo ? JSON.parse(salvo) : [];
-    const hojeISO = obterDataDeHojeISO();
     const atualizado = [...historico.filter((ponto) => ponto.data !== hojeISO), { data: hojeISO, peso: pesoNumero }].slice(
       -MAXIMO_PONTOS_HISTORICO
     );
@@ -122,7 +132,7 @@ export default function PerfilPage() {
       const resposta = await fitnessApi.updateProfile(payload);
       const atualizado = resposta.data || payload;
       setProfile(atualizado);
-      registrarPesoNoHistorico(atualizado.peso);
+      await registrarPesoNoHistorico(atualizado.peso);
       setMensagem('Perfil atualizado com sucesso.');
     } catch (err) {
       setErro(err?.response?.data?.message || err?.message || 'Falha ao salvar o perfil.');
@@ -141,7 +151,7 @@ export default function PerfilPage() {
     const atualizado = resposta.data || payload;
     setProfile(atualizado);
     setFormulario((prev) => ({ ...prev, peso: atualizado.peso ?? prev.peso }));
-    registrarPesoNoHistorico(atualizado.peso);
+    await registrarPesoNoHistorico(atualizado.peso);
   };
 
   if (loading) {

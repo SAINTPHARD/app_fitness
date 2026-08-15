@@ -41,9 +41,49 @@
 }
 
 .vazio {
-  margin: 0;
+  display: grid;
+  gap: 0.75rem;
   color: var(--text-muted);
   font-size: 0.9rem;
   padding: 2rem 0;
   text-align: center;
+}
+
+.vazio p {
+  margin: 0;
+}
+
+.formPesoRapido {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+}
+
+.formPesoRapido input {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--bg-muted);
+  color: var(--text-primary);
+  padding: 0.65rem 0.75rem;
+}
+
+.formPesoRapido button {
+  border: none;
+  border-radius: 0.75rem;
+  background: var(--brand);
+  color: var(--brand-ink);
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0.65rem 0.75rem;
+}
+
+.formPesoRapido button:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.erro {
+  color: var(--danger);
+  font-weight: 700;
 }

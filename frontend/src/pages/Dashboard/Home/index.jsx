@@ -13,7 +13,7 @@ const formatar1Casa = (valor) => (Number(valor) || 0).toFixed(1);
 const formatarCalorias = (valor) => String(Math.round(Number(valor) || 0));
 
 export default function HomePage() {
-  const { carregando, historicoPeso, variacaoPeso } = usePerfilResumo();
+  const { carregando, historicoPeso, variacaoPeso, registrarPeso } = usePerfilResumo();
   const {
     metas,
     totaisDoDia,
@@ -102,7 +102,7 @@ export default function HomePage() {
       {/* Gráficos: tendência semanal de calorias e evolução do peso. */}
       <div className={estilos.gradeGraficos}>
         <GraficoSemanal />
-        <GraficoEvolucaoPeso historicoPeso={historicoPeso} variacaoPeso={variacaoPeso} />
+        <GraficoEvolucaoPeso historicoPeso={historicoPeso} variacaoPeso={variacaoPeso} aoRegistrarPeso={registrarPeso} />
       </div>
     </section>
   );

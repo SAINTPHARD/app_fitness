@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { fitnessApi } from '../services/fitnessApi';
+import { useNutrition } from '../context/NutritionContext';
 import { formatarDataISO } from '../pages/Dashboard/Dieta/utils/calendario';
 
 /**
@@ -24,6 +25,7 @@ import { formatarDataISO } from '../pages/Dashboard/Dieta/utils/calendario';
  * próprio fallback para `[]`, e só reportamos `erro` se TODAS falharem.
  */
 export function useHistoricoRefeicoes(dias) {
+  const { revisaoRefeicoes } = useNutrition();
   const [refeicoesPorDia, setRefeicoesPorDia] = useState(new Map());
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
@@ -65,7 +67,7 @@ export function useHistoricoRefeicoes(dias) {
 
   useEffect(() => {
     carregar();
-  }, [carregar]);
+  }, [carregar, revisaoRefeicoes]);
 
   return { refeicoesPorDia, carregando, erro, recarregar: carregar };
 }
