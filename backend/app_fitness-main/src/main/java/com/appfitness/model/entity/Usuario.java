@@ -50,6 +50,11 @@ public class Usuario implements UserDetails {
 	private Double peso;
 	private Double altura;
 	private Character sexo;
+	private Integer metaCalorias;
+	private Integer metaProteinas;
+	private Integer metaCarboidratos;
+	private Integer metaGorduras;
+	private Integer metaAguaMl;
 
 	@Enumerated(EnumType.STRING)
 	private Objetivo objetivo;
@@ -188,6 +193,46 @@ public class Usuario implements UserDetails {
 
 	public void setSexo(Character sexo) {
 		this.sexo = sexo;
+	}
+
+	public Integer getMetaCalorias() {
+		return metaCalorias;
+	}
+
+	public void setMetaCalorias(Integer metaCalorias) {
+		this.metaCalorias = metaCalorias;
+	}
+
+	public Integer getMetaProteinas() {
+		return metaProteinas;
+	}
+
+	public void setMetaProteinas(Integer metaProteinas) {
+		this.metaProteinas = metaProteinas;
+	}
+
+	public Integer getMetaCarboidratos() {
+		return metaCarboidratos;
+	}
+
+	public void setMetaCarboidratos(Integer metaCarboidratos) {
+		this.metaCarboidratos = metaCarboidratos;
+	}
+
+	public Integer getMetaGorduras() {
+		return metaGorduras;
+	}
+
+	public void setMetaGorduras(Integer metaGorduras) {
+		this.metaGorduras = metaGorduras;
+	}
+
+	public Integer getMetaAguaMl() {
+		return metaAguaMl;
+	}
+
+	public void setMetaAguaMl(Integer metaAguaMl) {
+		this.metaAguaMl = metaAguaMl;
 	}
 
 	public Objetivo getObjetivo() {
