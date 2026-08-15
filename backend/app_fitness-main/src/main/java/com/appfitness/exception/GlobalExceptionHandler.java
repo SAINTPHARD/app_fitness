@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -102,6 +103,46 @@ public class GlobalExceptionHandler {
 				HttpStatus.CONFLICT.value(),
 				"Alimento duplicado",
 				List.of(ex.getMessage())
+		);
+
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(erroResposta);
+	}
+
+	/**
+	 * Captura tentativas de criar uma Refeição duplicada (mesmo nome, mesmo
+	 * usuário, mesma data) e responde com 409 Conflict. Também é o handler
+	 * acionado se a constraint única do banco (`uk_refeicao_usuario_data_nome`)
+	 * for violada numa corrida entre duas requisições simultâneas — ver
+	 * `RefeicaoService.salvar`.
+	 */
+	@ExceptionHandler(RefeicaoDuplicadaException.class)
+	public ResponseEntity<ErroRespostaDTO> handleRefeicaoDuplicada(RefeicaoDuplicadaException ex) {
+		ErroRespostaDTO erroResposta = new ErroRespostaDTO(
+				LocalDateTime.now(),
+				HttpStatus.CONFLICT.value(),
+				"Refeição duplicada",
+				List.of(ex.getMessage())
+		);
+
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(erroResposta);
+	}
+
+	/**
+	 * Rede de segurança para a constraint única do banco: se, por uma corrida
+	 * entre duas requisições simultâneas, os dois pré-checks em
+	 * `RefeicaoService.salvar` passarem antes de qualquer um dos dois salvar,
+	 * o banco ainda rejeita o segundo INSERT — isso chega aqui como
+	 * `DataIntegrityViolationException` em vez de `RefeicaoDuplicadaException`.
+	 * Sem esse handler, o cliente veria um 500 genérico para o mesmo cenário
+	 * de duplicidade que o pré-check já trata como 409.
+	 */
+	@ExceptionHandler(DataIntegrityViolationException.class)
+	public ResponseEntity<ErroRespostaDTO> handleIntegridadeDados(DataIntegrityViolationException ex) {
+		ErroRespostaDTO erroResposta = new ErroRespostaDTO(
+				LocalDateTime.now(),
+				HttpStatus.CONFLICT.value(),
+				"Conflito de dados",
+				List.of("Este registro conflita com um já existente.")
 		);
 
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(erroResposta);

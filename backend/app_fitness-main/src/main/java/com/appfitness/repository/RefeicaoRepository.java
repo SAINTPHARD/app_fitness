@@ -44,4 +44,18 @@ public interface RefeicaoRepository extends JpaRepository<Refeicao, Long> {
 	// uma tentativa de lazy-load de `alimentos` já fora da sessão do Hibernate.
 	@Query("SELECT DISTINCT r FROM Refeicao r LEFT JOIN FETCH r.alimentos WHERE r.usuario = :usuario")
 	List<Refeicao> findByUsuarioComAlimentos(@Param("usuario") Usuario usuario);
+
+	// Pré-check de duplicidade (auditoria QA #2): nome comparado sem distinguir
+	// maiúsculas/minúsculas nem espaços nas pontas — "Café da manhã" e "café
+	// da manhã " devem contar como a mesma refeição para este usuário/data.
+	@Query("""
+			SELECT COUNT(r) > 0 FROM Refeicao r
+			WHERE r.usuario.id = :usuarioId
+			AND r.dataRefeicao = :dataRefeicao
+			AND LOWER(TRIM(r.nomeRefeicao)) = LOWER(TRIM(:nome))
+			""")
+	boolean existeComMesmoNomeEData(
+			@Param("usuarioId") Long usuarioId,
+			@Param("dataRefeicao") LocalDate dataRefeicao,
+			@Param("nome") String nome);
 }

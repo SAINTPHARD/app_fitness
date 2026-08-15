@@ -21,6 +21,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -29,7 +30,26 @@ import jakarta.validation.constraints.NotNull;
  * Cada Refeição pertence a um único Usuário e possui vários Alimentos.
  */
 @Entity
-@Table(name = "refeicoes")
+@Table(
+		name = "refeicoes",
+		// CORREÇÃO (auditoria QA #2): duas refeições com o mesmo nome, para o
+		// mesmo usuário, na mesma data, causavam divergência de totais entre
+		// telas (cada uma somava um subconjunto diferente de alimentos). Esta
+		// constraint é a última linha de defesa contra a corrida entre duas
+		// requisições simultâneas — o pré-check em `RefeicaoService.salvar`
+		// cobre o caso comum (usuário clicou "salvar" duas vezes), mas só o
+		// banco garante atomicidade de verdade.
+		//
+		// IMPORTANTE: com `ddl-auto=update`, o Hibernate tenta criar esta
+		// constraint no próximo start — se já existirem duplicatas na base
+		// (o cenário relatado na auditoria), o ALTER TABLE falha. Rode
+		// `db/scripts/higienizar_refeicoes_duplicadas.sql` ANTES de subir a
+		// aplicação com esta mudança.
+		uniqueConstraints = @UniqueConstraint(
+				name = "uk_refeicao_usuario_data_nome",
+				columnNames = {"usuario_id", "data_refeicao", "nome_refeicao"}
+		)
+)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Refeicao {
 

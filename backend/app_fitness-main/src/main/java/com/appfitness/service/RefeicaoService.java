@@ -1,8 +1,12 @@
 package com.appfitness.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -14,6 +18,7 @@ import com.appfitness.event.ItensRefeicaoAtualizadosEvent;
 import com.appfitness.exception.AcessoNegadoException;
 import com.appfitness.exception.AlimentoDuplicadoException;
 import com.appfitness.exception.RecursoNaoEncontradoException;
+import com.appfitness.exception.RefeicaoDuplicadaException;
 import com.appfitness.model.entity.Alimento;
 import com.appfitness.model.entity.Refeicao;
 import com.appfitness.model.entity.Usuario;
@@ -56,6 +61,23 @@ public class RefeicaoService {
     @Transactional
     public Refeicao salvar(Refeicao refeicao) {
         vincularUsuario(refeicao);
+
+        // CORREÇÃO (auditoria QA #2): antes não havia nenhuma validação
+        // contra duas refeições com o mesmo nome no mesmo dia para o mesmo
+        // usuário — um duplo clique em "salvar" (ou uma corrida de rede)
+        // criava dois "Café da manhã" no mesmo dia, e cada tela que somava
+        // totais via um subconjunto diferente das duas causava divergência
+        // de calorias entre elas. Este pré-check cobre o caso comum; a
+        // constraint única no banco (`uk_refeicao_usuario_data_nome`, ver
+        // `@Table` em `Refeicao`) cobre a corrida real entre duas
+        // requisições simultâneas que passariam pelos dois pré-checks antes
+        // de qualquer uma commitar.
+        if (refeicao.getUsuario() != null && refeicao.getDataRefeicao() != null
+                && refeicaoRepository.existeComMesmoNomeEData(
+                        refeicao.getUsuario().getId(), refeicao.getDataRefeicao(), refeicao.getNomeRefeicao())) {
+            throw new RefeicaoDuplicadaException(
+                    "Já existe uma refeição \"" + refeicao.getNomeRefeicao() + "\" registrada neste dia.");
+        }
 
         // Garante que cada Alimento aponte para esta Refeição antes de salvar em Cascade
         if (refeicao.getAlimentos() != null) {
@@ -221,6 +243,19 @@ public class RefeicaoService {
 
     /**
      * Atualiza um alimento já existente dentro de uma refeição.
+     *
+     * CORREÇÃO (auditoria QA #3): editar só a quantidade (ex: 180g → 90g)
+     * sem recalcular kcal/macros corrompia os totais do dia — o Alimento
+     * ficava com a quantidade nova mas os valores nutricionais da
+     * quantidade antiga. Como `Alimento` guarda valores absolutos (não uma
+     * taxa por 100g), a única forma segura de recalcular é comparando a
+     * quantidade nova com a antiga: se o payload chegou com os MESMOS
+     * kcal/macros já salvos (sinal de que o cliente só mudou o campo
+     * quantidade, sem recalcular nada), escalamos proporcionalmente aqui —
+     * centralizado no backend, a mesma regra vale para qualquer tela que
+     * edite um Alimento, não só a Dieta. Se os macros vieram diferentes do
+     * que já estava salvo, o cliente claramente já recalculou (ex: trocou de
+     * alimento na busca) e usamos o valor enviado como está.
      */
     @Transactional
     public Alimento atualizarAlimento(Long idRefeicao, Long idAlimento, Alimento alimentoAtualizado, Usuario usuarioAutenticado) {
@@ -232,15 +267,92 @@ public class RefeicaoService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException(
                         "Alimento não encontrado com ID: " + idAlimento + " na Refeição: " + idRefeicao));
 
+        boolean somenteQuantidadeMudou = macrosIguais(alimentoExistente, alimentoAtualizado)
+                && !normalizarParaComparacao(alimentoExistente.getQuantidade())
+                        .equals(normalizarParaComparacao(alimentoAtualizado.getQuantidade()));
+
         alimentoExistente.setNome(alimentoAtualizado.getNome());
-        alimentoExistente.setQuantidade(alimentoAtualizado.getQuantidade());
-        alimentoExistente.setCalorias(alimentoAtualizado.getCalorias());
-        alimentoExistente.setCarboidratos(alimentoAtualizado.getCarboidratos());
-        alimentoExistente.setProteinas(alimentoAtualizado.getProteinas());
-        alimentoExistente.setGorduras(alimentoAtualizado.getGorduras());
+
+        if (somenteQuantidadeMudou) {
+            aplicarQuantidadeComRecalculo(alimentoExistente, alimentoAtualizado.getQuantidade());
+        } else {
+            alimentoExistente.setQuantidade(alimentoAtualizado.getQuantidade());
+            alimentoExistente.setCalorias(alimentoAtualizado.getCalorias());
+            alimentoExistente.setCarboidratos(alimentoAtualizado.getCarboidratos());
+            alimentoExistente.setProteinas(alimentoAtualizado.getProteinas());
+            alimentoExistente.setGorduras(alimentoAtualizado.getGorduras());
+        }
 
         refeicaoRepository.save(refeicao);
         return alimentoExistente;
+    }
+
+    private boolean macrosIguais(Alimento a, Alimento b) {
+        return Objects.equals(a.getCalorias(), b.getCalorias())
+                && comparavelIgual(a.getCarboidratos(), b.getCarboidratos())
+                && comparavelIgual(a.getProteinas(), b.getProteinas())
+                && comparavelIgual(a.getGorduras(), b.getGorduras());
+    }
+
+    private boolean comparavelIgual(BigDecimal a, BigDecimal b) {
+        if (a == null || b == null) {
+            return a == b;
+        }
+        return a.compareTo(b) == 0;
+    }
+
+    /**
+     * Escala calorias/macros proporcionalmente à razão entre a quantidade
+     * nova e a antiga. Se qualquer uma das duas não puder ser interpretada
+     * como número (texto livre, ex: "a gosto"), não há base segura para
+     * escalar — mantém os valores nutricionais como estavam e só troca o
+     * texto da quantidade, em vez de arriscar um cálculo sem sentido.
+     */
+    private void aplicarQuantidadeComRecalculo(Alimento alimento, String novaQuantidade) {
+        BigDecimal quantidadeAntiga = extrairNumero(alimento.getQuantidade());
+        BigDecimal quantidadeNova = extrairNumero(novaQuantidade);
+
+        alimento.setQuantidade(novaQuantidade);
+
+        if (quantidadeAntiga == null || quantidadeNova == null || quantidadeAntiga.signum() == 0) {
+            return;
+        }
+
+        BigDecimal razao = quantidadeNova.divide(quantidadeAntiga, 6, RoundingMode.HALF_UP);
+
+        if (alimento.getCalorias() != null) {
+            alimento.setCalorias(BigDecimal.valueOf(alimento.getCalorias())
+                    .multiply(razao)
+                    .setScale(0, RoundingMode.HALF_UP)
+                    .intValue());
+        }
+        alimento.setProteinas(escalar(alimento.getProteinas(), razao));
+        alimento.setCarboidratos(escalar(alimento.getCarboidratos(), razao));
+        alimento.setGorduras(escalar(alimento.getGorduras(), razao));
+    }
+
+    private BigDecimal escalar(BigDecimal valor, BigDecimal razao) {
+        return valor == null ? null : valor.multiply(razao).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Extrai o primeiro número (inteiro ou decimal) do início da string de
+     * quantidade — cobre os formatos usados pelo frontend ("150g", "150",
+     * "1.5kg", "2 un"). Retorna null se não houver número reconhecível.
+     */
+    private BigDecimal extrairNumero(String quantidade) {
+        if (quantidade == null) {
+            return null;
+        }
+        Matcher matcher = Pattern.compile("[0-9]+([.,][0-9]+)?").matcher(quantidade.trim());
+        if (!matcher.find()) {
+            return null;
+        }
+        try {
+            return new BigDecimal(matcher.group().replace(',', '.'));
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 
     /**
