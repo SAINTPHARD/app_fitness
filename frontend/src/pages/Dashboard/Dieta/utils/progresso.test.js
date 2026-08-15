@@ -1,6 +1,12 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { calcularPercentual, metaExcedida, calcularMetaDoDiaPercentual } from './progresso.js';
+import {
+  calcularPercentual,
+  metaExcedida,
+  calcularMetaDoDiaPercentual,
+  calcularPercentualReal,
+  calcularProgressoVisual,
+} from './progresso.js';
 
 describe('calcularPercentual', () => {
   test('calcula o percentual consumido/meta, limitado a 100', () => {
@@ -19,6 +25,22 @@ describe('metaExcedida', () => {
     assert.equal(metaExcedida(120, 100), true);
     assert.equal(metaExcedida(80, 100), false);
     assert.equal(metaExcedida(120, 0), false);
+  });
+});
+
+describe('hidratação acima de 100%', () => {
+  test('mantém o percentual real acima da meta', () => {
+    assert.equal(Math.round(calcularPercentualReal(5000, 2300)), 217);
+  });
+
+  test('limita apenas o preenchimento visual', () => {
+    assert.equal(calcularProgressoVisual(217), 100);
+    assert.equal(calcularProgressoVisual(45), 45);
+  });
+
+  test('não divide por meta de água zerada ou ausente', () => {
+    assert.equal(calcularPercentualReal(500, 0), 0);
+    assert.equal(calcularPercentualReal(500, null), 0);
   });
 });
 

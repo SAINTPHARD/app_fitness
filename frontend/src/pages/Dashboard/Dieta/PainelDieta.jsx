@@ -37,7 +37,7 @@ export default function PainelDieta() {
   const [criandoRefeicao, setCriandoRefeicao] = useState(false);
   const [refeicaoExpandidaId, setRefeicaoExpandidaId] = useState(null);
 
-  const { metas, atualizarMetas } = useMetas();
+  const { metas, atualizarMetas, loading: carregandoMetas, erro: erroMetas } = useMetas();
   const {
     refeicoesDoDia,
     totaisDoDia,
@@ -54,7 +54,7 @@ export default function PainelDieta() {
   } = useRefeicoes(dataSelecionadaISO);
   // Peso/IMC não vivem mais aqui — só na página de Perfil. `historicoPeso`
   // continua sendo usado pelo gráfico de evolução, mais abaixo.
-  const { historicoPeso } = usePerfilResumo();
+  const { historicoPeso, registrarPeso } = usePerfilResumo();
 
   const lidarComAdicaoDeAlimento = async (idRefeicao, novoAlimento) => {
     // CORREÇÃO: `adicionarAlimento` agora pode criar a Refeição no backend
@@ -100,7 +100,7 @@ export default function PainelDieta() {
   // Blindagem de UI: enquanto o cliente não "hidratou" ou se, por algum
   // motivo, um dado essencial vier nulo/indefinido, mostramos o esqueleto em
   // vez de arriscar quebrar o layout com valores ausentes.
-  if (!pronto || !metas || !refeicoesDoDia) {
+  if (!pronto || carregandoMetas || !metas || !refeicoesDoDia) {
     return <EsqueletoPainel />;
   }
 
@@ -146,9 +146,19 @@ export default function PainelDieta() {
         </div>
       )}
 
+      {erroMetas && (
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+          <span>{erroMetas}</span>
+        </div>
+      )}
+
       {/* Anel colorido com o cálculo automático de quanto ainda resta na
           meta diária de calorias — fica logo no topo do plano alimentar. */}
-      <CartaoMetaDiaria meta={metas.calorias || 0} consumido={formatarCalorias(totaisDoDia.calorias)} />
+      <CartaoMetaDiaria
+        meta={metas.calorias || 0}
+        consumido={formatarCalorias(totaisDoDia.calorias)}
+        aoEditar={() => setModalMetasAberto(true)}
+      />
 
       {/* 4 cartões de macro. */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -258,7 +268,7 @@ export default function PainelDieta() {
       {/* Gráficos: tendência semanal de calorias e evolução do peso. */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
         <GraficoCaloriasSemanais />
-        <GraficoEvolucaoPeso historicoPeso={historicoPeso} />
+        <GraficoEvolucaoPeso historicoPeso={historicoPeso} aoRegistrarPeso={registrarPeso} />
       </div>
 
       <HistoricoTabela historicoPeso={historicoPeso} />

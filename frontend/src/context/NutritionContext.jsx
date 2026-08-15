@@ -64,6 +64,9 @@ function calcularTotaisDoDia(refeicoes = []) {
 export function NutritionProvider({ children }) {
   const [refeicoesPorData, setRefeicoesPorData] = useState({});
   const [statusPorData, setStatusPorData] = useState({});
+  const [revisaoRefeicoes, setRevisaoRefeicoes] = useState(0);
+  const [aguaPorData, setAguaPorData] = useState({});
+  const [statusAguaPorData, setStatusAguaPorData] = useState({});
   const [hidratacaoPorData, setHidratacaoPorData] = useState(() => lerJsonLocalStorage(CHAVE_HIDRATACAO, {}));
   const [metaMl, setMetaMl] = useState(lerMetaMlSalva);
 
@@ -83,6 +86,10 @@ export function NutritionProvider({ children }) {
         persistida: refeicao.persistida ?? true,
       })),
     }));
+  }, []);
+
+  const invalidarHistoricosRefeicoes = useCallback(() => {
+    setRevisaoRefeicoes((versaoAtual) => versaoAtual + 1);
   }, []);
 
   const carregarRefeicoes = useCallback(
@@ -142,9 +149,10 @@ export function NutritionProvider({ children }) {
       ...prev,
       [dataISO]: ordenarPorHorario([{ ...refeicaoCriada, persistida: true }, ...(prev[dataISO] || [])]),
     }));
+    invalidarHistoricosRefeicoes();
 
     return refeicaoCriada;
-  }, []);
+  }, [invalidarHistoricosRefeicoes]);
 
   const editarRefeicao = useCallback(async (dataISO, idRefeicao, dadosRefeicao) => {
     const refeicaoAtualizada = await fitnessApi.atualizarRefeicao(idRefeicao, {
@@ -153,8 +161,9 @@ export function NutritionProvider({ children }) {
     });
 
     substituirRefeicaoNaData(dataISO, idRefeicao, () => ({ ...refeicaoAtualizada, persistida: true }));
+    invalidarHistoricosRefeicoes();
     return refeicaoAtualizada;
-  }, [substituirRefeicaoNaData]);
+  }, [invalidarHistoricosRefeicoes, substituirRefeicaoNaData]);
 
   const removerRefeicao = useCallback(async (dataISO, idRefeicao) => {
     const refeicoes = obterRefeicoesDaData(dataISO);
@@ -173,7 +182,8 @@ export function NutritionProvider({ children }) {
       ...prev,
       [dataISO]: (prev[dataISO] || []).filter((refeicao) => refeicao.id !== idRefeicao),
     }));
-  }, [obterRefeicoesDaData]);
+    invalidarHistoricosRefeicoes();
+  }, [invalidarHistoricosRefeicoes, obterRefeicoesDaData]);
 
   const garantirRefeicaoPersistida = useCallback(async (dataISO, idRefeicao) => {
     const refeicaoAlvo = obterRefeicoesDaData(dataISO).find((refeicao) => refeicao.id === idRefeicao);
@@ -199,9 +209,10 @@ export function NutritionProvider({ children }) {
     const refeicaoAtualizada = await fitnessApi.adicionarAlimento(idRefeicaoReal, novoAlimento);
 
     substituirRefeicaoNaData(dataISO, idRefeicaoReal, () => ({ ...refeicaoAtualizada, persistida: true }));
+    invalidarHistoricosRefeicoes();
 
     return idRefeicaoReal;
-  }, [garantirRefeicaoPersistida, substituirRefeicaoNaData]);
+  }, [garantirRefeicaoPersistida, invalidarHistoricosRefeicoes, substituirRefeicaoNaData]);
 
   const editarAlimento = useCallback(async (dataISO, idRefeicao, idAlimento, alimentoEditado) => {
     const alimentoAtualizado = await fitnessApi.atualizarAlimento(idRefeicao, idAlimento, alimentoEditado);
@@ -212,9 +223,10 @@ export function NutritionProvider({ children }) {
         alimento.id === idAlimento ? alimentoAtualizado : alimento
       ),
     }));
+    invalidarHistoricosRefeicoes();
 
     return alimentoAtualizado;
-  }, [substituirRefeicaoNaData]);
+  }, [invalidarHistoricosRefeicoes, substituirRefeicaoNaData]);
 
   const removerAlimento = useCallback(async (dataISO, idRefeicao, idAlimento) => {
     const refeicaoAtualizada = await fitnessApi.removerAlimento(idRefeicao, idAlimento);
@@ -224,13 +236,70 @@ export function NutritionProvider({ children }) {
       ...(refeicaoAtualizada || {}),
       alimentos: refeicaoAtualizada?.alimentos || (refeicao.alimentos || []).filter((alimento) => alimento.id !== idAlimento),
     }));
-  }, [substituirRefeicaoNaData]);
+    invalidarHistoricosRefeicoes();
+  }, [invalidarHistoricosRefeicoes, substituirRefeicaoNaData]);
 
   const concluirRefeicao = useCallback(async (dataISO, idRefeicao) => {
     const refeicaoAtualizada = await fitnessApi.concluirRefeicao(idRefeicao);
     substituirRefeicaoNaData(dataISO, idRefeicao, (refeicao) => ({ ...refeicao, ...refeicaoAtualizada }));
+    invalidarHistoricosRefeicoes();
     return refeicaoAtualizada;
-  }, [substituirRefeicaoNaData]);
+  }, [invalidarHistoricosRefeicoes, substituirRefeicaoNaData]);
+
+  const carregarAgua = useCallback(
+    async (dataISO = obterDataDeHojeISO(), { forcar = false } = {}) => {
+      if (!forcar && aguaPorData[dataISO]) return aguaPorData[dataISO];
+
+      setStatusAguaPorData((prev) => ({ ...prev, [dataISO]: { loading: true, erro: null } }));
+
+      try {
+        const registros = await fitnessApi.listarAguaDoDia(dataISO);
+        setAguaPorData((prev) => ({ ...prev, [dataISO]: registros }));
+        setStatusAguaPorData((prev) => ({ ...prev, [dataISO]: { loading: false, erro: null } }));
+        return registros;
+      } catch (erro) {
+        console.error('Erro ao buscar hidratação da API:', erro);
+        setStatusAguaPorData((prev) => ({
+          ...prev,
+          [dataISO]: { loading: false, erro: 'Não foi possível carregar o consumo de água.' },
+        }));
+        return aguaPorData[dataISO] || [];
+      }
+    },
+    [aguaPorData]
+  );
+
+  const obterRegistrosAguaDaData = useCallback((dataISO) => aguaPorData[dataISO] || [], [aguaPorData]);
+
+  const adicionarAguaMl = useCallback(async (dataISO, quantidadeMl) => {
+    const quantidade = Number(quantidadeMl);
+    if (!Number.isFinite(quantidade) || quantidade <= 0 || quantidade > 5000) {
+      throw new Error('A quantidade deve estar entre 1 e 5000 ml.');
+    }
+
+    const registro = await fitnessApi.criarRegistroAgua({
+      quantidadeMl: Math.round(quantidade),
+      diaReferencia: dataISO,
+      origem: 'manual',
+    });
+
+    setAguaPorData((prev) => ({
+      ...prev,
+      [dataISO]: [...(prev[dataISO] || []), registro].sort((a, b) =>
+        String(a.dataHora || '').localeCompare(String(b.dataHora || ''))
+      ),
+    }));
+
+    return registro;
+  }, []);
+
+  const removerRegistroAgua = useCallback(async (dataISO, idRegistro) => {
+    await fitnessApi.removerRegistroAgua(idRegistro);
+    setAguaPorData((prev) => ({
+      ...prev,
+      [dataISO]: (prev[dataISO] || []).filter((registro) => registro.id !== idRegistro),
+    }));
+  }, []);
 
   const definirConsumoAguaMl = useCallback((dataISO, novoTotalMl) => {
     const totalMl = Math.max(0, Number(novoTotalMl) || 0);
@@ -258,6 +327,12 @@ export function NutritionProvider({ children }) {
   const valor = useMemo(
     () => ({
       carregarRefeicoes,
+      revisaoRefeicoes,
+      carregarAgua,
+      obterRegistrosAguaDaData,
+      obterStatusAguaDaData: (dataISO) => statusAguaPorData[dataISO] || { loading: !aguaPorData[dataISO], erro: null },
+      adicionarAguaMl,
+      removerRegistroAgua,
       obterRefeicoesDaData,
       obterStatusDaData: (dataISO) => statusPorData[dataISO] || { loading: !refeicoesPorData[dataISO], erro: null },
       obterTotaisDaData: (dataISO) => calcularTotaisDoDia(obterRefeicoesDaData(dataISO)),
@@ -279,21 +354,28 @@ export function NutritionProvider({ children }) {
     }),
     [
       adicionarAlimento,
+      adicionarAguaMl,
       adicionarCopo,
       adicionarRefeicao,
       alternarCopo,
       carregarRefeicoes,
+      carregarAgua,
       concluirRefeicao,
       definirConsumoAguaMl,
       definirMetaMl,
       editarAlimento,
       editarRefeicao,
+      aguaPorData,
       hidratacaoPorData,
       metaMl,
       obterRefeicoesDaData,
+      obterRegistrosAguaDaData,
       refeicoesPorData,
+      revisaoRefeicoes,
       removerAlimento,
+      removerRegistroAgua,
       removerRefeicao,
+      statusAguaPorData,
       statusPorData,
     ]
   );

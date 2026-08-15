@@ -3,7 +3,7 @@
  * dependência `zod` instalada — em vez de adicioná-la só para este formulário,
  * usamos validação nativa explícita, mais transparente para manter).
  *
- * Regras aplicadas a cada campo (calorias, proteínas, carboidratos, gorduras):
+ * Regras aplicadas a cada campo (calorias, proteínas, carboidratos, gorduras, água):
  *  - não pode estar vazio;
  *  - precisa ser um número válido;
  *  - não pode ser negativo;
@@ -12,7 +12,15 @@
  * Retorna `{ valido, erros }`, onde `erros` mapeia campo -> mensagem, pronto
  * para ser exibido diretamente abaixo de cada input no ModalMetas.
  */
-const CAMPOS_OBRIGATORIOS = ['calorias', 'proteinas', 'carboidratos', 'gorduras'];
+const LIMITES = {
+  calorias: { min: 1, max: 10000, unidade: 'kcal' },
+  proteinas: { min: 0, max: 1000, unidade: 'g' },
+  carboidratos: { min: 0, max: 1500, unidade: 'g' },
+  gorduras: { min: 0, max: 500, unidade: 'g' },
+  aguaMl: { min: 250, max: 10000, unidade: 'ml' },
+};
+
+const CAMPOS_OBRIGATORIOS = Object.keys(LIMITES);
 
 export function validarMetas(metas) {
   const erros = {};
@@ -27,18 +35,23 @@ export function validarMetas(metas) {
 
     const valorNumerico = Number(valorBruto);
 
-    if (Number.isNaN(valorNumerico)) {
+    if (!Number.isFinite(valorNumerico)) {
       erros[campo] = 'Informe um número válido.';
       return;
     }
 
-    if (valorNumerico < 0) {
-      erros[campo] = 'O valor não pode ser negativo.';
+    const limite = LIMITES[campo];
+
+    if (valorNumerico < limite.min) {
+      erros[campo] =
+        limite.min === 0
+          ? 'O valor não pode ser negativo.'
+          : `Informe ao menos ${limite.min} ${limite.unidade}.`;
       return;
     }
 
-    if (campo === 'calorias' && valorNumerico === 0) {
-      erros[campo] = 'A meta de calorias deve ser maior que zero.';
+    if (valorNumerico > limite.max) {
+      erros[campo] = `Informe no máximo ${limite.max} ${limite.unidade}.`;
     }
   });
 

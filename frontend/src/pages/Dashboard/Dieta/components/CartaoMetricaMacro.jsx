@@ -5,6 +5,9 @@
  * Calorie Intake" por 4 cartões simétricos, mais fáceis de escanear.
  */
 export default function CartaoMetricaMacro({ icone: Icone, corIcone, rotulo, consumido, meta, unidade, percentual, alerta }) {
+  const metaDefinida = Number(meta) > 0;
+  const percentualSeguro = Number.isFinite(Number(percentual)) ? Number(percentual) : 0;
+
   return (
     <article className="flex flex-col gap-3 rounded-3xl bg-white p-5 shadow-xl shadow-slate-200/50 dark:bg-zinc-800 dark:shadow-none">
       <div className="flex items-center gap-3">
@@ -16,17 +19,21 @@ export default function CartaoMetricaMacro({ icone: Icone, corIcone, rotulo, con
 
       <p className="m-0 text-xl font-bold text-slate-800 dark:text-zinc-50">
         {consumido}
-        <span className="text-sm font-semibold text-slate-400 dark:text-zinc-500"> / {meta}{unidade}</span>
+        <span className="text-sm font-semibold text-slate-400 dark:text-zinc-500">
+          {metaDefinida ? ` / ${meta}${unidade}` : ' / Meta não definida'}
+        </span>
       </p>
 
       <div className="flex items-center gap-2">
         <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-700">
           <div
             className={`h-full rounded-full transition-all duration-500 ${alerta ? 'bg-rose-400' : 'bg-lime-400'}`}
-            style={{ width: `${Math.min(percentual, 100)}%` }}
+            style={{ width: `${Math.min(percentualSeguro, 100)}%` }}
           />
         </div>
-        <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">{Math.round(percentual)}%</span>
+        <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">
+          {metaDefinida ? `${Math.round(percentualSeguro)}%` : '--'}
+        </span>
       </div>
     </article>
   );

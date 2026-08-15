@@ -25,23 +25,34 @@ export default function ResumoNutricional({ totais, metas, percentuais }) {
 
       {LINHAS.map(({ chave, rotulo, corBarra }) => (
         <div key={chave}>
+          {(() => {
+            const chaveMeta = chave === 'proteina' ? 'proteinas' : chave;
+            const meta = Number(metas?.[chaveMeta]) || 0;
+            const metaDefinida = meta > 0;
+            const percentual = Number.isFinite(Number(percentuais[chave])) ? Number(percentuais[chave]) : 0;
+
+            return (
+              <>
           <div className="mb-1.5 flex items-center justify-between text-sm">
             <span className="font-semibold text-slate-700 dark:text-zinc-200">{rotulo}</span>
             <span className="text-slate-500 dark:text-zinc-400">
-              {formatar1Casa(totais?.[chave])}g / {metas?.[chave === 'proteina' ? 'proteinas' : chave] || 0}g
+              {formatar1Casa(totais?.[chave])}g / {metaDefinida ? `${meta}g` : 'Meta não definida'}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-700">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${corBarra}`}
-                style={{ width: `${Math.min(percentuais[chave], 100)}%` }}
+                style={{ width: `${Math.min(percentual, 100)}%` }}
               />
             </div>
             <span className="w-10 text-right text-xs font-bold text-slate-500 dark:text-zinc-400">
-              {Math.round(percentuais[chave])}%
+              {metaDefinida ? `${Math.round(percentual)}%` : '--'}
             </span>
           </div>
+              </>
+            );
+          })()}
         </div>
       ))}
     </div>
