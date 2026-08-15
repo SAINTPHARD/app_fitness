@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NutritionProvider } from './context/NutritionContext';
+import { MetasProvider } from './context/MetasContext';
 import ToastHost from './components/ui/Toast';
+import ErrorBoundary from './components/ErrorBoundary';
 import LoginPage from './pages/Login';
 import OnboardingPage from './pages/Onboarding';
 import DashboardLayout from './pages/Dashboard';
@@ -88,10 +90,14 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <NutritionProvider>
-        <AppRoutes />
-        <ToastHost />
-      </NutritionProvider>
+      <MetasProvider>
+        <NutritionProvider>
+          <ErrorBoundary>
+            <AppRoutes />
+            <ToastHost />
+          </ErrorBoundary>
+        </NutritionProvider>
+      </MetasProvider>
     </AuthProvider>
   );
 }

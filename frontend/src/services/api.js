@@ -2,8 +2,20 @@ import axios from 'axios';
 import { notificarErro } from '../utils/notificacoes';
 import { extrairMensagemErro } from '../utils/erroApi';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
+if (!API_URL) {
+  console.error(
+    'VITE_API_URL não configurada. Defina a URL do backend no ambiente do frontend e reinicie o Vite.'
+  );
+}
+
+if (import.meta.env.PROD && API_URL && /localhost|127\.0\.0\.1/.test(API_URL)) {
+  throw new Error('VITE_API_URL de produção não pode apontar para localhost.');
+}
+
 const api = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: API_URL || '',
   timeout: 15000,
 });
 
