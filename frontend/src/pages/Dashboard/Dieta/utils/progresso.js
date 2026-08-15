@@ -8,6 +8,17 @@ export function calcularPercentual(consumido, meta) {
   return Math.min((Number(consumido) / Number(meta)) * 100, 100);
 }
 
+export function calcularPercentualReal(consumido, meta) {
+  if (!meta || Number(meta) <= 0) return 0;
+  const percentual = (Number(consumido) / Number(meta)) * 100;
+  return Number.isFinite(percentual) ? percentual : 0;
+}
+
+export function calcularProgressoVisual(percentualReal) {
+  if (!Number.isFinite(Number(percentualReal)) || Number(percentualReal) <= 0) return 0;
+  return Math.min(Number(percentualReal), 100);
+}
+
 /** Indica se o valor consumido ultrapassou a meta definida (meta > 0). */
 export function metaExcedida(consumido, meta) {
   return Number(meta) > 0 && Number(consumido) > Number(meta);

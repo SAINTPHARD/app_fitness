@@ -6,10 +6,11 @@ import { usePerfilResumo } from '../../../../hooks/usePerfilResumo';
 import { fitnessApi } from '../../../../services/fitnessApi';
 
 const CAMPOS_DO_FORMULARIO = [
-  { chave: 'calorias', rotulo: 'Calorias (kcal)' },
-  { chave: 'proteinas', rotulo: 'Proteínas (g)' },
-  { chave: 'carboidratos', rotulo: 'Carboidratos (g)' },
-  { chave: 'gorduras', rotulo: 'Gorduras (g)' },
+  { chave: 'calorias', rotulo: 'Calorias', unidade: 'kcal', max: 10000 },
+  { chave: 'proteinas', rotulo: 'Proteínas', unidade: 'g', max: 1000 },
+  { chave: 'carboidratos', rotulo: 'Carboidratos', unidade: 'g', max: 1500 },
+  { chave: 'gorduras', rotulo: 'Gorduras', unidade: 'g', max: 500 },
+  { chave: 'aguaMl', rotulo: 'Água', unidade: 'ml', max: 10000 },
 ];
 
 // Mesmas chaves do enum `Objetivo` do backend e do Onboarding — sem inventar
@@ -65,8 +66,12 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
     proteinas: metasAtuais.proteinas || '',
     carboidratos: metasAtuais.carboidratos || '',
     gorduras: metasAtuais.gorduras || '',
+    aguaMl: metasAtuais.aguaMl || '',
   }));
   const [erros, setErros] = useState({});
+  const [salvando, setSalvando] = useState(false);
+  const [mensagem, setMensagem] = useState('');
+  const [erroEnvio, setErroEnvio] = useState('');
 
   // Ao abrir o modal, pré-preenche os dados corporais com o que já se sabe
   // do usuário (perfil real + preferência de nível de atividade guardada
@@ -86,6 +91,20 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
       nivelAtividade: prev.nivelAtividade || preferenciasLocais.nivelAtividade || '',
     }));
   }, [aberto, perfil]);
+
+  useEffect(() => {
+    if (!aberto) return;
+    setRascunho({
+      calorias: metasAtuais.calorias || '',
+      proteinas: metasAtuais.proteinas || '',
+      carboidratos: metasAtuais.carboidratos || '',
+      gorduras: metasAtuais.gorduras || '',
+      aguaMl: metasAtuais.aguaMl || '',
+    });
+    setErros({});
+    setErroEnvio('');
+    setMensagem('');
+  }, [aberto, metasAtuais]);
 
   // Blindagem: se o modal não estiver aberto, não renderiza nada (evita
   // manter um formulário escondido no DOM ocupando espaço/JS à toa).
@@ -114,6 +133,7 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
       proteinas: String(resultado.metas.proteinas),
       carboidratos: String(resultado.metas.carboidratos),
       gorduras: String(resultado.metas.gorduras),
+      aguaMl: String(metasAtuais.aguaMl || 2000),
     });
     setAba('manual');
   };
@@ -128,17 +148,20 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
       return;
     }
 
-    aoSalvar(rascunho);
+    setSalvando(true);
+    setErroEnvio('');
+    setMensagem('');
     setErros({});
 
-    // Persistência dos dados corporais: atualiza o perfil no backend (o PUT
-    // substitui o registro inteiro, então mesclamos com o que já veio do
-    // GET para não perder nome/e-mail) e guarda o nível de atividade — o
-    // backend ainda não tem coluna para isso, mesma estratégia do
-    // Onboarding. Roda em paralelo ao fechamento do modal; uma falha aqui
-        // não deve travar o salvamento das metas, que já é o essencial.
-    if (dadosCorporais.peso && dadosCorporais.altura) {
-      try {
+    try {
+      await aoSalvar(rascunho);
+
+      // Persistência dos dados corporais: atualiza o perfil no backend (o PUT
+      // substitui o registro inteiro, então mesclamos com o que já veio do
+      // GET para não perder nome/e-mail) e guarda o nível de atividade — o
+      // backend ainda não tem coluna para isso, mesma estratégia do
+      // Onboarding. Uma falha aqui não desfaz as metas já salvas.
+      if (dadosCorporais.peso && dadosCorporais.altura) {
         await fitnessApi.updateProfile({
           ...perfil,
           peso: Number(dadosCorporais.peso) || perfil?.peso,
@@ -152,12 +175,16 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
           'perfil-preferencias-locais',
           JSON.stringify({ ...lerPreferenciasLocais(), nivelAtividade: dadosCorporais.nivelAtividade })
         );
-      } catch (erro) {
-        console.error('Falha ao atualizar dados corporais do perfil:', erro);
       }
-    }
 
-    aoFechar();
+      setMensagem('Metas salvas com sucesso.');
+      window.setTimeout(aoFechar, 500);
+    } catch (erro) {
+      const mensagens = erro?.response?.data?.mensagens;
+      setErroEnvio(Array.isArray(mensagens) ? mensagens[0] : 'Não foi possível salvar as metas.');
+    } finally {
+      setSalvando(false);
+    }
   };
 
   return (
@@ -321,15 +348,17 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
               </div>
             )}
 
-            {CAMPOS_DO_FORMULARIO.map(({ chave, rotulo }) => (
+            {CAMPOS_DO_FORMULARIO.map(({ chave, rotulo, unidade, max }) => (
               <label key={chave} className="flex flex-col gap-1 text-sm font-semibold text-slate-600 dark:text-zinc-300">
-                {rotulo}
+                {rotulo} ({unidade})
                 <input
                   type="number"
                   min="0"
+                  max={max}
                   value={rascunho[chave]}
                   onChange={(evento) => atualizarCampo(chave, evento.target.value)}
                   aria-invalid={Boolean(erros[chave])}
+                  aria-describedby={erros[chave] ? `erro-meta-${chave}` : undefined}
                   className={[
                     'rounded-xl border bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none transition-shadow focus:ring-4 dark:bg-zinc-900/40 dark:text-zinc-100',
                     erros[chave]
@@ -337,16 +366,24 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
                       : 'border-slate-200 focus:border-lime-400 focus:ring-lime-100 dark:border-zinc-700',
                   ].join(' ')}
                 />
-                {erros[chave] && <span className="text-xs font-medium text-rose-500">{erros[chave]}</span>}
+                {erros[chave] && (
+                  <span id={`erro-meta-${chave}`} className="text-xs font-medium text-rose-500">
+                    {erros[chave]}
+                  </span>
+                )}
               </label>
             ))}
+
+            {erroEnvio && <p className="m-0 text-xs font-bold text-rose-500">{erroEnvio}</p>}
+            {mensagem && <p className="m-0 text-xs font-bold text-emerald-600">{mensagem}</p>}
 
             <div className="mt-2 flex gap-2">
               <button
                 type="submit"
+                disabled={salvando}
                 className="flex-1 rounded-xl bg-zinc-900 py-2.5 text-sm font-bold text-white transition-transform hover:scale-[1.01] active:scale-[0.99] dark:bg-lime-400 dark:text-zinc-900"
               >
-                Salvar metas
+                {salvando ? 'Salvando...' : 'Salvar metas'}
               </button>
               <button
                 type="button"

@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { baixarCsv, montarCsvRelatorio, obterDadosRelatorio } from './utils/agregarRelatorio';
 import { useHistoricoRefeicoes } from '../../../hooks/useHistoricoRefeicoes';
+import { notificarSucesso } from '../../../utils/notificacoes';
 import estilos from './styles.module.css';
 
 const PERIODOS = [
@@ -43,6 +44,20 @@ export default function RelatoriosPage() {
     baixarCsv(csv, `relatorio-system-fitness-${periodo}d.csv`);
   };
 
+  // CORREÇÃO (auditoria QA #7): `window.print()` já funcionava — abre o
+  // diálogo nativo de impressão do navegador (o usuário escolhe "Salvar como
+  // PDF" ali), e o CSS de impressão (`@media print` em styles.module.css)
+  // já esconde os botões/filtros do impresso via `data-print-hide`. O que
+  // faltava era um feedback *visível em DOM/JS* de que o clique foi
+  // recebido — um diálogo nativo do SO não deixa rastro observável por
+  // ferramentas de QA automatizadas (nem por captura de tela headless), daí
+  // o relato de "nenhum retorno". O toast aqui não substitui o diálogo, só
+  // confirma que a ação disparou.
+  const imprimirRelatorio = () => {
+    notificarSucesso('Abrindo janela de impressão…');
+    window.print();
+  };
+
   return (
     <section className={estilos.pagina}>
       <div className={estilos.topo}>
@@ -71,7 +86,7 @@ export default function RelatoriosPage() {
             <Download size={16} strokeWidth={2.5} />
             CSV
           </button>
-          <button type="button" className={estilos.botaoPrimario} onClick={() => window.print()}>
+          <button type="button" className={estilos.botaoPrimario} onClick={imprimirRelatorio}>
             <Printer size={16} strokeWidth={2.5} />
             Imprimir / PDF
           </button>

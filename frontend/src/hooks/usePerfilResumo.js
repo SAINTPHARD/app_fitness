@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fitnessApi } from '../services/fitnessApi';
 import { obterDataDeHojeISO } from '../pages/Dashboard/Dieta/utils/calendario';
 import { calcularImc, classificarImc, normalizarAlturaCm } from '../utils/imc';
@@ -17,13 +17,15 @@ function lerHistoricoPesoSalvo() {
   }
 }
 
+function ordenarPorData(lista) {
+  return [...lista].sort((a, b) => String(a.data).localeCompare(String(b.data)));
+}
+
 /**
- * Hook compartilhado (usado pela Home e pela Dieta) que busca o perfil real
- * do usuário — o mesmo endpoint `/profile` que a página Perfil já usa — e
- * deriva o IMC. Como o backend ainda não expõe um histórico de peso ao
- * longo do tempo, registramos aqui um ponto por dia (localStorage) sempre
- * que o peso do perfil é lido, para os gráficos de evolução crescerem com
- * dados reais em vez de uma tendência inventada.
+ * Hook compartilhado (usado pela Home, Dieta e Evolução) que busca o perfil
+ * real do usuário e deriva IMC/histórico de peso. O histórico agora vem do
+ * backend (`/evolucao/pesos`); o localStorage fica só como fallback de
+ * compatibilidade para bases antigas ou indisponibilidade temporária da API.
  */
 export function usePerfilResumo() {
   const [perfil, setPerfil] = useState(null);
@@ -63,16 +65,30 @@ export function usePerfilResumo() {
             );
         }
 
-        setPerfil(dadosPerfil);
-
         const pesoAtual = Number(dadosPerfil.peso);
-        if (pesoAtual > 0) {
-          const hojeISO = obterDataDeHojeISO();
+        let pesosBackend = [];
 
-          setHistoricoPeso((anterior) => {
-            const semRegistroDeHoje = anterior.filter((ponto) => ponto.data !== hojeISO);
-            return [...semRegistroDeHoje, { data: hojeISO, peso: pesoAtual }].slice(-MAXIMO_PONTOS_HISTORICO);
-          });
+        try {
+          pesosBackend = await fitnessApi.listarPesos();
+        } catch (erroHistorico) {
+          console.error('Falha ao carregar histórico de peso do backend:', erroHistorico);
+          pesosBackend = lerHistoricoPesoSalvo();
+        }
+
+        if (pesoAtual > 0 && pesosBackend.length === 0) {
+          const hojeISO = obterDataDeHojeISO();
+          try {
+            const registroCriado = await fitnessApi.criarPeso({ data: hojeISO, peso: pesoAtual });
+            pesosBackend = [registroCriado];
+          } catch (erroRegistroPeso) {
+            console.error('Falha ao registrar peso atual no backend:', erroRegistroPeso);
+            pesosBackend = [{ data: hojeISO, peso: pesoAtual }];
+          }
+        }
+
+        setPerfil(dadosPerfil);
+        if (pesosBackend.length > 0) {
+          setHistoricoPeso(pesosBackend.slice(-MAXIMO_PONTOS_HISTORICO));
         }
       } catch (erro) {
         console.error('Falha ao carregar o perfil:', erro);
@@ -100,6 +116,21 @@ export function usePerfilResumo() {
     return Number((ultimo - primeiro).toFixed(1));
   }, [historicoPeso]);
 
+  const registrarPeso = useCallback(async ({ data = obterDataDeHojeISO(), peso }) => {
+    const pesoNumero = Number(peso);
+    if (!Number.isFinite(pesoNumero) || pesoNumero < 20 || pesoNumero > 300) {
+      throw new Error('Peso deve estar entre 20 e 300 kg.');
+    }
+
+    const registro = await fitnessApi.criarPeso({ data, peso: pesoNumero });
+    setHistoricoPeso((anterior) => {
+      const semMesmoDia = anterior.filter((ponto) => ponto.data !== registro.data);
+      return ordenarPorData([...semMesmoDia, registro]).slice(-MAXIMO_PONTOS_HISTORICO);
+    });
+    setPerfil((atual) => (atual ? { ...atual, peso: pesoNumero } : atual));
+    return registro;
+  }, []);
+
   return {
     perfil,
     carregando,
@@ -107,5 +138,6 @@ export function usePerfilResumo() {
     classificacaoImc: classificarImc(imc),
     historicoPeso,
     variacaoPeso,
+    registrarPeso,
   };
 }

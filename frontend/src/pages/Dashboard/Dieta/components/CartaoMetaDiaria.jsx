@@ -10,7 +10,8 @@ const CIRCUNFERENCIA_ANEL = 2 * Math.PI * RAIO_ANEL;
  * `meta - consumido`, recalculado a cada render a partir dos dados reais de
  * `useRefeicoes`/`useMetas` (nada aqui é digitado manualmente pelo usuário).
  */
-export default function CartaoMetaDiaria({ meta, consumido }) {
+export default function CartaoMetaDiaria({ meta, consumido, aoEditar }) {
+  const metaDefinida = Number(meta) > 0;
   const restante = meta - consumido;
   const excedeu = restante < 0;
   const percentualConsumido = calcularPercentual(consumido, meta);
@@ -26,6 +27,13 @@ export default function CartaoMetaDiaria({ meta, consumido }) {
       <div className="flex flex-col gap-3 text-center sm:text-left">
         <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
           <h3 className="m-0 text-lg font-bold text-slate-800 dark:text-zinc-50">Meta diária</h3>
+          <button
+            type="button"
+            onClick={aoEditar}
+            className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 transition-colors hover:bg-lime-100 hover:text-lime-700 focus:outline-none focus:ring-2 focus:ring-lime-400 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-lime-400/10 dark:hover:text-lime-300"
+          >
+            Editar
+          </button>
           {emCimaDaHora && (
             <span className="animate-bounce rounded-full bg-lime-100 px-2 py-0.5 text-xs font-bold text-lime-700 dark:bg-lime-400/10 dark:text-lime-300">
               🎯 Quase lá!
@@ -34,7 +42,9 @@ export default function CartaoMetaDiaria({ meta, consumido }) {
         </div>
         <div>
           <p className="m-0 text-sm text-slate-400 dark:text-zinc-500">Meta</p>
-          <p className="m-0 text-xl font-bold text-slate-700 dark:text-zinc-100">{meta || 0} kcal</p>
+          <p className="m-0 text-xl font-bold text-slate-700 dark:text-zinc-100">
+            {metaDefinida ? `${meta} kcal` : 'Meta não definida'}
+          </p>
         </div>
         <div>
           <p className="m-0 text-sm text-slate-400 dark:text-zinc-500">Consumido</p>
@@ -61,7 +71,7 @@ export default function CartaoMetaDiaria({ meta, consumido }) {
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
           <strong className="text-3xl font-bold text-slate-800 dark:text-zinc-50">{Math.abs(restante)}</strong>
           <span className="text-sm font-semibold text-slate-400 dark:text-zinc-500">
-            {excedeu ? 'Acima da meta' : 'Restantes'}
+            {metaDefinida ? (excedeu ? 'Acima da meta' : 'Restantes') : 'Configure'}
           </span>
         </div>
       </div>

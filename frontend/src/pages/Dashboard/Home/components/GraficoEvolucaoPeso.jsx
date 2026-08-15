@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { obterDataDeHojeISO } from '../../Dieta/utils/calendario';
 import estilos from './GraficoEvolucaoPeso.module.css';
 
 const COR_TEXTO_EIXO = '#64748b';
@@ -11,9 +13,30 @@ const COR_LINHA = '#a3e635';
  * cadastrado no Perfil). Sem pelo menos 2 pontos, mostramos um estado
  * vazio em vez de inventar uma tendência.
  */
-export default function GraficoEvolucaoPeso({ historicoPeso, variacaoPeso }) {
+export default function GraficoEvolucaoPeso({ historicoPeso, variacaoPeso, aoRegistrarPeso }) {
+  const [peso, setPeso] = useState('');
+  const [data, setData] = useState(obterDataDeHojeISO());
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState('');
   const temHistoricoSuficiente = historicoPeso.length >= 2;
   const ultimoPeso = historicoPeso.length > 0 ? historicoPeso[historicoPeso.length - 1].peso : null;
+  const registrosFaltantes = Math.max(0, 2 - historicoPeso.length);
+
+  const salvarPeso = async (evento) => {
+    evento.preventDefault();
+    if (!aoRegistrarPeso) return;
+
+    setErro('');
+    setSalvando(true);
+    try {
+      await aoRegistrarPeso({ data, peso });
+      setPeso('');
+    } catch (error) {
+      setErro(error?.message || 'Não foi possível registrar o peso.');
+    } finally {
+      setSalvando(false);
+    }
+  };
 
   return (
     <div className={estilos.cartao}>
@@ -49,9 +72,32 @@ export default function GraficoEvolucaoPeso({ historicoPeso, variacaoPeso }) {
           </ResponsiveContainer>
         </div>
       ) : (
-        <p className={estilos.vazio}>
-          Continue atualizando seu peso no Perfil — com pelo menos 2 registros, o gráfico aparece aqui.
-        </p>
+        <div className={estilos.vazio}>
+          <p>
+            {historicoPeso.length === 1
+              ? `Último peso: ${ultimoPeso} kg. Falta 1 registro para exibir o gráfico.`
+              : `Faltam ${registrosFaltantes} registros para exibir o gráfico de evolução.`}
+          </p>
+          {aoRegistrarPeso && (
+            <form className={estilos.formPesoRapido} onSubmit={salvarPeso}>
+              <input type="date" value={data} onChange={(evento) => setData(evento.target.value)} required />
+              <input
+                type="number"
+                min="20"
+                max="300"
+                step="0.1"
+                placeholder="Peso (kg)"
+                value={peso}
+                onChange={(evento) => setPeso(evento.target.value)}
+                required
+              />
+              <button type="submit" disabled={salvando}>
+                {salvando ? 'Salvando...' : 'Registrar peso'}
+              </button>
+            </form>
+          )}
+          {erro && <span className={estilos.erro}>{erro}</span>}
+        </div>
       )}
     </div>
   );

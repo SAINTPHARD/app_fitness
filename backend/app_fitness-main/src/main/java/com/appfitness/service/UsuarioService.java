@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.appfitness.model.entity.Usuario;
 import com.appfitness.repository.UsuarioRepository;
+import com.appfitness.dto.usuario.MetasUsuarioDTO;
 
 import jakarta.validation.Valid;
 
@@ -85,6 +86,32 @@ public class UsuarioService {
         }
 
         return repository.save(usuarioExistente);
+    }
+
+    @Transactional(readOnly = true)
+    public MetasUsuarioDTO buscarMetas(Long id) {
+        return paraMetasDTO(buscarPorId(id));
+    }
+
+    @Transactional
+    public MetasUsuarioDTO atualizarMetas(Long id, MetasUsuarioDTO metas) {
+        Usuario usuario = buscarPorId(id);
+        usuario.setMetaCalorias(metas.getCalorias());
+        usuario.setMetaProteinas(metas.getProteinas());
+        usuario.setMetaCarboidratos(metas.getCarboidratos());
+        usuario.setMetaGorduras(metas.getGorduras());
+        usuario.setMetaAguaMl(metas.getAguaMl());
+        return paraMetasDTO(repository.save(usuario));
+    }
+
+    private MetasUsuarioDTO paraMetasDTO(Usuario usuario) {
+        MetasUsuarioDTO dto = new MetasUsuarioDTO();
+        dto.setCalorias(usuario.getMetaCalorias());
+        dto.setProteinas(usuario.getMetaProteinas());
+        dto.setCarboidratos(usuario.getMetaCarboidratos());
+        dto.setGorduras(usuario.getMetaGorduras());
+        dto.setAguaMl(usuario.getMetaAguaMl());
+        return dto;
     }
 
     // =====================================================

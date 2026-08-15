@@ -6,6 +6,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.appfitness.exception.AcessoNegadoException;
+import com.appfitness.dto.usuario.MetasUsuarioDTO;
 import com.appfitness.model.entity.Usuario;
 import com.appfitness.service.UsuarioService;
 
@@ -83,6 +84,20 @@ public class UsuarioController {
         Usuario usuarioLogado = extrairUsuarioAutenticado(authentication);
         Usuario usuarioAtualizado = usuarioService.atualizar(usuarioLogado.getId(), metricas);
         return ResponseEntity.ok(usuarioAtualizado);
+    }
+
+    @GetMapping("/me/metas")
+    public ResponseEntity<MetasUsuarioDTO> buscarMetasAutenticado(Authentication authentication) {
+        Usuario usuarioLogado = extrairUsuarioAutenticado(authentication);
+        return ResponseEntity.ok(usuarioService.buscarMetas(usuarioLogado.getId()));
+    }
+
+    @PutMapping("/me/metas")
+    public ResponseEntity<MetasUsuarioDTO> atualizarMetasAutenticado(
+            Authentication authentication,
+            @Valid @RequestBody MetasUsuarioDTO metas) {
+        Usuario usuarioLogado = extrairUsuarioAutenticado(authentication);
+        return ResponseEntity.ok(usuarioService.atualizarMetas(usuarioLogado.getId(), metas));
     }
 
     /**

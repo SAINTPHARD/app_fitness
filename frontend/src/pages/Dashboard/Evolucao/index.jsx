@@ -1,22 +1,19 @@
-import { useEffect, useState } from 'react';
-import { Camera, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Camera, Check, Pencil, Plus, Trash2, X } from 'lucide-react';
 import GraficoEvolucaoPeso from '../Home/components/GraficoEvolucaoPeso';
-import { usePerfilResumo } from '../../../hooks/usePerfilResumo';
 import { obterDataDeHojeISO } from '../Dieta/utils/calendario';
+import { fitnessApi } from '../../../services/fitnessApi';
 import estilos from './Evolucao.module.css';
 
+const CHAVE_PESOS = 'home-historico-peso';
 const CHAVE_MEDIDAS = 'evolucao-medidas';
 const CHAVE_FOTOS = 'evolucao-fotos';
 const MAX_FOTOS = 6;
-const MAX_HISTORICO_MEDIDAS = 30;
+const MAX_HISTORICO = 30;
 
 const MEDIDAS_VAZIAS = { cintura: '', braco: '', perna: '', gordura: '' };
+const PESO_VAZIO = { data: obterDataDeHojeISO(), peso: '' };
 
-// Faixas fisiologicamente plausíveis para um adulto — impedem valores como
-// "cintura: 900cm" de entrar no histórico só porque o campo aceitava
-// qualquer número positivo. Limites generosos de propósito (cobrem casos
-// extremos reais) — o objetivo é barrar erro de digitação, não validar
-// clinicamente a medida.
 const LIMITES_MEDIDAS = {
   cintura: { min: 30, max: 200, rotulo: 'Cintura' },
   braco: { min: 10, max: 80, rotulo: 'Braço' },
@@ -40,54 +37,217 @@ function formatarDataCurta(iso) {
   return `${dia}/${mes}/${ano}`;
 }
 
+function ordenarPorData(lista) {
+  return [...lista].sort((a, b) => String(a.data).localeCompare(String(b.data)));
+}
+
+function trocarRegistro(lista, registro) {
+  const semAtual = lista.filter((item) => item.id !== registro.id && item.data !== registro.data);
+  return ordenarPorData([...semAtual, registro]).slice(-MAX_HISTORICO);
+}
+
+function mensagemErroApi(erro, fallback) {
+  const detalhes = erro?.response?.data?.mensagens || erro?.response?.data?.details;
+  if (Array.isArray(detalhes) && detalhes.length > 0) return detalhes[0];
+  return erro?.response?.data?.message || erro?.message || fallback;
+}
+
+function normalizarMedidas(formulario) {
+  return {
+    data: formulario.data || obterDataDeHojeISO(),
+    cintura: formulario.cintura ? Number(formulario.cintura) : null,
+    braco: formulario.braco ? Number(formulario.braco) : null,
+    perna: formulario.perna ? Number(formulario.perna) : null,
+    gordura: formulario.gordura ? Number(formulario.gordura) : null,
+  };
+}
+
+function validarMedidas(registro) {
+  if (!registro.cintura && !registro.braco && !registro.perna && !registro.gordura) {
+    return 'Informe ao menos uma medida.';
+  }
+
+  for (const [campo, { min, max, rotulo }] of Object.entries(LIMITES_MEDIDAS)) {
+    const valor = registro[campo];
+    if (valor != null && (valor < min || valor > max)) {
+      return `${rotulo} deve estar entre ${min} e ${max}${campo === 'gordura' ? '%' : 'cm'}.`;
+    }
+  }
+
+  return '';
+}
+
+async function importarRegistrosLocais(listaBackend, chave, salvar) {
+  if (listaBackend.length > 0) return listaBackend;
+
+  const locais = lerJSON(chave, []);
+  if (locais.length === 0) return listaBackend;
+
+  try {
+    const importados = await Promise.all(locais.map((item) => salvar(item)));
+    return ordenarPorData(importados);
+  } catch (erro) {
+    console.error(`Falha ao importar ${chave} para o backend:`, erro);
+    return ordenarPorData(locais);
+  }
+}
+
 export default function EvolucaoPage() {
-  const { historicoPeso, variacaoPeso, carregando } = usePerfilResumo();
-  const [historicoMedidas, setHistoricoMedidas] = useState(() => lerJSON(CHAVE_MEDIDAS, []));
-  const [fotos, setFotos] = useState(() => lerJSON(CHAVE_FOTOS, []));
-  const [formMedidas, setFormMedidas] = useState(MEDIDAS_VAZIAS);
+  const [historicoPeso, setHistoricoPeso] = useState([]);
+  const [historicoMedidas, setHistoricoMedidas] = useState([]);
+  const [fotos, setFotos] = useState([]);
+  const [formPeso, setFormPeso] = useState(PESO_VAZIO);
+  const [formMedidas, setFormMedidas] = useState({ data: obterDataDeHojeISO(), ...MEDIDAS_VAZIAS });
+  const [edicaoPeso, setEdicaoPeso] = useState(null);
+  const [edicaoMedida, setEdicaoMedida] = useState(null);
+  const [confirmacao, setConfirmacao] = useState(null);
+  const [carregando, setCarregando] = useState(true);
   const [erroFoto, setErroFoto] = useState('');
+  const [erroPeso, setErroPeso] = useState('');
   const [erroMedidas, setErroMedidas] = useState('');
 
   useEffect(() => {
-    window.localStorage.setItem(CHAVE_MEDIDAS, JSON.stringify(historicoMedidas));
-  }, [historicoMedidas]);
+    let cancelado = false;
 
-  useEffect(() => {
-    window.localStorage.setItem(CHAVE_FOTOS, JSON.stringify(fotos));
-  }, [fotos]);
+    async function carregarEvolucao() {
+      setCarregando(true);
 
-  const ultimaMedida = historicoMedidas.length > 0 ? historicoMedidas[historicoMedidas.length - 1] : null;
+      try {
+        const [pesosApi, medidasApi, fotosApi] = await Promise.all([
+          fitnessApi.listarPesos(),
+          fitnessApi.listarMedidas(),
+          fitnessApi.listarFotos(),
+        ]);
 
-  const salvarMedidas = (evento) => {
-    evento.preventDefault();
-    setErroMedidas('');
+        if (cancelado) return;
 
-    const registro = {
-      data: obterDataDeHojeISO(),
-      cintura: formMedidas.cintura ? Number(formMedidas.cintura) : null,
-      braco: formMedidas.braco ? Number(formMedidas.braco) : null,
-      perna: formMedidas.perna ? Number(formMedidas.perna) : null,
-      gordura: formMedidas.gordura ? Number(formMedidas.gordura) : null,
-    };
+        const [pesos, medidas, fotosImportadas] = await Promise.all([
+          importarRegistrosLocais(pesosApi, CHAVE_PESOS, fitnessApi.criarPeso),
+          importarRegistrosLocais(medidasApi, CHAVE_MEDIDAS, fitnessApi.criarMedida),
+          importarRegistrosLocais(fotosApi, CHAVE_FOTOS, fitnessApi.criarFoto),
+        ]);
 
-    if (!registro.cintura && !registro.braco && !registro.perna && !registro.gordura) return;
-
-    // CORREÇÃO (P2.10): nenhum campo tinha limite superior — só `min="0"` —
-    // então nada impedia registrar "cintura: 900cm" por erro de digitação e
-    // esse valor entrava no histórico/gráfico como se fosse real.
-    for (const [campo, { min, max, rotulo }] of Object.entries(LIMITES_MEDIDAS)) {
-      const valor = registro[campo];
-      if (valor != null && (valor < min || valor > max)) {
-        setErroMedidas(`${rotulo} deve estar entre ${min} e ${max}${campo === 'gordura' ? '%' : 'cm'}.`);
-        return;
+        if (!cancelado) {
+          setHistoricoPeso(ordenarPorData(pesos).slice(-MAX_HISTORICO));
+          setHistoricoMedidas(ordenarPorData(medidas).slice(-MAX_HISTORICO));
+          setFotos(ordenarPorData(fotosImportadas).slice(-MAX_FOTOS));
+        }
+      } catch (erro) {
+        console.error('Falha ao carregar evolução:', erro);
+        if (!cancelado) {
+          setHistoricoPeso(lerJSON(CHAVE_PESOS, []));
+          setHistoricoMedidas(lerJSON(CHAVE_MEDIDAS, []));
+          setFotos(lerJSON(CHAVE_FOTOS, []));
+        }
+      } finally {
+        if (!cancelado) setCarregando(false);
       }
     }
 
-    setHistoricoMedidas((anterior) => {
-      const semHoje = anterior.filter((item) => item.data !== registro.data);
-      return [...semHoje, registro].slice(-MAX_HISTORICO_MEDIDAS);
-    });
-    setFormMedidas(MEDIDAS_VAZIAS);
+    carregarEvolucao();
+
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+  const ultimaMedida = historicoMedidas.length > 0 ? historicoMedidas[historicoMedidas.length - 1] : null;
+
+  const variacaoPeso = useMemo(() => {
+    if (historicoPeso.length < 2) return null;
+    const primeiro = Number(historicoPeso[0].peso);
+    const ultimo = Number(historicoPeso[historicoPeso.length - 1].peso);
+    return Number((ultimo - primeiro).toFixed(1));
+  }, [historicoPeso]);
+
+  const salvarPeso = async (evento) => {
+    evento.preventDefault();
+    setErroPeso('');
+
+    const registro = { data: formPeso.data, peso: Number(formPeso.peso) };
+    if (registro.peso < 20 || registro.peso > 300) {
+      setErroPeso('Peso deve estar entre 20 e 300 kg.');
+      return;
+    }
+
+    try {
+      const salvo = await fitnessApi.criarPeso(registro);
+      setHistoricoPeso((anterior) => trocarRegistro(anterior, salvo));
+      setFormPeso(PESO_VAZIO);
+    } catch (erro) {
+      setErroPeso(mensagemErroApi(erro, 'Falha ao registrar peso.'));
+    }
+  };
+
+  const salvarEdicaoPeso = async () => {
+    setErroPeso('');
+    const registro = { data: edicaoPeso.data, peso: Number(edicaoPeso.peso) };
+
+    try {
+      const salvo = await fitnessApi.atualizarPeso(edicaoPeso.id, registro);
+      setHistoricoPeso((anterior) => trocarRegistro(anterior, salvo));
+      setEdicaoPeso(null);
+    } catch (erro) {
+      setErroPeso(mensagemErroApi(erro, 'Falha ao atualizar peso.'));
+    }
+  };
+
+  const removerPeso = async (id) => {
+    try {
+      await fitnessApi.removerPeso(id);
+      setHistoricoPeso((anterior) => anterior.filter((item) => item.id !== id));
+      setConfirmacao(null);
+    } catch (erro) {
+      setErroPeso(mensagemErroApi(erro, 'Falha ao remover peso.'));
+    }
+  };
+
+  const salvarMedidas = async (evento) => {
+    evento.preventDefault();
+    setErroMedidas('');
+
+    const registro = normalizarMedidas(formMedidas);
+    const erroValidacao = validarMedidas(registro);
+    if (erroValidacao) {
+      setErroMedidas(erroValidacao);
+      return;
+    }
+
+    try {
+      const salvo = await fitnessApi.criarMedida(registro);
+      setHistoricoMedidas((anterior) => trocarRegistro(anterior, salvo));
+      setFormMedidas({ data: obterDataDeHojeISO(), ...MEDIDAS_VAZIAS });
+    } catch (erro) {
+      setErroMedidas(mensagemErroApi(erro, 'Falha ao registrar medidas.'));
+    }
+  };
+
+  const salvarEdicaoMedida = async () => {
+    setErroMedidas('');
+    const registro = normalizarMedidas(edicaoMedida);
+    const erroValidacao = validarMedidas(registro);
+    if (erroValidacao) {
+      setErroMedidas(erroValidacao);
+      return;
+    }
+
+    try {
+      const salvo = await fitnessApi.atualizarMedida(edicaoMedida.id, registro);
+      setHistoricoMedidas((anterior) => trocarRegistro(anterior, salvo));
+      setEdicaoMedida(null);
+    } catch (erro) {
+      setErroMedidas(mensagemErroApi(erro, 'Falha ao atualizar medidas.'));
+    }
+  };
+
+  const removerMedida = async (id) => {
+    try {
+      await fitnessApi.removerMedida(id);
+      setHistoricoMedidas((anterior) => anterior.filter((item) => item.id !== id));
+      setConfirmacao(null);
+    } catch (erro) {
+      setErroMedidas(mensagemErroApi(erro, 'Falha ao remover medidas.'));
+    }
   };
 
   const adicionarFoto = (evento) => {
@@ -112,26 +272,59 @@ export default function EvolucaoPage() {
 
     setErroFoto('');
     const leitor = new FileReader();
-    leitor.onload = () => {
-      setFotos((anterior) =>
-        [
-          ...anterior,
-          {
-            id: Date.now(),
-            data: obterDataDeHojeISO(),
-            src: leitor.result,
-          },
-        ].slice(-MAX_FOTOS)
-      );
+    leitor.onload = async () => {
+      try {
+        const salva = await fitnessApi.criarFoto({
+          data: obterDataDeHojeISO(),
+          src: leitor.result,
+        });
+        setFotos((anterior) => ordenarPorData([...anterior, salva]).slice(-MAX_FOTOS));
+      } catch (erro) {
+        setErroFoto(mensagemErroApi(erro, 'Falha ao salvar foto.'));
+      }
     };
     leitor.readAsDataURL(arquivo);
   };
 
-  const removerFoto = (id) => {
-    // CORREÇÃO (P3.15): remoção era imediata e irreversível — um clique
-    // acidental no ícone de lixeira apagava a foto sem chance de desfazer.
-    if (!window.confirm('Remover esta foto de progresso? Essa ação não pode ser desfeita.')) return;
-    setFotos((anterior) => anterior.filter((foto) => foto.id !== id));
+  const removerFoto = async (id) => {
+    try {
+      await fitnessApi.removerFoto(id);
+      setFotos((anterior) => anterior.filter((foto) => foto.id !== id));
+      setConfirmacao(null);
+    } catch (erro) {
+      setErroFoto(mensagemErroApi(erro, 'Falha ao remover foto.'));
+    }
+  };
+
+  const renderAcoesHistorico = (tipo, item, aoEditar, aoRemover) => {
+    const chave = `${tipo}-${item.id}`;
+    const aguardandoConfirmacao = confirmacao === chave;
+
+    if (aguardandoConfirmacao) {
+      return (
+        <span className={estilos.confirmacaoInline}>
+          Remover?
+          <button type="button" onClick={aoRemover}>Sim</button>
+          <button type="button" onClick={() => setConfirmacao(null)}>Não</button>
+        </span>
+      );
+    }
+
+    return (
+      <span className={estilos.acoesHistorico}>
+        <button type="button" className={estilos.botaoIcone} onClick={aoEditar} aria-label="Editar registro">
+          <Pencil size={14} />
+        </button>
+        <button
+          type="button"
+          className={estilos.botaoIcone}
+          onClick={() => setConfirmacao(chave)}
+          aria-label="Remover registro"
+        >
+          <Trash2 size={14} />
+        </button>
+      </span>
+    );
   };
 
   return (
@@ -142,7 +335,92 @@ export default function EvolucaoPage() {
         <p className={estilos.subtitulo}>Peso, medidas corporais e fotos de progresso — tudo no mesmo lugar.</p>
       </div>
 
-      {!carregando && <GraficoEvolucaoPeso historicoPeso={historicoPeso} variacaoPeso={variacaoPeso} />}
+      {carregando ? (
+        <p className={estilos.estadoTexto}>Carregando evolução...</p>
+      ) : (
+        <GraficoEvolucaoPeso historicoPeso={historicoPeso} variacaoPeso={variacaoPeso} />
+      )}
+
+      <div className={estilos.cartao}>
+        <h3 className={estilos.cartaoTitulo}>Peso corporal</h3>
+
+        <form className={estilos.formMedidas} onSubmit={salvarPeso}>
+          <label>
+            Data
+            <input
+              type="date"
+              value={formPeso.data}
+              onChange={(e) => setFormPeso((p) => ({ ...p, data: e.target.value }))}
+              required
+            />
+          </label>
+          <label>
+            Peso (kg)
+            <input
+              type="number"
+              step="0.1"
+              min="20"
+              max="300"
+              value={formPeso.peso}
+              onChange={(e) => setFormPeso((p) => ({ ...p, peso: e.target.value }))}
+              required
+            />
+          </label>
+          {erroPeso && <p className={estilos.erro}>{erroPeso}</p>}
+          <button type="submit" className={estilos.botaoPrimario}>
+            Registrar peso
+          </button>
+        </form>
+
+        {historicoPeso.length > 0 && (
+          <div className={estilos.listaHistorico}>
+            <h4>Histórico recente</h4>
+            <ul>
+              {[...historicoPeso].reverse().slice(0, 5).map((item) => (
+                <li key={item.id || item.data} className={estilos.linhaHistorico}>
+                  {edicaoPeso?.id === item.id ? (
+                    <span className={estilos.formEdicaoHistorico}>
+                      <input
+                        type="date"
+                        value={edicaoPeso.data}
+                        onChange={(e) => setEdicaoPeso((p) => ({ ...p, data: e.target.value }))}
+                      />
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="20"
+                        max="300"
+                        value={edicaoPeso.peso}
+                        onChange={(e) => setEdicaoPeso((p) => ({ ...p, peso: e.target.value }))}
+                      />
+                      <button type="button" onClick={salvarEdicaoPeso} aria-label="Salvar edição">
+                        <Check size={14} />
+                      </button>
+                      <button type="button" onClick={() => setEdicaoPeso(null)} aria-label="Cancelar edição">
+                        <X size={14} />
+                      </button>
+                    </span>
+                  ) : (
+                    <>
+                      <span>
+                        <strong>{formatarDataCurta(item.data)}</strong>
+                        {Number(item.peso).toFixed(1)} kg
+                      </span>
+                      {item.id &&
+                        renderAcoesHistorico(
+                          'peso',
+                          item,
+                          () => setEdicaoPeso({ ...item, peso: String(item.peso) }),
+                          () => removerPeso(item.id)
+                        )}
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
 
       <div className={estilos.cartao}>
         <h3 className={estilos.cartaoTitulo}>Medidas e % de gordura</h3>
@@ -169,6 +447,14 @@ export default function EvolucaoPage() {
         )}
 
         <form className={estilos.formMedidas} onSubmit={salvarMedidas}>
+          <label>
+            Data
+            <input
+              type="date"
+              value={formMedidas.data}
+              onChange={(e) => setFormMedidas((p) => ({ ...p, data: e.target.value }))}
+            />
+          </label>
           <label>
             Cintura (cm)
             <input
@@ -224,18 +510,53 @@ export default function EvolucaoPage() {
             <h4>Histórico recente</h4>
             <ul>
               {[...historicoMedidas].reverse().slice(0, 5).map((item) => (
-                <li key={item.data}>
-                  <strong>{formatarDataCurta(item.data)}</strong>
-                  <span>
-                    {[
-                      item.cintura != null && `Cintura ${item.cintura}cm`,
-                      item.braco != null && `Braço ${item.braco}cm`,
-                      item.perna != null && `Perna ${item.perna}cm`,
-                      item.gordura != null && `${item.gordura}% gordura`,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </span>
+                <li key={item.id || item.data} className={estilos.linhaHistorico}>
+                  {edicaoMedida?.id === item.id ? (
+                    <span className={estilos.formEdicaoHistorico}>
+                      <input
+                        type="date"
+                        value={edicaoMedida.data}
+                        onChange={(e) => setEdicaoMedida((p) => ({ ...p, data: e.target.value }))}
+                      />
+                      {Object.keys(MEDIDAS_VAZIAS).map((campo) => (
+                        <input
+                          key={campo}
+                          type="number"
+                          step="0.1"
+                          placeholder={campo}
+                          value={edicaoMedida[campo] ?? ''}
+                          onChange={(e) => setEdicaoMedida((p) => ({ ...p, [campo]: e.target.value }))}
+                        />
+                      ))}
+                      <button type="button" onClick={salvarEdicaoMedida} aria-label="Salvar edição">
+                        <Check size={14} />
+                      </button>
+                      <button type="button" onClick={() => setEdicaoMedida(null)} aria-label="Cancelar edição">
+                        <X size={14} />
+                      </button>
+                    </span>
+                  ) : (
+                    <>
+                      <span>
+                        <strong>{formatarDataCurta(item.data)}</strong>
+                        {[
+                          item.cintura != null && `Cintura ${item.cintura}cm`,
+                          item.braco != null && `Braço ${item.braco}cm`,
+                          item.perna != null && `Perna ${item.perna}cm`,
+                          item.gordura != null && `${item.gordura}% gordura`,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </span>
+                      {item.id &&
+                        renderAcoesHistorico(
+                          'medida',
+                          item,
+                          () => setEdicaoMedida({ ...MEDIDAS_VAZIAS, ...item }),
+                          () => removerMedida(item.id)
+                        )}
+                    </>
+                  )}
                 </li>
               ))}
             </ul>
@@ -258,18 +579,28 @@ export default function EvolucaoPage() {
         {fotos.length === 0 ? (
           <div className={estilos.vazioFotos}>
             <Camera size={28} strokeWidth={2} />
-            <p>Ainda não há fotos. Adicione até {MAX_FOTOS} imagens locais para acompanhar o progresso.</p>
+            <p>Ainda não há fotos. Adicione até {MAX_FOTOS} imagens para acompanhar o progresso.</p>
           </div>
         ) : (
           <div className={estilos.gradeFotos}>
             {fotos.map((foto) => (
-              <figure key={foto.id} className={estilos.fotoItem}>
+              <figure key={foto.id || foto.src} className={estilos.fotoItem}>
                 <img src={foto.src} alt={`Progresso de ${formatarDataCurta(foto.data)}`} />
                 <figcaption>
                   <span>{formatarDataCurta(foto.data)}</span>
-                  <button type="button" onClick={() => removerFoto(foto.id)} aria-label="Remover foto">
-                    <Trash2 size={14} />
-                  </button>
+                  {confirmacao === `foto-${foto.id}` ? (
+                    <span className={estilos.confirmacaoInline}>
+                      Remover?
+                      <button type="button" onClick={() => removerFoto(foto.id)}>Sim</button>
+                      <button type="button" onClick={() => setConfirmacao(null)}>Não</button>
+                    </span>
+                  ) : (
+                    foto.id && (
+                      <button type="button" onClick={() => setConfirmacao(`foto-${foto.id}`)} aria-label="Remover foto">
+                        <Trash2 size={14} />
+                      </button>
+                    )
+                  )}
                 </figcaption>
               </figure>
             ))}

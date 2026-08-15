@@ -405,6 +405,771 @@
   color: var(--brand);
 }
 
+/* ==========================================================
+   CABEÇALHO DA SESSÃO DE EXECUÇÃO
+   ========================================================== */
+
+.cabecalhoSessao {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.cabecalhoSessaoTopo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.statusSessaoBadge {
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border: 1px solid var(--border);
+  background: var(--bg-muted);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.statusSessao-EM_ANDAMENTO {
+  background: var(--brand-soft);
+  color: #3f6212;
+  border-color: transparent;
+}
+
+.statusSessao-CONCLUIDO {
+  background: var(--success);
+  color: white;
+  border-color: transparent;
+}
+
+.statusSessao-PAUSADO {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: transparent;
+}
+
+:root[data-theme='dark'] .statusSessao-EM_ANDAMENTO {
+  color: var(--brand);
+}
+
+:root[data-theme='dark'] .statusSessao-PAUSADO {
+  background: rgba(217, 119, 6, 0.18);
+  color: #fbbf24;
+}
+
+.barraProgresso {
+  width: 100%;
+  height: 0.6rem;
+  border-radius: 999px;
+  background: var(--bg-muted);
+  overflow: hidden;
+}
+
+.barraProgressoPreenchida {
+  height: 100%;
+  background: var(--brand);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.cabecalhoSessaoAcoes {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btnEncerrarTreino {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.6rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btnEncerrarTreino:hover {
+  filter: brightness(0.92);
+}
+
+.btnEncerrarTreino:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==========================================================
+   RESUMO FINAL DO TREINO
+   ========================================================== */
+
+.modalResumo {
+  max-width: 480px;
+}
+
+.resumoGradeMetricas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.resumoMetrica {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--bg-muted);
+  border-radius: 1rem;
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.resumoMetrica strong {
+  font-size: 1.3rem;
+  color: var(--text-primary);
+}
+
+.resumoMetrica span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.resumoLinha {
+  margin: 0.5rem 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.resumoPositivo {
+  color: #16a34a;
+}
+
+.resumoNegativo {
+  color: #dc2626;
+}
+
+.resumoSecao {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.resumoSecao h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.resumoRecordes ul,
+.resumoPendentesLista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.resumoRecordes li {
+  background: var(--brand-soft);
+  border-radius: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  color: #3f6212;
+}
+
+:root[data-theme='dark'] .resumoRecordes li {
+  color: var(--brand);
+}
+
+.resumoPendentesLista li {
+  background: var(--bg-muted);
+  border-radius: 0.6rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.btnResumoFechar {
+  width: 100%;
+  margin-top: 1.25rem;
+  justify-content: center;
+}
+
+/* ==========================================================
+   INDICADORES DE CONEXÃO / SINCRONIZAÇÃO
+   ========================================================== */
+
+.indicadorConexao {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.indicadorConexao::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.indicadorConexaoOffline {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.indicadorConexaoOffline::before {
+  background: #dc2626;
+}
+
+.indicadorConexaoSincronizando {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.indicadorConexaoSincronizando::before {
+  background: #2563eb;
+  animation: pulseSincronizando 1s ease-in-out infinite;
+}
+
+@keyframes pulseSincronizando {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .indicadorConexaoSincronizando::before {
+    animation: none;
+  }
+}
+
+:root[data-theme='dark'] .indicadorConexaoOffline {
+  background: rgba(220, 38, 38, 0.18);
+  color: #fca5a5;
+}
+
+:root[data-theme='dark'] .indicadorConexaoSincronizando {
+  background: rgba(37, 99, 235, 0.18);
+  color: #93c5fd;
+}
+
+.pillSincronizacao {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  white-space: nowrap;
+}
+
+:root[data-theme='dark'] .pillSincronizacao {
+  background: rgba(217, 119, 6, 0.18);
+  color: #fbbf24;
+}
+
+/* ==========================================================
+   CRONÔMETRO GERAL DA SESSÃO
+   ========================================================== */
+
+.cronometroSessao {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.cronometroSessaoTempo {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  min-width: 3.5rem;
+}
+
+.btnCronometroToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--brand);
+  color: var(--brand-ink);
+  border: none;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.6rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btnCronometroToggle:hover {
+  filter: brightness(0.95);
+}
+
+/* ==========================================================
+   TEMPORIZADOR DE DESCANSO
+   ========================================================== */
+
+.painelDescansoInativo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.btnDescansoPreset {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.btnDescansoPreset:hover {
+  border-color: var(--brand);
+  color: var(--text-primary);
+}
+
+.painelDescanso {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.painelDescansoTopo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.painelDescansoLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+.btnFecharDescanso {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.2rem;
+}
+
+.btnFecharDescanso:hover {
+  color: var(--text-primary);
+}
+
+.barraDescanso {
+  width: 100%;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--bg-muted);
+  overflow: hidden;
+}
+
+.barraDescansoPreenchida {
+  height: 100%;
+  background: #38bdf8;
+  border-radius: 999px;
+  transition: width 0.25s linear;
+}
+
+.painelDescansoTempo {
+  margin: 0;
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.painelDescansoControles {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.painelDescansoControles > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.6rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.painelDescansoControles > button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnDescansoPrincipal {
+  background: var(--brand) !important;
+  color: var(--brand-ink) !important;
+  border-color: transparent !important;
+  padding: 0.75rem 1.5rem !important;
+  font-size: 0.95rem !important;
+}
+
+/* Alternativa visual ao som/vibração — nunca depende de suporte de
+   hardware/navegador, então é a única garantia de aviso "acessível" quando
+   a aba está em segundo plano ou o dispositivo está mudo. */
+.temporizadorFinalizado {
+  border-color: var(--brand);
+  animation: pulseDescansoFinalizado 1s ease-in-out infinite;
+}
+
+@keyframes pulseDescansoFinalizado {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(163, 230, 53, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(163, 230, 53, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .temporizadorFinalizado {
+    animation: none;
+    outline: 3px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+/* ==========================================================
+   CARD DE EXERCÍCIO EXPANSÍVEL (execução)
+   ========================================================== */
+
+.cardExercicioExecucao {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.cardExercicioHeader {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.cardExercicioInfo p {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 1.05rem;
+}
+
+.cardExercicioInfo span {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.2rem;
+}
+
+.cardExercicioMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.chevron {
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.chevronAberto {
+  transform: rotate(180deg);
+}
+
+.cardExercicioCorpo {
+  padding: 0 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1.25rem;
+}
+
+.bannerSugestao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  background: var(--brand-soft);
+  border-radius: 0.85rem;
+  padding: 0.85rem 1rem;
+  font-size: 0.85rem;
+  color: #3f6212;
+}
+
+:root[data-theme='dark'] .bannerSugestao {
+  color: var(--brand);
+}
+
+.btnUsarSugestao {
+  background: var(--brand);
+  color: var(--brand-ink);
+  border: none;
+  padding: 0.45rem 0.9rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.listaSeries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.linhaSerie {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.linhaSerieConcluida {
+  background: var(--brand-soft);
+  border-color: transparent;
+}
+
+.serieNumero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.serieCampo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.serieCampoLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.serieCampoControles {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.serieCampoControles button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.serieCampoControles button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.serieCampoControles input {
+  width: 3.5rem;
+  text-align: center;
+  padding: 0.4rem 0.2rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.serieCampoControles input:disabled {
+  opacity: 0.7;
+}
+
+.serieAcoes {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.btnConcluirSerie {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.btnConcluirSerie.ativo {
+  background: var(--success);
+  border-color: transparent;
+  color: white;
+  cursor: default;
+}
+
+.btnConcluirSerie:disabled:not(.ativo) {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnExcluirSerie {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.btnExcluirSerie:hover {
+  color: #dc2626;
+  border-color: #dc2626;
+}
+
+.cardExercicioRodape {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btnNovaSerie {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--brand-soft);
+  color: #3f6212;
+  border: none;
+  padding: 0.55rem 1rem;
+  border-radius: 0.6rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+:root[data-theme='dark'] .btnNovaSerie {
+  color: var(--brand);
+}
+
+.btnRemoverExercicio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  padding: 0.55rem 0.5rem;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.btnRemoverExercicio:hover {
+  color: #dc2626;
+}
+
+@media (max-width: 768px) {
+  .linhaSerie {
+    justify-content: space-between;
+  }
+
+  .serieAcoes {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
 @media (max-width: 768px) {
   .statsCard,
   .sessionCard {
