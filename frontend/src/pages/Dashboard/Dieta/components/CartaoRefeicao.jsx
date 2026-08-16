@@ -1,7 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { obterEmojiAlimento, obterEmojiRefeicao, PALETA_FUNDO_ICONE } from '../utils/emojiAlimento';
-import { calcularCaloriasPelosMacros, somarMacrosDeAlimentos } from '../utils/macros';
+import {
+  calcularCaloriasPelosMacros,
+  LIMITES_ALIMENTO,
+  somarMacrosDeAlimentos,
+  validarValoresAlimento,
+} from '../utils/macros';
 import { calcularMacrosProporcionais } from '../utils/tabelaAlimentos';
 import { metaExcedida } from '../utils/progresso';
 import { refeicaoConcluida } from '../utils/proximaRefeicao';
@@ -39,6 +44,8 @@ export default function CartaoRefeicao({
   // que o formulário já vem sempre visível dentro do card expandido.
   const [mostrarAdicionarAlimento, setMostrarAdicionarAlimento] = useState(false);
   const [adicionandoAlimento, setAdicionandoAlimento] = useState(false);
+  const [erroValidacaoNovoAlimento, setErroValidacaoNovoAlimento] = useState(null);
+  const [erroValidacaoEdicao, setErroValidacaoEdicao] = useState(null);
 
   const totaisDaRefeicao = useMemo(() => {
     const brutos = somarMacrosDeAlimentos([...(refeicao?.alimentos || []), ...alimentosRascunho]);
@@ -85,6 +92,10 @@ export default function CartaoRefeicao({
       carboidratos: carboidratosNumericos,
       gordura: gorduraNumerica,
     };
+  };
+
+  const validarAlimento = (rascunho) => {
+    return validarValoresAlimento(rascunho);
   };
 
   const salvarRefeicao = async () => {
@@ -144,7 +155,18 @@ export default function CartaoRefeicao({
 
   const lidarComEnvioNovoAlimento = async (evento) => {
     evento.preventDefault();
-    if (!String(novoAlimento.nome || '').trim()) return;
+    if (!String(novoAlimento.nome || '').trim()) {
+      setErroValidacaoNovoAlimento('O nome do alimento é obrigatório');
+      return;
+    }
+
+    const erro = validarAlimento(novoAlimento);
+    if (erro) {
+      setErroValidacaoNovoAlimento(erro);
+      return;
+    }
+
+    setErroValidacaoNovoAlimento(null);
 
     if (concluida) {
       setAdicionandoAlimento(true);
@@ -216,7 +238,18 @@ export default function CartaoRefeicao({
 
   const salvarEdicao = async (evento, indice, idAlimento) => {
     evento.preventDefault();
-    if (!String(rascunhoEdicao.nome || '').trim()) return;
+    if (!String(rascunhoEdicao.nome || '').trim()) {
+      setErroValidacaoEdicao('O nome do alimento é obrigatório');
+      return;
+    }
+
+    const erro = validarAlimento(rascunhoEdicao);
+    if (erro) {
+      setErroValidacaoEdicao(erro);
+      return;
+    }
+
+    setErroValidacaoEdicao(null);
     await aoEditarAlimento(refeicao.id, idAlimento, montarAlimento(rascunhoEdicao, idAlimento));
     setIndiceEmEdicao(null);
   };
@@ -303,17 +336,20 @@ export default function CartaoRefeicao({
               {refeicao.alimentos.map((alimento, indice) => (
                 <li key={alimento.id ?? `${alimento.nome}-${indice}`}>
                   {indiceEmEdicao === indice ? (
-                    <form onSubmit={(evento) => salvarEdicao(evento, indice, alimento.id)} className="flex flex-col gap-2 rounded-2xl bg-slate-50 p-3 dark:bg-zinc-900/40">
+                    <form noValidate onSubmit={(evento) => salvarEdicao(evento, indice, alimento.id)} className="flex flex-col gap-2 rounded-2xl bg-slate-50 p-3 dark:bg-zinc-900/40">
                       <BuscaAlimento valor={rascunhoEdicao.nome} aoDigitar={(nome) => setRascunhoEdicao((p) => ({ ...p, nome, alimentoRef: null }))} aoSelecionar={selecionarAlimentoRef(setRascunhoEdicao)} />
-                      <input type="text" placeholder="Quantidade" value={rascunhoEdicao.quantidade} onChange={(e) => alterarQuantidade(setRascunhoEdicao)(e.target.value)} className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                      <input type="number" step="0.1" placeholder="Quantidade" min="0" max={LIMITES_ALIMENTO.quantidade} value={rascunhoEdicao.quantidade} onChange={(e) => { alterarQuantidade(setRascunhoEdicao)(e.target.value); setErroValidacaoEdicao(null); }} className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
                       <div className="grid grid-cols-3 gap-2">
                         {['proteina', 'carboidratos', 'gordura'].map((campo) => (
-                          <input key={campo} type="number" step="0.1" value={rascunhoEdicao[campo]} onChange={(e) => setRascunhoEdicao((p) => ({ ...p, [campo]: e.target.value }))} className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                          <input key={campo} type="number" step="0.1" min="0" max={LIMITES_ALIMENTO[campo]} value={rascunhoEdicao[campo]} onChange={(e) => { setRascunhoEdicao((p) => ({ ...p, [campo]: e.target.value })); setErroValidacaoEdicao(null); }} className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
                         ))}
                       </div>
+                      {erroValidacaoEdicao && (
+                        <span className="w-fit rounded-full bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">{erroValidacaoEdicao}</span>
+                      )}
                       <div className="flex gap-2">
-                        <button type="submit" className="flex-1 rounded-lg bg-zinc-900 py-2 text-xs font-bold text-white dark:bg-lime-400 dark:text-zinc-900">Salvar</button>
-                        <button type="button" onClick={() => setIndiceEmEdicao(null)} className="rounded-lg bg-slate-200 px-3 py-2 text-xs font-bold text-slate-600 dark:bg-zinc-700 dark:text-zinc-300">Cancelar</button>
+                        <button type="submit" disabled={!!erroValidacaoEdicao} className="flex-1 rounded-lg bg-zinc-900 py-2 text-xs font-bold text-white disabled:opacity-60 dark:bg-lime-400 dark:text-zinc-900">Salvar</button>
+                        <button type="button" onClick={() => { setIndiceEmEdicao(null); setErroValidacaoEdicao(null); }} className="rounded-lg bg-slate-200 px-3 py-2 text-xs font-bold text-slate-600 dark:bg-zinc-700 dark:text-zinc-300">Cancelar</button>
                       </div>
                     </form>
                   ) : (
@@ -376,7 +412,7 @@ export default function CartaoRefeicao({
           )}
 
           {(!concluida || mostrarAdicionarAlimento) && (
-            <form onSubmit={lidarComEnvioNovoAlimento} className="flex flex-col gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-zinc-900/40">
+            <form noValidate onSubmit={lidarComEnvioNovoAlimento} className="flex flex-col gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-zinc-900/40">
               <div className="flex items-center justify-between">
                 <h4 className="m-0 text-sm font-bold text-slate-600 dark:text-zinc-300">Novo alimento</h4>
                 {concluida && (
@@ -394,14 +430,17 @@ export default function CartaoRefeicao({
                 )}
               </div>
               <BuscaAlimento valor={novoAlimento.nome} aoDigitar={(nome) => setNovoAlimento((p) => ({ ...p, nome, alimentoRef: null }))} aoSelecionar={selecionarAlimentoRef(setNovoAlimento)} />
-              <input type="text" placeholder="Quantidade (ex: 150)" value={novoAlimento.quantidade} onChange={(e) => alterarQuantidade(setNovoAlimento)(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+              <input type="number" step="0.1" placeholder="Quantidade (ex: 150)" min="0" max={LIMITES_ALIMENTO.quantidade} value={novoAlimento.quantidade} onChange={(e) => { alterarQuantidade(setNovoAlimento)(e.target.value); setErroValidacaoNovoAlimento(null); }} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
               <div className="grid grid-cols-3 gap-2">
                 {['proteina', 'carboidratos', 'gordura'].map((campo) => (
-                  <input key={campo} type="number" step="0.1" placeholder={campo === 'proteina' ? 'Prot' : campo === 'carboidratos' ? 'Carb' : 'Gord'} value={novoAlimento[campo]} onChange={(e) => setNovoAlimento((p) => ({ ...p, [campo]: e.target.value }))} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                  <input key={campo} type="number" step="0.1" min="0" max={LIMITES_ALIMENTO[campo]} placeholder={campo === 'proteina' ? 'Prot' : campo === 'carboidratos' ? 'Carb' : 'Gord'} value={novoAlimento[campo]} onChange={(e) => { setNovoAlimento((p) => ({ ...p, [campo]: e.target.value })); setErroValidacaoNovoAlimento(null); }} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
                 ))}
               </div>
+              {erroValidacaoNovoAlimento && (
+                <span className="w-fit rounded-full bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">{erroValidacaoNovoAlimento}</span>
+              )}
               <span className="w-fit rounded-full bg-lime-50 px-2.5 py-1 text-xs font-bold text-lime-700 dark:bg-lime-400/10 dark:text-lime-300">Prévia: {Math.round(calcularCaloriasPelosMacros(novoAlimento.proteina, novoAlimento.carboidratos, novoAlimento.gordura))} kcal</span>
-              <button type="submit" disabled={adicionandoAlimento} className="flex items-center justify-center gap-2 rounded-xl bg-zinc-900 py-2.5 text-sm font-bold text-white disabled:opacity-60 dark:bg-lime-400 dark:text-zinc-900"><Plus size={14} strokeWidth={2.5} /> {adicionandoAlimento ? 'Adicionando...' : 'Adicionar'}</button>
+              <button type="submit" disabled={adicionandoAlimento || !!erroValidacaoNovoAlimento} className="flex items-center justify-center gap-2 rounded-xl bg-zinc-900 py-2.5 text-sm font-bold text-white disabled:opacity-60 dark:bg-lime-400 dark:text-zinc-900"><Plus size={14} strokeWidth={2.5} /> {adicionandoAlimento ? 'Adicionando...' : 'Adicionar'}</button>
             </form>
           )}
         </div>

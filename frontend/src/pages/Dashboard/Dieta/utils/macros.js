@@ -30,3 +30,33 @@ export function calcularCaloriasPelosMacros(proteina, carboidratos, gordura) {
     paraNumeroNaoNegativo(proteina) * 4 + paraNumeroNaoNegativo(carboidratos) * 4 + paraNumeroNaoNegativo(gordura) * 9
   );
 }
+
+export const LIMITES_ALIMENTO = Object.freeze({
+  quantidade: 5000,
+  proteina: 1000,
+  carboidratos: 1500,
+  gordura: 500,
+});
+
+/** Valida os valores nutricionais antes de qualquer persistência. */
+export function validarValoresAlimento(alimento = {}) {
+  const quantidade = Number(alimento.quantidade);
+  if (!Number.isFinite(quantidade) || quantidade <= 0) {
+    return 'A quantidade deve ser maior que 0';
+  }
+  if (quantidade > LIMITES_ALIMENTO.quantidade) {
+    return `A quantidade deve ser menor ou igual a ${LIMITES_ALIMENTO.quantidade} g`;
+  }
+
+  for (const campo of ['proteina', 'carboidratos', 'gordura']) {
+    const valor = Number(alimento[campo] || 0);
+    if (!Number.isFinite(valor) || valor < 0) {
+      return 'Os macronutrientes não podem ser negativos';
+    }
+    if (valor > LIMITES_ALIMENTO[campo]) {
+      return `O valor de ${campo} excede o limite permitido`;
+    }
+  }
+
+  return null;
+}

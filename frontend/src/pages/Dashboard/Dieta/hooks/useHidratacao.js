@@ -4,14 +4,15 @@ import { useMetas } from './useMetas';
 
 export function useHidratacao(dataSelecionadaISO) {
   const nutrition = useNutrition();
+  const { carregarAgua } = nutrition;
   const { metas, atualizarMetas } = useMetas();
   const registros = nutrition.obterRegistrosAguaDaData(dataSelecionadaISO);
   const status = nutrition.obterStatusAguaDaData(dataSelecionadaISO);
   const metaMl = metas.aguaMl;
 
   useEffect(() => {
-    nutrition.carregarAgua(dataSelecionadaISO);
-  }, [nutrition, dataSelecionadaISO]);
+    carregarAgua(dataSelecionadaISO);
+  }, [carregarAgua, dataSelecionadaISO]);
 
   const totalMl = useMemo(
     () => registros.reduce((total, registro) => total + (Number(registro.quantidadeMl) || 0), 0),
@@ -42,6 +43,6 @@ export function useHidratacao(dataSelecionadaISO) {
     adicionarAgua,
     removerRegistro,
     definirMetaMl,
-    recarregar: () => nutrition.carregarAgua(dataSelecionadaISO, { forcar: true }),
+    recarregar: () => carregarAgua(dataSelecionadaISO, { forcar: true }),
   };
 }

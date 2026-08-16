@@ -8,10 +8,11 @@ import { useNutrition } from '../../../../context/NutritionContext';
  */
 export function useRefeicoes(dataSelecionadaISO) {
   const nutrition = useNutrition();
+  const { carregarRefeicoes } = nutrition;
 
   useEffect(() => {
-    nutrition.carregarRefeicoes(dataSelecionadaISO);
-  }, [nutrition, dataSelecionadaISO]);
+    carregarRefeicoes(dataSelecionadaISO);
+  }, [carregarRefeicoes, dataSelecionadaISO]);
 
   const adicionarAlimento = useCallback(
     (idRefeicao, novoAlimento) => nutrition.adicionarAlimento(dataSelecionadaISO, idRefeicao, novoAlimento),
@@ -60,6 +61,6 @@ export function useRefeicoes(dataSelecionadaISO) {
     editarRefeicao,
     removerRefeicao,
     concluirRefeicao,
-    recarregar: () => nutrition.carregarRefeicoes(dataSelecionadaISO, { forcar: true }),
+    recarregar: () => carregarRefeicoes(dataSelecionadaISO, { forcar: true }),
   };
 }

@@ -124,8 +124,9 @@ export default function RelatoriosPage() {
       </div>
 
       {carregandoHistorico ? (
-        <div className={estilos.cartaoVazio}>
-          <h3>Carregando relatório…</h3>
+        <div className={estilos.esqueletoGraficos} aria-busy="true" aria-label="Carregando relatório">
+          <div className={estilos.esqueletoCartao} />
+          <div className={estilos.esqueletoCartao} />
         </div>
       ) : resumo.diasComRegistro === 0 ? (
         <div className={estilos.cartaoVazio}>

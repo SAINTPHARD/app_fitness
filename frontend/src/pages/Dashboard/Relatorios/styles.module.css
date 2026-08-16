@@ -186,6 +186,29 @@
   font-size: 0.9rem;
 }
 
+.esqueletoGraficos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.esqueletoCartao {
+  height: 280px;
+  border-radius: var(--radius);
+  background: var(--bg-muted);
+  animation: pulso 1.5s ease-in-out infinite;
+}
+
+@keyframes pulso {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 @media print {
   [data-print-hide] {
     display: none !important;

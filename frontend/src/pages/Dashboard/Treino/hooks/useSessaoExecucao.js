@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { fitnessApi } from '../../../../services/fitnessApi';
 import { notificarErro } from '../../../../utils/notificacoes';
 import { removerDaFila } from '../utils/filaOffline';
+import { obterErroSerie } from '../utils/validarSerie';
 import { useSincronizacaoOffline } from './useSincronizacaoOffline';
 
 const PREFIXO_TEMP = 'temp-';
@@ -203,6 +204,13 @@ export function useSessaoExecucao(treino) {
       return null;
     }
 
+    const serieAtual = (sessaoRef.current?.series || []).find((serie) => serie.id === serieId);
+    const erroPreenchimento = obterErroSerie(serieAtual?.carga, serieAtual?.repeticoes);
+    if (erroPreenchimento) {
+      notificarErro(erroPreenchimento);
+      return null;
+    }
+
     const chave = `serie-${serieId}`;
     marcarProcessando(chave, true);
     try {
@@ -215,11 +223,6 @@ export function useSessaoExecucao(treino) {
 
       // Offline: conclusão otimista local. Repetições precisam já estar
       // preenchidas (mesma regra do backend) — sem isso, nem tenta.
-      const serieAtual = (sessaoRef.current?.series || []).find((serie) => serie.id === serieId);
-      if (!serieAtual || serieAtual.repeticoes == null || serieAtual.repeticoes < 0) {
-        notificarErro('Informe as repetições realizadas antes de concluir a série.');
-        return null;
-      }
       const serieOtimista = {
         ...serieAtual,
         status: 'CONCLUIDA',

@@ -1071,6 +1071,13 @@
   margin-left: auto;
 }
 
+.serieErro {
+  color: #dc2626;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .btnConcluirSerie {
   display: inline-flex;
   align-items: center;

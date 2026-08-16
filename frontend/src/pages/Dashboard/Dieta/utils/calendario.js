@@ -18,6 +18,17 @@ export function obterDataDeHojeISO() {
 }
 
 /**
+ * Converte uma data ISO (AAAA-MM-DD) para o formato de exibição brasileiro
+ * (DD/MM/AAAA) — usado nos eixos de gráficos e tabelas que hoje mostram a
+ * data crua vinda da API/estado.
+ */
+export function formatarDataParaExibicaoBr(dataISO) {
+  const [ano, mes, dia] = String(dataISO || '').split('-');
+  if (!ano || !mes || !dia) return dataISO;
+  return `${dia}/${mes}/${ano}`;
+}
+
+/**
  * Monta os 7 dias (Domingo a Sábado) da semana que contém `dataReferenciaISO`,
  * para alimentar a BarraCalendario. Sempre retorna a semana completa, mesmo
  * que a data de referência esteja no meio dela.

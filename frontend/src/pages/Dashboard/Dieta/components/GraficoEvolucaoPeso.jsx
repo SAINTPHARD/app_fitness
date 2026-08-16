@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { formatarDataParaExibicaoBr } from '../utils/calendario';
 
 const COR_TEXTO_EIXO = '#94a3b8';
 const COR_BORDA = '#dbe2ef';
@@ -29,7 +30,13 @@ export default function GraficoEvolucaoPeso({ historicoPeso }) {
         <div className="-mx-2">
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={historicoPeso} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-              <XAxis dataKey="data" tick={{ fill: COR_TEXTO_EIXO, fontSize: 11 }} axisLine={false} tickLine={false} />
+              <XAxis
+                dataKey="data"
+                tickFormatter={formatarDataParaExibicaoBr}
+                tick={{ fill: COR_TEXTO_EIXO, fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+              />
               <YAxis
                 domain={['dataMin - 1', 'dataMax + 1']}
                 tick={{ fill: COR_TEXTO_EIXO, fontSize: 12 }}

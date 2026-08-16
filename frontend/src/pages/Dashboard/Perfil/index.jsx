@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { fitnessApi } from '../../../services/fitnessApi';
-import { calcularImc, classificarImc, normalizarAlturaCm } from '../../../utils/imc';
+import { calcularImc, classificarImc, normalizarAlturaCm, tonalidadeImc } from '../../../utils/imc';
 import { obterDataDeHojeISO } from '../Dieta/utils/calendario';
 import AtualizacaoPesoCard from '../AtualizacaoPesoCard';
+import { obterUltimoRegistroPeso } from '../../../utils/historicoPeso';
 import './perfil.css';
 
 const OBJETIVOS = [
@@ -57,8 +58,16 @@ export default function PerfilPage() {
 
   const carregarPerfil = async () => {
     try {
-      const response = await fitnessApi.getProfile();
+      const [response, historicoPeso] = await Promise.all([
+        fitnessApi.getProfile(),
+        fitnessApi.listarPesos().catch((erroHistorico) => {
+          console.error('Falha ao carregar histórico de peso:', erroHistorico);
+          return [];
+        }),
+      ]);
       let dados = response.data || {};
+      const ultimoPeso = obterUltimoRegistroPeso(historicoPeso);
+      if (ultimoPeso) dados = { ...dados, peso: Number(ultimoPeso.peso) };
 
       // CORREÇÃO (mesma migração de `usePerfilResumo`): se a altura salva
       // ainda está em metros, corrige para cm antes de exibir no formulário
@@ -95,6 +104,7 @@ export default function PerfilPage() {
 
   const imc = calcularImc(profile?.peso, profile?.altura);
   const classificacao = classificarImc(imc);
+  const tomImc = tonalidadeImc(classificacao);
 
   const atualizarCampo = (campo, valor) => {
     setFormulario((prev) => ({ ...prev, [campo]: valor }));
@@ -182,7 +192,7 @@ export default function PerfilPage() {
         <article>
           <span>IMC</span>
           <strong>{imc ?? '---'}</strong>
-          {classificacao && <em>{classificacao}</em>}
+          {classificacao && <em data-tom={tomImc}>{classificacao}</em>}
         </article>
         <article>
           <span>Objetivo</span>

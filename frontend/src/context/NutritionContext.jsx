@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { fitnessApi } from '../services/fitnessApi';
-import { somarMacrosDeAlimentos } from '../pages/Dashboard/Dieta/utils/macros';
+import { somarMacrosDeAlimentos, validarValoresAlimento } from '../pages/Dashboard/Dieta/utils/macros';
 import { obterDataDeHojeISO } from '../pages/Dashboard/Dieta/utils/calendario';
 import { ordenarPorHorario } from '../pages/Dashboard/Dieta/utils/proximaRefeicao';
 
@@ -200,6 +200,9 @@ export function NutritionProvider({ children }) {
   }, [obterRefeicoesDaData, substituirRefeicaoNaData]);
 
   const adicionarAlimento = useCallback(async (dataISO, idRefeicao, novoAlimento) => {
+    const erroValidacao = validarValoresAlimento(novoAlimento);
+    if (erroValidacao) throw new Error(erroValidacao);
+
     const idRefeicaoReal = await garantirRefeicaoPersistida(dataISO, idRefeicao);
     // O backend agora devolve a Refeição inteira (itens + totalCalorias
     // recalculado), não só o Alimento criado — substituímos a refeição
@@ -215,6 +218,9 @@ export function NutritionProvider({ children }) {
   }, [garantirRefeicaoPersistida, invalidarHistoricosRefeicoes, substituirRefeicaoNaData]);
 
   const editarAlimento = useCallback(async (dataISO, idRefeicao, idAlimento, alimentoEditado) => {
+    const erroValidacao = validarValoresAlimento(alimentoEditado);
+    if (erroValidacao) throw new Error(erroValidacao);
+
     const alimentoAtualizado = await fitnessApi.atualizarAlimento(idRefeicao, idAlimento, alimentoEditado);
 
     substituirRefeicaoNaData(dataISO, idRefeicao, (refeicao) => ({

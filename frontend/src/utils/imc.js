@@ -41,6 +41,26 @@ export function classificarImc(imc) {
   return 'Obesidade';
 }
 
+/**
+ * Tom semântico (não a cor final) associado a cada classificação de IMC —
+ * "Peso normal" é a única faixa segura; as demais usam alerta/perigo em vez
+ * de verde, já que abaixo do peso, sobrepeso e obesidade não são estados
+ * positivos.
+ */
+export function tonalidadeImc(classificacao) {
+  switch (classificacao) {
+    case 'Peso normal':
+      return 'sucesso';
+    case 'Sobrepeso':
+      return 'alerta';
+    case 'Abaixo do peso':
+    case 'Obesidade':
+      return 'perigo';
+    default:
+      return 'neutro';
+  }
+}
+
 // Faixa usada pelo indicador visual de IMC (barra gradiente): valores fora
 // desse intervalo são "grampeados" nas pontas ao posicionar o marcador.
 export const IMC_FAIXA_MINIMA = 15;

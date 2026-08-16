@@ -5,6 +5,7 @@ import { useCronometro } from './hooks/useCronometro';
 import { useTemporizadorDescanso } from './hooks/useTemporizadorDescanso';
 import { DIAS_SEMANA, obterIdDiaDaSemanaAtual } from './utils/diasSemana';
 import { gruposMusculares } from './utils/catalogoExercicios';
+import { contarExerciciosConcluidos } from './utils/progressoTreino';
 import { notificarErro } from '../../../utils/notificacoes';
 import CardExercicioExecucao from './components/CardExercicioExecucao';
 import CronometroSessao from './components/CronometroSessao';
@@ -96,16 +97,14 @@ export default function TreinoPage() {
     await removerExercicio(diaSelecionado, idExercicio);
   };
 
-  const exerciciosComProgresso = exerciciosDoDia.filter(
-    (ex) => seriesDoExercicio(ex.id).some((serie) => serie.status === 'CONCLUIDA')
-  ).length;
+  const exerciciosComProgresso = contarExerciciosConcluidos(exerciciosDoDia, seriesDoExercicio);
   const totalExercicios = exerciciosDoDia.length;
   const percentualProgresso = totalExercicios > 0 ? Math.round((exerciciosComProgresso / totalExercicios) * 100) : 0;
   const statusSessao = sessao?.status || 'PENDENTE';
 
   // "Verificar se existem exercícios ou séries pendentes" antes de encerrar
-  // — pendente = algum exercício sem NENHUMA série concluída, ou alguma
-  // série já criada mas ainda não concluída (EM_ANDAMENTO).
+  // — pendente = algum exercício que ainda não teve TODAS as séries
+  // concluídas, incluindo exercícios sem séries registradas.
   const haPendencias =
     exerciciosComProgresso < totalExercicios ||
     (sessao?.series || []).some((serie) => serie.status === 'EM_ANDAMENTO');

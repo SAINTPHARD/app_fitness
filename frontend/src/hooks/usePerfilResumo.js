@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fitnessApi } from '../services/fitnessApi';
 import { obterDataDeHojeISO } from '../pages/Dashboard/Dieta/utils/calendario';
 import { calcularImc, classificarImc, normalizarAlturaCm } from '../utils/imc';
+import { obterUltimoRegistroPeso, ordenarPesosPorData } from '../utils/historicoPeso';
 
 const CHAVE_HISTORICO_PESO = 'home-historico-peso';
 const MAXIMO_PONTOS_HISTORICO = 30;
@@ -18,7 +19,7 @@ function lerHistoricoPesoSalvo() {
 }
 
 function ordenarPorData(lista) {
-  return [...lista].sort((a, b) => String(a.data).localeCompare(String(b.data)));
+  return ordenarPesosPorData(lista);
 }
 
 /**
@@ -86,9 +87,11 @@ export function usePerfilResumo() {
           }
         }
 
-        setPerfil(dadosPerfil);
+        const historicoOrdenado = ordenarPesosPorData(pesosBackend).slice(-MAXIMO_PONTOS_HISTORICO);
+        const ultimoPeso = obterUltimoRegistroPeso(historicoOrdenado);
+        setPerfil(ultimoPeso ? { ...dadosPerfil, peso: Number(ultimoPeso.peso) } : dadosPerfil);
         if (pesosBackend.length > 0) {
-          setHistoricoPeso(pesosBackend.slice(-MAXIMO_PONTOS_HISTORICO));
+          setHistoricoPeso(historicoOrdenado);
         }
       } catch (erro) {
         console.error('Falha ao carregar o perfil:', erro);

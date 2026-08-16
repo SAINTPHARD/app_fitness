@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ChevronDown, Check, Minus, Plus, Trash2, X } from 'lucide-react';
 import { fitnessApi } from '../../../../services/fitnessApi';
+import { obterErroSerie } from '../utils/validarSerie';
 
 const PASSO_CARGA = 2.5;
 const PASSO_REPS = 1;
@@ -22,6 +23,7 @@ function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) 
   const concluida = serie.status === 'CONCLUIDA';
   const pendenteCriacao = String(serie.id).startsWith('temp-');
   const bloqueada = concluida || processando || pendenteCriacao;
+  const erroPreenchimento = concluida ? null : obterErroSerie(carga, repeticoes);
 
   useEffect(() => {
     setCarga(serie.carga ?? '');
@@ -65,7 +67,7 @@ function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) 
           <input
             type="number"
             inputMode="decimal"
-            min="0"
+            min="0.1"
             step="0.5"
             value={carga}
             disabled={bloqueada}
@@ -88,7 +90,7 @@ function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) 
           <input
             type="number"
             inputMode="numeric"
-            min="0"
+            min="1"
             step="1"
             value={repeticoes}
             disabled={bloqueada}
@@ -103,6 +105,7 @@ function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) 
       </div>
 
       <div className="serieAcoes">
+        {erroPreenchimento && <span className="serieErro" role="alert">{erroPreenchimento}</span>}
         {serie.pendenteSincronizacao && (
           <span className="pillSincronizacao" title="Salva localmente, sincroniza quando a conexão voltar">
             {pendenteCriacao ? 'Offline' : 'Pendente'}
@@ -112,7 +115,7 @@ function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) 
           type="button"
           className={`btnConcluirSerie ${concluida ? 'ativo' : ''}`}
           onClick={() => aoConcluir(serie.id)}
-          disabled={concluida || processando || pendenteCriacao}
+          disabled={concluida || processando || pendenteCriacao || Boolean(erroPreenchimento)}
           aria-pressed={concluida}
           title={pendenteCriacao ? 'Aguarde a sincronização antes de concluir' : undefined}
         >

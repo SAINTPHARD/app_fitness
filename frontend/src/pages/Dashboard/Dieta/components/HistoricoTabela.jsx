@@ -68,7 +68,10 @@ export default function HistoricoTabela({ historicoPeso }) {
                 {COLUNAS.map((coluna) => (
                   <th
                     key={coluna.chave}
-                    className="whitespace-nowrap px-3 py-2 text-left text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-zinc-500"
+                    className={[
+                      'whitespace-nowrap px-3 py-2 text-left text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-zinc-500',
+                      coluna.chave === 'dataFormatada' ? 'sticky left-0 z-10 bg-white dark:bg-zinc-800' : '',
+                    ].join(' ')}
                   >
                     {coluna.rotulo}
                   </th>
@@ -78,7 +81,7 @@ export default function HistoricoTabela({ historicoPeso }) {
             <tbody>
               {linhas.map((linha) => (
                 <tr key={linha.iso} className="border-t border-slate-100 dark:border-zinc-700">
-                  <td className="whitespace-nowrap px-3 py-2.5 font-semibold text-slate-700 dark:text-zinc-200">
+                  <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-2.5 font-semibold text-slate-700 dark:bg-zinc-800 dark:text-zinc-200">
                     {linha.dataFormatada}
                   </td>
                   <td className="px-3 py-2.5 text-slate-600 dark:text-zinc-300">{linha.calorias}</td>

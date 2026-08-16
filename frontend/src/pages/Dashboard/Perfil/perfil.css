@@ -67,12 +67,32 @@
 .perfilStatsGrid em {
   font-style: normal;
   font-size: 0.8rem;
-  color: #65a30d;
+  color: var(--text-muted);
   font-weight: 600;
 }
 
-:root[data-theme='dark'] .perfilStatsGrid em {
+.perfilStatsGrid em[data-tom='sucesso'] {
+  color: #65a30d;
+}
+
+.perfilStatsGrid em[data-tom='alerta'] {
+  color: #d97706;
+}
+
+.perfilStatsGrid em[data-tom='perigo'] {
+  color: var(--danger, #dc2626);
+}
+
+:root[data-theme='dark'] .perfilStatsGrid em[data-tom='sucesso'] {
   color: var(--brand);
+}
+
+:root[data-theme='dark'] .perfilStatsGrid em[data-tom='alerta'] {
+  color: #fbbf24;
+}
+
+:root[data-theme='dark'] .perfilStatsGrid em[data-tom='perigo'] {
+  color: #f87171;
 }
 
 .perfilGrade {

@@ -26,7 +26,7 @@ export default function ResumoNutricional({ totais, metas, percentuais }) {
       {LINHAS.map(({ chave, rotulo, corBarra }) => (
         <div key={chave}>
           {(() => {
-            const chaveMeta = chave === 'proteina' ? 'proteinas' : chave;
+            const chaveMeta = chave === 'proteina' ? 'proteinas' : chave === 'gordura' ? 'gorduras' : chave;
             const meta = Number(metas?.[chaveMeta]) || 0;
             const metaDefinida = meta > 0;
             const percentual = Number.isFinite(Number(percentuais[chave])) ? Number(percentuais[chave]) : 0;
