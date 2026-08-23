@@ -1,38 +1,36 @@
-# ============================================================================
-# SEGREDOS — NUNCA versionar
-# ============================================================================
-# CORREÇÃO: não existia .gitignore nenhum na raiz do repositório antes disso,
-# então o .env da raiz (usado pelo docker-compose.yml e pelo backend em dev)
-# não estava protegido em lugar nenhum — só o de dentro de
-# backend/app_fitness-main/ (que não cobre um .env um nível acima). Ele já
-# tinha sido commitado (ver `git log -- .env`); removido do rastreamento
-# separadamente, mas os segredos antigos devem ser tratados como
-# comprometidos e rotacionados.
+# IDEs & Ambientes Locais
+.vscode/
+.idea/
+*.iml
+*.log
+
+# Ferramentas de IA & Metadados Locais
+.claude/
+.claude-flow/
+.codex/
+.agents/
+.swarm/
+.clinerules
+.mcp.json
+*.skill
+*.db
+AGENTS.md
+CLAUDE.md
+
+# Dependências e Builds
+target/
+build/
+node_modules/
+dist/
 .env
 .env.local
+
+# Segredos adicionais
 .env.*.local
 backend/.env
 backend/app_fitness-main/.env
 
-# ============================================================================
-# BUILD / DEPENDÊNCIAS
-# ============================================================================
-node_modules/
-dist/
-build/
-target/
-
-# ============================================================================
-# IDE / SO
-# ============================================================================
-.idea/
-.vscode/
-*.iml
+# Sistema operacional e dados locais
 .DS_Store
 Thumbs.db
-
-# ============================================================================
-# LOGS E DADOS LOCAIS
-# ============================================================================
-*.log
 postgres_data/

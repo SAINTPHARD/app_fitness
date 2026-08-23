@@ -1,23 +1,73 @@
 # System Fitness
 
-Projeto full stack para gestão de treinos, dietas e acompanhamento de atletas, desenvolvido com Spring Boot no backend e React no frontend.
+Plataforma full stack para gestão de treinos, nutrição e acompanhamento de evolução física.
 
-## Visão geral
+O projeto utiliza uma arquitetura desacoplada, com frontend em React e API REST em Spring Boot, autenticação via JWT, persistência em PostgreSQL e deploy em serviços cloud.
 
-O System Fitness une uma API REST robusta com uma interface moderna para oferecer um fluxo completo de cadastro, acompanhamento e organização de treinos e dietas.
+## Produção
 
-## Arquitetura visual
+- **Frontend:** https://app-fitness-murex.vercel.app
+- **Backend:** https://app-fitness-mpmk.onrender.com
 
-![Arquitetura do System Fitness](./docs/system-fitness-architecture.png)
+---
 
-## Materiais de documentação
+## Tecnologias
 
-- [Arquitetura visual](./docs/system-fitness-architecture.png)
-- [Banner do projeto](./docs/banner.png)
-- [Demonstração visual](./docs/demo.gif)
+### Backend
 
-## Estrutura do repositório
+- Java 21
+- Spring Boot 4.x
+- Spring Security
+- JWT
+- Spring Data JPA
+- Hibernate
+- PostgreSQL
+- Flyway
+- Maven
+- Docker
 
-- [backend](./backend)
-- [frontend](./frontend)
-- [docs](./docs)
+### Frontend
+
+- React
+- Vite
+- TypeScript / JavaScript
+- Tailwind CSS
+- Axios
+- Lucide Icons
+
+### Infraestrutura
+
+- **Vercel** — hospedagem e deploy do frontend
+- **Render** — execução do backend
+- **Neon** — PostgreSQL Serverless
+
+---
+
+## Funcionalidades
+
+- **Autenticação:** cadastro, login e controle de acesso com JWT.
+- **Nutrição:** registro de refeições, acompanhamento de calorias, macronutrientes e consumo de água.
+- **Treinos:** criação e organização de fichas e exercícios.
+- **Evolução:** acompanhamento de peso, medidas e metas corporais.
+- **Segurança:** proteção de endpoints e configuração controlada de CORS.
+
+---
+
+## Estrutura do Projeto
+
+```text
+app_fitness/
+├── backend/
+│   └── app_fitness-main/
+│       ├── src/main/java/        # API, serviços, entidades e segurança
+│       ├── src/main/resources/   # Configurações e migrations Flyway
+│       ├── Dockerfile
+│       └── pom.xml
+│
+├── frontend/
+│   ├── src/                      # Páginas, componentes, contextos e serviços
+│   ├── public/
+│   └── package.json
+│
+├── docker-compose.yml
+└── README.md
