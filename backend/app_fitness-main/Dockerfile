@@ -1,25 +1,18 @@
-# ============================================================================
-# Dockerfile para o backend Spring Boot (Atualizado para Java 25)
-# ============================================================================
-# Esta imagem empacota a aplicação Java Spring Boot e expõe a API na porta 8080.
-
-# Stage 1: build com Maven (Java 25 LTS estável)
-FROM maven:3.9.6-eclipse-temurin-25-alpine AS build
+FROM maven:3.9.9-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 
-# Copia os arquivos de build
 COPY pom.xml ./
+RUN mvn -B -q dependency:go-offline
 
-# Copia o código-fonte e empacota a aplicação pulando testes para acelerar
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN mvn -B clean package -DskipTests
 
-# Stage 2: runtime Java (Java 25 JRE leve)
-FROM eclipse-temurin:25-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Copia o jar gerado pelo build
-COPY --from=build /app/target/*.jar app.jar
+RUN addgroup -S app && adduser -S app -G app
+COPY --from=build --chown=app:app /app/target/*.jar app.jar
 
+USER app
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
