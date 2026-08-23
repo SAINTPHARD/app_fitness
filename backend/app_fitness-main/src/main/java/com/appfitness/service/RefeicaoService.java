@@ -309,8 +309,8 @@ public class RefeicaoService {
      * texto da quantidade, em vez de arriscar um cálculo sem sentido.
      */
     private void aplicarQuantidadeComRecalculo(Alimento alimento, String novaQuantidade) {
-        BigDecimal quantidadeAntiga = extrairNumero(alimento.getQuantidade());
-        BigDecimal quantidadeNova = extrairNumero(novaQuantidade);
+        BigDecimal quantidadeAntiga = extrairQuantidadeBase(alimento.getQuantidade());
+        BigDecimal quantidadeNova = extrairQuantidadeBase(novaQuantidade);
 
         alimento.setQuantidade(novaQuantidade);
 
@@ -340,16 +340,25 @@ public class RefeicaoService {
      * quantidade — cobre os formatos usados pelo frontend ("150g", "150",
      * "1.5kg", "2 un"). Retorna null se não houver número reconhecível.
      */
-    private BigDecimal extrairNumero(String quantidade) {
+    private BigDecimal extrairQuantidadeBase(String quantidade) {
         if (quantidade == null) {
             return null;
         }
-        Matcher matcher = Pattern.compile("[0-9]+([.,][0-9]+)?").matcher(quantidade.trim());
+        Matcher matcher = Pattern.compile("(?i)([0-9]+(?:[.,][0-9]+)?)\\s*(kg|ml\\.?|mililitros?|l|litros?|copos?)?")
+                .matcher(quantidade.trim());
         if (!matcher.find()) {
             return null;
         }
         try {
-            return new BigDecimal(matcher.group().replace(',', '.'));
+            BigDecimal valor = new BigDecimal(matcher.group(1).replace(',', '.'));
+            String unidade = matcher.group(2) == null ? "" : matcher.group(2).toLowerCase().replace(".", "");
+            if (unidade.equals("kg") || unidade.equals("l") || unidade.startsWith("litro")) {
+                return valor.multiply(BigDecimal.valueOf(1000));
+            }
+            if (unidade.startsWith("copo")) {
+                return valor.multiply(BigDecimal.valueOf(250));
+            }
+            return valor;
         } catch (NumberFormatException ex) {
             return null;
         }

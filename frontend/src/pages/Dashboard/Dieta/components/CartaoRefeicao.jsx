@@ -15,6 +15,10 @@ import BuscaAlimento from './BuscaAlimento';
 
 const RASCUNHO_VAZIO = { nome: '', quantidade: '', proteina: '', carboidratos: '', gordura: '', alimentoRef: null };
 const arredondar1Casa = (valor) => Number((Number(valor) || 0).toFixed(1));
+const extrairQuantidadeNumerica = (valor) => Number(String(valor ?? '').match(/[0-9]+(?:[.,][0-9]+)?/)?.[0]?.replace(',', '.')) || 0;
+const formatarQuantidade = (valor) => /^\s*[0-9]+(?:[.,][0-9]+)?\s*$/.test(String(valor ?? ''))
+  ? `${String(valor).trim()}g`
+  : String(valor ?? '').trim();
 
 export default function CartaoRefeicao({
   refeicao,
@@ -86,7 +90,7 @@ export default function CartaoRefeicao({
     return {
       ...(idExistente != null && { id: idExistente }),
       nome: String(rascunho.nome || '').trim(),
-      quantidade: String(rascunho.quantidade || '').trim(),
+      quantidade: formatarQuantidade(rascunho.quantidade),
       calorias: calcularCaloriasPelosMacros(proteinaNumerica, carboidratosNumericos, gorduraNumerica),
       proteina: proteinaNumerica,
       carboidratos: carboidratosNumericos,
@@ -206,7 +210,7 @@ export default function CartaoRefeicao({
 
   const selecionarAlimentoRef = (setRascunho) => (alimentoRef) => {
     setRascunho((prev) => {
-      const quantidadeNumerica = Number(prev.quantidade);
+      const quantidadeNumerica = extrairQuantidadeNumerica(prev.quantidade);
       const macros = quantidadeNumerica > 0 ? calcularMacrosProporcionais(alimentoRef, quantidadeNumerica) : null;
 
       return {
@@ -225,7 +229,7 @@ export default function CartaoRefeicao({
   const alterarQuantidade = (setRascunho) => (quantidade) => {
     setRascunho((prev) => {
       if (!prev.alimentoRef) return { ...prev, quantidade };
-      const macros = calcularMacrosProporcionais(prev.alimentoRef, Number(quantidade) || 0);
+      const macros = calcularMacrosProporcionais(prev.alimentoRef, extrairQuantidadeNumerica(quantidade));
       return {
         ...prev,
         quantidade,
@@ -256,7 +260,7 @@ export default function CartaoRefeicao({
 
   return (
     <article className={`mb-4 rounded-3xl bg-white shadow-xl shadow-slate-200/50 transition-all dark:bg-zinc-800 dark:shadow-none ${excedeuAlgumaMeta ? 'ring-2 ring-rose-300' : ''}`}>
-      <div className="flex w-full items-center justify-between gap-3 px-5 py-4">
+      <div className="flex w-full min-w-0 items-center justify-between gap-2 px-4 py-4 sm:gap-3 sm:px-5">
         <button type="button" onClick={aoAlternarExpandida} aria-expanded={expandida} className="flex min-w-0 flex-1 items-center gap-3 text-left transition-opacity hover:opacity-90">
           <span className="text-xl" aria-hidden="true">{obterEmojiRefeicao(refeicao.nome)}</span>
           <span className="truncate font-bold text-slate-800 dark:text-zinc-50">{refeicao.nome}</span>
@@ -318,7 +322,7 @@ export default function CartaoRefeicao({
 
           {erroSalvar && <span className="w-fit rounded-full bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-500 dark:bg-rose-500/10 dark:text-rose-300">{erroSalvar}</span>}
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-3">
             {[
               ['Proteína', totaisDaRefeicao.proteina],
               ['Carbo', totaisDaRefeicao.carboidratos],
@@ -338,8 +342,8 @@ export default function CartaoRefeicao({
                   {indiceEmEdicao === indice ? (
                     <form noValidate onSubmit={(evento) => salvarEdicao(evento, indice, alimento.id)} className="flex flex-col gap-2 rounded-2xl bg-slate-50 p-3 dark:bg-zinc-900/40">
                       <BuscaAlimento valor={rascunhoEdicao.nome} aoDigitar={(nome) => setRascunhoEdicao((p) => ({ ...p, nome, alimentoRef: null }))} aoSelecionar={selecionarAlimentoRef(setRascunhoEdicao)} />
-                      <input type="number" step="0.1" placeholder="Quantidade" min="0" max={LIMITES_ALIMENTO.quantidade} value={rascunhoEdicao.quantidade} onChange={(e) => { alterarQuantidade(setRascunhoEdicao)(e.target.value); setErroValidacaoEdicao(null); }} className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-                      <div className="grid grid-cols-3 gap-2">
+                      <input type="text" inputMode="decimal" placeholder="Quantidade (ex: 200ml)" value={rascunhoEdicao.quantidade} onChange={(e) => { alterarQuantidade(setRascunhoEdicao)(e.target.value); setErroValidacaoEdicao(null); }} className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                      <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-3">
                         {['proteina', 'carboidratos', 'gordura'].map((campo) => (
                           <input key={campo} type="number" step="0.1" min="0" max={LIMITES_ALIMENTO[campo]} value={rascunhoEdicao[campo]} onChange={(e) => { setRascunhoEdicao((p) => ({ ...p, [campo]: e.target.value })); setErroValidacaoEdicao(null); }} className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
                         ))}
@@ -358,7 +362,7 @@ export default function CartaoRefeicao({
                         <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg ${PALETA_FUNDO_ICONE[indice % PALETA_FUNDO_ICONE.length]}`}>{obterEmojiAlimento(alimento.nome)}</span>
                         <div>
                           <p className="m-0 text-sm font-semibold text-slate-700 dark:text-zinc-200">{alimento.nome}</p>
-                          {alimento.quantidade && <p className="m-0 text-xs text-slate-400 dark:text-zinc-500">{alimento.quantidade}g/un</p>}
+                          {alimento.quantidade && <p className="m-0 text-xs text-slate-400 dark:text-zinc-500">{alimento.quantidade}</p>}
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
@@ -430,8 +434,8 @@ export default function CartaoRefeicao({
                 )}
               </div>
               <BuscaAlimento valor={novoAlimento.nome} aoDigitar={(nome) => setNovoAlimento((p) => ({ ...p, nome, alimentoRef: null }))} aoSelecionar={selecionarAlimentoRef(setNovoAlimento)} />
-              <input type="number" step="0.1" placeholder="Quantidade (ex: 150)" min="0" max={LIMITES_ALIMENTO.quantidade} value={novoAlimento.quantidade} onChange={(e) => { alterarQuantidade(setNovoAlimento)(e.target.value); setErroValidacaoNovoAlimento(null); }} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
-              <div className="grid grid-cols-3 gap-2">
+              <input type="text" inputMode="decimal" placeholder="Quantidade (ex: 150g ou 200ml)" value={novoAlimento.quantidade} onChange={(e) => { alterarQuantidade(setNovoAlimento)(e.target.value); setErroValidacaoNovoAlimento(null); }} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+              <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-3">
                 {['proteina', 'carboidratos', 'gordura'].map((campo) => (
                   <input key={campo} type="number" step="0.1" min="0" max={LIMITES_ALIMENTO[campo]} placeholder={campo === 'proteina' ? 'Prot' : campo === 'carboidratos' ? 'Carb' : 'Gord'} value={novoAlimento[campo]} onChange={(e) => { setNovoAlimento((p) => ({ ...p, [campo]: e.target.value })); setErroValidacaoNovoAlimento(null); }} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
                 ))}

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { notificarErro } from '../utils/notificacoes';
+import { notificarErro, notificarInfo } from '../utils/notificacoes';
 import { extrairMensagemErro } from '../utils/erroApi';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -14,10 +14,50 @@ if (import.meta.env.PROD && API_URL && /localhost|127\.0\.0\.1/.test(API_URL)) {
   throw new Error('VITE_API_URL de produção não pode apontar para localhost.');
 }
 
+// Hospedagens gratuitas suspendem o container quando ele fica ocioso; a
+// primeira requisição depois disso ("cold start") pode levar bem mais que
+// os 15s antigos, e o timeout transformava a espera em erro de rede.
+const TIMEOUT_PADRAO_MS = 45000;
+// Depois desse tempo sem resposta assumimos que o backend está acordando e
+// avisamos o usuário — uma vez por sessão, para não virar spam de toast.
+const LIMIAR_AVISO_COLD_START_MS = 4000;
+
 const api = axios.create({
   baseURL: API_URL || '',
-  timeout: 15000,
+  timeout: TIMEOUT_PADRAO_MS,
 });
+
+let requisicoesEmAndamento = 0;
+let avisoColdStartExibido = false;
+let temporizadorColdStart = null;
+
+function cancelarTemporizadorColdStart() {
+  if (temporizadorColdStart) {
+    clearTimeout(temporizadorColdStart);
+    temporizadorColdStart = null;
+  }
+}
+
+function registrarInicioRequisicao() {
+  requisicoesEmAndamento += 1;
+
+  if (avisoColdStartExibido || temporizadorColdStart) return;
+
+  temporizadorColdStart = setTimeout(() => {
+    temporizadorColdStart = null;
+    if (requisicoesEmAndamento > 0 && !avisoColdStartExibido) {
+      avisoColdStartExibido = true;
+      notificarInfo('O servidor está acordando. O primeiro carregamento pode levar alguns segundos.');
+    }
+  }, LIMIAR_AVISO_COLD_START_MS);
+}
+
+function registrarFimRequisicao() {
+  requisicoesEmAndamento = Math.max(0, requisicoesEmAndamento - 1);
+  if (requisicoesEmAndamento === 0) {
+    cancelarTemporizadorColdStart();
+  }
+}
 
 let refreshEmAndamento = false;
 let logoutPorSessaoExpiradaNotificado = false;
@@ -79,6 +119,8 @@ async function renovarToken() {
 // ==========================================
 api.interceptors.request.use(
   (config) => {
+    registrarInicioRequisicao();
+
     const token = localStorage.getItem('token');
     
     // Garante que o objeto headers existe antes de injetar o token
@@ -91,6 +133,7 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    registrarFimRequisicao();
     return Promise.reject(error);
   }
 );
@@ -99,8 +142,12 @@ api.interceptors.request.use(
 // 🛡️ INTERCEPTOR DE RESPONSE (Tratamento de Erros e 401)
 // ==========================================
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    registrarFimRequisicao();
+    return response;
+  },
   async (error) => {
+    registrarFimRequisicao();
     const requisicaoOriginal = error.config;
     const urlOriginal = requisicaoOriginal?.url || '';
     const rotaAutenticacao = urlOriginal.includes('/auth/login') || urlOriginal.includes('/auth/refresh');
@@ -169,6 +216,19 @@ api.get = (url, config = {}) => {
   
   requisicoesEmVoo.set(chave, promessa);
   return promessa;
+};
+
+// --- INTEGRAÇÃO COM CATÁLOGO EXTERNO ---
+
+export const buscarCatalogoExercicios = async (musculoAlvo) => {
+  try {
+    // Aponta para o SEU Spring Boot, que fará a ponte segura com a RapidAPI
+    const response = await api.get(`/catalogo-exercicios/musculo/${musculoAlvo}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Erro ao buscar catálogo para o músculo ${musculoAlvo}:`, error);
+    throw error;
+  }
 };
 
 export default api;

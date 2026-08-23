@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { NutritionProvider } from './context/NutritionContext';
 import { MetasProvider } from './context/MetasContext';
 import ToastHost from './components/ui/Toast';
+import TelaCarregamento from './components/ui/TelaCarregamento';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoginPage from './pages/Login';
 import OnboardingPage from './pages/Onboarding';
@@ -16,15 +17,14 @@ import PerfilPage from './pages/Dashboard/Perfil';
 import ConfiguracoesPage from './pages/Dashboard/Configuracoes';
 
 function AppRoutes() {
-  const { signed, loading } = useAuth();
-  const profileComplete = localStorage.getItem('profile_complete') === 'true';
+  // `perfilCompleto` vem do contexto (estado do React), e não mais de uma
+  // leitura direta do localStorage a cada render: escrita em localStorage
+  // não dispara re-render, então o valor antigo ficava congelado aqui e a
+  // guarda de /dashboard jogava o usuário de volta para o onboarding.
+  const { signed, loading, perfilCompleto: profileComplete } = useAuth();
 
   if (loading) {
-    return (
-      <div className="app-shell-loading">
-        <div className="app-shell-spinner">Carregando...</div>
-      </div>
-    );
+    return <TelaCarregamento mensagem="Preparando o seu painel…" />;
   }
 
   return (

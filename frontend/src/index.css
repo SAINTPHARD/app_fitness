@@ -110,3 +110,28 @@ svg {
   box-shadow: var(--shadow);
 }
 
+.recharts-responsive-container {
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  button,
+  input,
+  textarea,
+  select,
+  a[role='button'] {
+    min-height: 44px;
+  }
+
+  input,
+  textarea,
+  select {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+

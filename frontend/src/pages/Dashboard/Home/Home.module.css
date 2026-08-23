@@ -91,3 +91,11 @@
     flex-direction: column;
   }
 }
+
+@media (max-width: 420px) {
+  .chartsGrid,
+  .mainGrid,
+  .metricsGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

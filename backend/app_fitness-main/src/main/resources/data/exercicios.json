@@ -1,0 +1,173 @@
+[
+  {
+    "name": "Supino Reto com Barra",
+    "type": "strength",
+    "muscle": "chest",
+    "equipment": "barbell",
+    "difficulty": "intermediate",
+    "instructions": "Deite-se no banco. Segure a barra com as mãos um pouco mais largas que os ombros. Desça a barra até o meio do peito de forma controlada e empurre para cima com força.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Supino Inclinado com Halteres",
+    "type": "strength",
+    "muscle": "chest",
+    "equipment": "dumbbell",
+    "difficulty": "intermediate",
+    "instructions": "Deite-se num banco inclinado a 30-45 graus. Segure um haltere em cada mão. Desça os halteres até a altura do peito e empurre-os de volta para cima, contraindo o peitoral.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Crucifixo na Máquina (Voador)",
+    "type": "strength",
+    "muscle": "chest",
+    "equipment": "machine",
+    "difficulty": "beginner",
+    "instructions": "Sente-se na máquina com as costas retas. Junte os braços à frente do corpo apertando o peito e retorne lentamente à posição inicial.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Flexão de Braços",
+    "type": "strength",
+    "muscle": "chest",
+    "equipment": "body_only",
+    "difficulty": "beginner",
+    "instructions": "Apoie as mãos e as pontas dos pés no chão. Mantenha o corpo reto como uma prancha. Desça o corpo até o peito quase tocar no chão e empurre de volta.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Puxada Frontal",
+    "type": "strength",
+    "muscle": "back",
+    "equipment": "cable",
+    "difficulty": "beginner",
+    "instructions": "Sente-se na máquina e segure a barra com uma pegada larga. Puxe a barra até a altura do queixo, contraindo as costas. Volte esticando os braços lentamente.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Remada Curvada com Barra",
+    "type": "strength",
+    "muscle": "back",
+    "equipment": "barbell",
+    "difficulty": "intermediate",
+    "instructions": "Incline o tronco para a frente mantendo as costas retas. Puxe a barra em direção ao umbigo, contraindo as escápulas, e desça controladamente.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Remada Serrote (Unilateral)",
+    "type": "strength",
+    "muscle": "back",
+    "equipment": "dumbbell",
+    "difficulty": "beginner",
+    "instructions": "Apoie um joelho e uma mão num banco. Com a outra mão, puxe o haltere para cima, mantendo o cotovelo rente ao corpo. Desça esticando bem as costas.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Agachamento Livre",
+    "type": "strength",
+    "muscle": "legs",
+    "equipment": "barbell",
+    "difficulty": "advanced",
+    "instructions": "Com a barra apoiada nos trapézios, mantenha os pés na largura dos ombros. Flexione os joelhos e quadris como se fosse sentar numa cadeira, mantendo as costas retas. Retorne à posição inicial.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Leg Press 45º",
+    "type": "strength",
+    "muscle": "legs",
+    "equipment": "machine",
+    "difficulty": "intermediate",
+    "instructions": "Sente-se no aparelho e coloque os pés na plataforma. Destrave a máquina, desça o peso flexionando os joelhos até 90 graus e empurre a plataforma de volta.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Cadeira Extensora",
+    "type": "strength",
+    "muscle": "legs",
+    "equipment": "machine",
+    "difficulty": "beginner",
+    "instructions": "Sente-se no aparelho com o rolo de apoio nos tornozelos. Estenda os joelhos levantando o peso e contraindo as coxas. Retorne lentamente.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Stiff com Barra",
+    "type": "strength",
+    "muscle": "legs",
+    "equipment": "barbell",
+    "difficulty": "intermediate",
+    "instructions": "Segure a barra com as pernas quase retas. Desça o tronco empurrando o quadril para trás, sentindo alongar a parte posterior da coxa. Suba contraindo os glúteos.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Rosca Direta com Barra",
+    "type": "strength",
+    "muscle": "biceps",
+    "equipment": "barbell",
+    "difficulty": "beginner",
+    "instructions": "Em pé, segure a barra com as palmas voltadas para cima. Mantendo os cotovelos fixos ao lado do corpo, levante o peso contraindo os bíceps. Desça de forma controlada.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Rosca Martelo com Halteres",
+    "type": "strength",
+    "muscle": "biceps",
+    "equipment": "dumbbell",
+    "difficulty": "beginner",
+    "instructions": "Em pé, segure um haltere em cada mão com as palmas voltadas uma para a outra (pegada neutra). Suba o peso mantendo o cotovelo fixo e retorne.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Tríceps Pulley na Polia",
+    "type": "strength",
+    "muscle": "triceps",
+    "equipment": "cable",
+    "difficulty": "beginner",
+    "instructions": "Em pé em frente à polia alta, segure a barra ou corda com os cotovelos junto ao corpo. Empurre a carga para baixo estendendo os cotovelos completamente. Retorne de forma controlada.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Tríceps Testa com Barra W",
+    "type": "strength",
+    "muscle": "triceps",
+    "equipment": "barbell",
+    "difficulty": "intermediate",
+    "instructions": "Deitado no banco plano, segure a barra W acima do peito. Flexione os cotovelos trazendo a barra em direção à testa, mantendo os braços fixos na vertical. Extenda os cotovelos para voltar à posição inicial.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Desenvolvimento com Halteres",
+    "type": "strength",
+    "muscle": "shoulders",
+    "equipment": "dumbbell",
+    "difficulty": "intermediate",
+    "instructions": "Sente-se num banco com apoio para as costas. Segure os halteres na altura dos ombros e empurre-os para cima até esticar os braços. Desça de forma controlada.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Elevação Lateral",
+    "type": "strength",
+    "muscle": "shoulders",
+    "equipment": "dumbbell",
+    "difficulty": "beginner",
+    "instructions": "Em pé, segure os halteres ao lado do corpo. Levante os braços lateralmente até a altura dos ombros, com uma leve flexão nos cotovelos. Retorne lentamente.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Prancha Isométrica",
+    "type": "strength",
+    "muscle": "core",
+    "equipment": "body_only",
+    "difficulty": "beginner",
+    "instructions": "Apoie os antebraços e as pontas dos pés no chão. Mantenha o corpo reto e o abdômen fortemente contraído. Segure a posição pelo tempo determinado.",
+    "gifUrl": ""
+  },
+  {
+    "name": "Abdominal Supra",
+    "type": "strength",
+    "muscle": "core",
+    "equipment": "body_only",
+    "difficulty": "beginner",
+    "instructions": "Deitado de costas, flexione os joelhos. Coloque as mãos atrás da cabeça e levante os ombros do chão contraindo o abdômen. Retorne devagar.",
+    "gifUrl": ""
+  }
+]

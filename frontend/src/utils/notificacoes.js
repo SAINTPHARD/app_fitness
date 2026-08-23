@@ -3,9 +3,9 @@
  *
  * Existe para permitir que código fora da árvore React — em particular o
  * interceptor de resposta do Axios em `services/api.js` — dispare toasts de
- * erro/sucesso sem precisar de acesso a contexto React. `ToastProvider`
- * (components/ui/Toast) é o único assinante em produção; qualquer outro
- * lugar pode chamar `notificarErro`/`notificarSucesso` diretamente.
+ * erro/sucesso/informação sem precisar de acesso a contexto React.
+ * `ToastHost` (components/ui/Toast) é o único assinante em produção;
+ * qualquer outro lugar pode chamar as funções abaixo diretamente.
  */
 let idSequencial = 0;
 const ouvintes = new Set();
@@ -25,4 +25,13 @@ export function notificarErro(mensagem) {
 
 export function notificarSucesso(mensagem) {
   emitir({ id: ++idSequencial, tipo: 'sucesso', mensagem });
+}
+
+/**
+ * Aviso neutro (nem erro, nem confirmação). Usado, por exemplo, para
+ * avisar que o backend está "acordando" no primeiro acesso — pintar isso
+ * de verde (sucesso) ou vermelho (erro) passaria a mensagem errada.
+ */
+export function notificarInfo(mensagem) {
+  emitir({ id: ++idSequencial, tipo: 'info', mensagem });
 }

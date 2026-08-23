@@ -129,8 +129,18 @@
   margin-top: 0.5rem;
 }
 
-.submitBtn:hover {
+.submitBtn:hover:not(:disabled) {
   filter: brightness(0.95);
+}
+
+.submitBtn:disabled,
+.toggleLink:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.input:disabled {
+  opacity: 0.7;
 }
 
 .toggleText {
@@ -140,10 +150,16 @@
   color: var(--text-muted);
 }
 
+/* Renderizado como <button> para funcionar com teclado e leitores de tela;
+   os resets abaixo mantêm a aparência de link. */
 .toggleLink {
   color: #65a30d;
   font-weight: 600;
   cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
 }
 
 .toggleLink:hover {

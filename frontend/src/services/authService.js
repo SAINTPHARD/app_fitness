@@ -43,6 +43,18 @@ export const authService = {
       };
 
       const response = await api.post('/usuarios', payload);
+
+      // Guarda o nome já no cadastro: o Header passa a ter o que exibir
+      // mesmo antes da primeira resposta de /usuarios/me (cold start).
+      if (nome) {
+        localStorage.setItem('userName', nome);
+      }
+
+      // `profile_complete` é global no localStorage, não por usuário. Sem
+      // limpar aqui, uma conta anterior usada no mesmo browser faria o
+      // usuário novo pular o onboarding e cair num dashboard sem dados.
+      localStorage.removeItem('profile_complete');
+
       return response.data;
     } catch (error) {
       if (error.response) {
@@ -65,6 +77,10 @@ export const authService = {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName');
+    // Sem isso, o próximo usuário a logar neste browser herdaria o
+    // "perfil já concluído" de quem saiu e pularia o onboarding.
+    localStorage.removeItem('profile_complete');
   },
 
   getToken: () => localStorage.getItem('token'),

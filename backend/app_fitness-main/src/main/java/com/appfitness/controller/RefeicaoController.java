@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.appfitness.model.entity.Alimento;
 import com.appfitness.model.entity.Refeicao;
 import com.appfitness.model.entity.Usuario;
+import com.appfitness.dto.alimento.AlimentoRequestDTO;
 import com.appfitness.service.RefeicaoService;
 
 import jakarta.validation.Valid;
@@ -163,10 +164,11 @@ public class RefeicaoController {
     @PostMapping("/{idRefeicao}/alimentos")
     public ResponseEntity<Refeicao> adicionarAlimento(
             @PathVariable Long idRefeicao,
-            @Valid @RequestBody Alimento novoAlimento,
+            @Valid @RequestBody AlimentoRequestDTO novoAlimentoDTO,
             Authentication authentication) {
 
         Usuario usuarioLogado = extrairUsuarioAutenticado(authentication);
+        Alimento novoAlimento = converterAlimento(novoAlimentoDTO);
         Refeicao refeicaoAtualizada = refeicaoService.adicionarAlimento(idRefeicao, novoAlimento, usuarioLogado);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(refeicaoAtualizada);
@@ -180,13 +182,24 @@ public class RefeicaoController {
     public ResponseEntity<Alimento> atualizarAlimento(
             @PathVariable Long idRefeicao,
             @PathVariable Long idAlimento,
-            @Valid @RequestBody Alimento alimentoAtualizado,
+            @Valid @RequestBody AlimentoRequestDTO alimentoAtualizadoDTO,
             Authentication authentication) {
         
         Usuario usuarioLogado = extrairUsuarioAutenticado(authentication);
+        Alimento alimentoAtualizado = converterAlimento(alimentoAtualizadoDTO);
         Alimento atualizado = refeicaoService.atualizarAlimento(idRefeicao, idAlimento, alimentoAtualizado, usuarioLogado);
         
         return ResponseEntity.ok(atualizado);
+    }
+
+    private Alimento converterAlimento(AlimentoRequestDTO dto) {
+        return new Alimento(
+                dto.nome(),
+                dto.quantidade().trim(),
+                dto.calorias().intValue(),
+                java.math.BigDecimal.valueOf(dto.carboidratos()),
+                java.math.BigDecimal.valueOf(dto.proteina()),
+                java.math.BigDecimal.valueOf(dto.gordura()));
     }
 
     /**

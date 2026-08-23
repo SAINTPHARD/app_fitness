@@ -6,6 +6,9 @@
   padding: 1.5rem 0;
 }
 
+.menuButton { display: none; }
+.headerIntro { min-width: 0; }
+
 .greeting {
   margin: 0;
   color: #475569;
@@ -164,6 +167,19 @@
   .profileCard p {
     display: none;
   }
+}
+
+@media (max-width: 767px) {
+  .header { gap: 0.6rem; padding: 0.75rem 0; }
+  .menuButton { display: inline-flex; width: 44px; height: 44px; flex: 0 0 44px; align-items: center; justify-content: center; border: 1px solid #e2e8f0; border-radius: 0.9rem; background: #fff; color: #334155; }
+  .headerIntro { flex: 1; }
+  .motivationalPhrase { display: none; }
+  .headerActions { gap: 0.35rem; }
+  .iconButton, .profileCard { min-width: 44px; min-height: 44px; }
+  .profileCard { padding: 0.2rem; }
+  .profileChevron { display: none; }
+  .dropdownPanel { position: fixed; top: 4.5rem; right: 0.75rem; left: 0.75rem; min-width: 0; }
+  :root[data-theme='dark'] .menuButton { background: #161f34; border-color: #2a3654; color: #cbd5e1; }
 }
 
 /* Tema escuro: mesmos componentes, só trocando os tons claros fixos por

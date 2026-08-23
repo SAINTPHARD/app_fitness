@@ -392,6 +392,177 @@
   filter: brightness(0.95);
 }
 
+/* Catálogo externo API Ninjas */
+.catalogoExternoContainer,
+.catalogoExterno {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.catalogoExternoSeletor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: min(100%, 20rem);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.catalogoExternoSeletor select {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.catalogoExterno {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.catalogoExternoCabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.catalogoExternoCabecalho h3,
+.catalogoExternoCard h4,
+.catalogoExternoEstado p {
+  margin: 0;
+}
+
+.catalogoExternoAlvo {
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: #3f6212;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.catalogoExternoGrade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1rem;
+}
+
+.catalogoExternoCard {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--bg-muted);
+  display: flex;
+  flex-direction: column;
+}
+
+.catalogoExternoGif {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  background: var(--bg-surface);
+  display: block;
+}
+
+.catalogoExternoGifPlaceholder {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  color: #64748b;
+  font-size: 2rem;
+}
+
+.catalogoExternoConteudo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1rem;
+  width: 100%;
+}
+
+.catalogoExternoConteudo h4 {
+  color: var(--text-primary);
+}
+
+.catalogoExternoTitulo {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.catalogoExternoTitulo > span {
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.catalogoExternoConteudo p,
+.catalogoExternoEstado {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.catalogoExternoInstrucoes {
+  min-height: 5.4rem;
+  max-height: 5.4rem;
+  overflow-y: auto;
+  padding: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  background: var(--bg-surface);
+  line-height: 1.45;
+  scrollbar-width: thin;
+}
+
+.catalogoExternoBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 0.4rem;
+}
+
+.catalogoExternoBadges span {
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: #3f6212;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+:root[data-theme='dark'] .catalogoExternoBadges span {
+  color: var(--brand);
+}
+
+.catalogoExternoAdicionar {
+  width: 100%;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.catalogoExternoErro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+:root[data-theme='dark'] .catalogoExternoAlvo {
+  color: var(--brand);
+}
+
 :root[data-theme='dark'] .label,
 :root[data-theme='dark'] .badgeRestantes {
   color: var(--brand);
@@ -908,6 +1079,13 @@
   font-size: 1.05rem;
 }
 
+.cardExercicioInfo .emojiExercicio {
+  display: inline-block;
+  margin-right: 0.45rem;
+  line-height: 1;
+  letter-spacing: 0.05rem;
+}
+
 .cardExercicioInfo span {
   display: block;
   color: var(--text-muted);
@@ -1192,5 +1370,24 @@
   .exerciseMeta {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .catalogoExterno,
+  .catalogoExternoConteudo {
+    min-width: 0;
+  }
+
+  .catalogoExternoCabecalho,
+  .catalogoExternoErro {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .catalogoExternoGrade {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .catalogoExternoAlvo {
+    align-self: flex-start;
   }
 }

@@ -246,7 +246,7 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
               Informe seus dados corporais para calcular as metas ideais pela equação de Mifflin-St Jeor.
             </p>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <label className="flex flex-col gap-1 text-sm font-semibold text-slate-600 dark:text-zinc-300">
                 Peso (kg)
                 <input

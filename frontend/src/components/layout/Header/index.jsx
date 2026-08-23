@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import { Bell, ChevronDown, Droplet, LogOut, Moon, Plus, Scale, Settings, Sun, User as UserIcon } from 'lucide-react';
+import { Bell, ChevronDown, Droplet, LogOut, Menu, Moon, Plus, Scale, Settings, Sun, User as UserIcon } from 'lucide-react';
 import { useTema } from '../../../hooks/useTema';
 import { obterFraseMotivacionalDoDia, obterSaudacaoPorHorario } from './frasesMotivacionais';
+import { obterIniciaisUsuario, obterNomeExibicao, obterPrimeiroNome } from '../../../utils/nomeUsuario';
 import './header.css';
 
 // Atalhos rápidos do Header: navegação direta para as ações mais comuns do
@@ -37,7 +39,7 @@ function useFecharAoClicarFora(aberto, aoFechar) {
   return referenciaContainer;
 }
 
-export default function Header({ user, onLogout }) {
+export default function Header({ user, onLogout, aoAbrirMenu }) {
   const { ehEscuro, alternarTema } = useTema();
   const [notificacoesAbertas, setNotificacoesAbertas] = useState(false);
   const [menuUsuarioAberto, setMenuUsuarioAberto] = useState(false);
@@ -45,13 +47,18 @@ export default function Header({ user, onLogout }) {
   const refNotificacoes = useFecharAoClicarFora(notificacoesAbertas, () => setNotificacoesAbertas(false));
   const refMenuUsuario = useFecharAoClicarFora(menuUsuarioAberto, () => setMenuUsuarioAberto(false));
 
-  const nomeUsuario = user?.email?.split('@')[0] || 'Atleta';
+  // Nome cadastrado, nunca o e-mail: `user.email.split('@')[0]` era o que
+  // fazia a saudação mostrar "robedsonsaintphard10".
+  const primeiroNome = obterPrimeiroNome(user);
+  const nomeCompleto = obterNomeExibicao(user);
+  const iniciais = obterIniciaisUsuario(user);
 
   return (
     <header className="header">
-      <div>
+      <button type="button" className="menuButton" onClick={aoAbrirMenu} aria-label="Abrir menu principal"><Menu size={22} strokeWidth={2.5} /></button>
+      <div className="headerIntro">
         <p className="greeting">
-          {obterSaudacaoPorHorario()}, {nomeUsuario} 👋
+          {obterSaudacaoPorHorario()}, {primeiroNome} 👋
         </p>
         <p className="motivationalPhrase">{obterFraseMotivacionalDoDia()}</p>
       </div>
@@ -103,9 +110,9 @@ export default function Header({ user, onLogout }) {
             onClick={() => setMenuUsuarioAberto((prev) => !prev)}
             aria-expanded={menuUsuarioAberto}
           >
-            <span className="profileAvatar">{user?.email?.charAt(0)?.toUpperCase() || 'A'}</span>
+            <span className="profileAvatar">{iniciais}</span>
             <div>
-              <strong>{nomeUsuario}</strong>
+              <strong>{nomeCompleto}</strong>
               <p>Plano ativo</p>
             </div>
             <ChevronDown size={16} strokeWidth={2.5} className="profileChevron" />
@@ -129,3 +136,9 @@ export default function Header({ user, onLogout }) {
     </header>
   );
 }
+
+Header.propTypes = {
+  user: PropTypes.shape({ nome: PropTypes.string, email: PropTypes.string }),
+  onLogout: PropTypes.func.isRequired,
+  aoAbrirMenu: PropTypes.func.isRequired,
+};

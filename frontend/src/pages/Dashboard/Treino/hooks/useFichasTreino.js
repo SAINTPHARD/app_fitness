@@ -83,13 +83,15 @@ export function useFichasTreino() {
         nome: exercicioCatalogo.nome,
         series,
         repeticoes,
-        descricao: exercicioCatalogo.seriesPadrao,
+        descricao: exercicioCatalogo.descricao || exercicioCatalogo.seriesPadrao,
       });
       await carregar();
+      return true;
     } catch (err) {
       // Duplicidade (409) e outros erros já viram toast pelo interceptor
       // global do Axios — aqui só evitamos uma promise rejeitada sem dono.
       console.error('Erro ao adicionar exercício:', err);
+      return false;
     }
   };
 

@@ -8,6 +8,7 @@ import CartaoMetricaMacro from './components/CartaoMetricaMacro';
 import CartaoRefeicao from './components/CartaoRefeicao';
 import FormularioNovaRefeicao from './components/FormularioNovaRefeicao';
 import BotaoFlutuanteNovaRefeicao from './components/BotaoFlutuanteNovaRefeicao';
+import BuscaAlimentosIA from './components/BuscaAlimentosIA';
 import ResumoNutricional from './components/ResumoNutricional';
 import DistribuicaoMacronutrientes from './components/DistribuicaoMacronutrientes';
 import GraficoCaloriasSemanais from './components/GraficoCaloriasSemanais';
@@ -67,13 +68,9 @@ export default function PainelDieta() {
     // (CartaoRefeicao.salvarRefeicao), que já mostra sua própria mensagem de
     // erro; aqui só evitamos um "unhandled rejection" quando a chamada não
     // vem de dentro daquele fluxo (ex: erro de rede inesperado).
-    try {
-      const idRefeicaoReal = await adicionarAlimento(idRefeicao, novoAlimento);
-      setRefeicaoExpandidaId(idRefeicaoReal);
-    } catch {
-      // O toast global (interceptor do Axios) já avisou o usuário; nada
-      // mais a fazer aqui além de não deixar a Promise rejeitar sem dono.
-    }
+    const idRefeicaoReal = await adicionarAlimento(idRefeicao, novoAlimento);
+    setRefeicaoExpandidaId(idRefeicaoReal);
+    return idRefeicaoReal;
   };
 
   const lidarComNovaRefeicao = async (novaRefeicao) => {
@@ -161,7 +158,7 @@ export default function PainelDieta() {
       />
 
       {/* 4 cartões de macro. */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 lg:grid-cols-4">
         <CartaoMetricaMacro
           icone={Flame}
           corIcone="bg-red-100 text-red-500 dark:bg-red-500/10 dark:text-red-300"
@@ -210,6 +207,10 @@ export default function PainelDieta() {
       <div className="mx-auto w-full lg:max-w-md">
         <WidgetHidratacao dataSelecionadaISO={dataSelecionadaISO} />
       </div>
+
+      {/* Busca de alimentos por texto livre via IA — calcula macros na hora,
+          sem depender de uma API de nutrição terceira (Edamam/FatSecret). */}
+      <BuscaAlimentosIA refeicoes={refeicoesDoDia} aoAdicionarAlimento={lidarComAdicaoDeAlimento} />
 
       {/* Refeições do dia (accordion) + resumo nutricional/distribuição de macros. */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">

@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios'; // <-- IMPORTAMOS O AXIOS DIRETAMENTE
-import './onboarding.css';
+import { Check, ChevronLeft } from 'lucide-react';
+import { fitnessApi } from '../../services/fitnessApi';
+import { useAuth } from '../../context/AuthContext';
+import { obterPrimeiroNome } from '../../utils/nomeUsuario';
 
 const TOTAL_ETAPAS = 4;
 
@@ -10,18 +13,23 @@ const TOTAL_ETAPAS = 4;
 // persistida, o formulário já nasce alinhado ao que a API aceita de verdade.
 const OBJETIVOS = [
   { valor: 'EMAGRECER', titulo: 'Perder peso', descricao: 'Déficit calórico controlado' },
-  { valor: 'MANTER', titulo: 'Manter peso', descricao: 'Equilíbrio entre consumo e gasto' },
-  { valor: 'HIPERTROFIA', titulo: 'Ganhar massa', descricao: 'Superávit calórico e treino de força' },
+  { valor: 'MANTER', titulo: 'Manter o peso', descricao: 'Equilíbrio entre consumo e gasto' },
+  { valor: 'HIPERTROFIA', titulo: 'Ganhar massa muscular', descricao: 'Superávit calórico e treino de força' },
 ];
 
 // Nível de atividade ainda não existe como campo no backend — guardamos como
 // preferência local (mesma estratégia já usada para metas de água/macros na
-// Dieta) até o backend ganhar esse campo.
+// Dieta) até o backend ganhar essa coluna.
 const NIVEIS_ATIVIDADE = [
-  { valor: 'SEDENTARIO', titulo: 'Não muito ativo', descricao: 'Pouco ou nenhum exercício' },
-  { valor: 'LEVE', titulo: 'Levemente ativo', descricao: 'Exercício leve 1-3x por semana' },
-  { valor: 'ATIVO', titulo: 'Ativo', descricao: 'Exercício moderado 3-5x por semana' },
-  { valor: 'MUITO_ATIVO', titulo: 'Muito ativo', descricao: 'Exercício intenso quase todos os dias' },
+  { valor: 'SEDENTARIO', titulo: 'Não muito ativo', descricao: 'Passa a maior parte do dia sentado' },
+  { valor: 'LEVE', titulo: 'Levemente ativo', descricao: 'Exercício leve 1 a 3x por semana' },
+  { valor: 'ATIVO', titulo: 'Ativo', descricao: 'Exercício moderado 3 a 5x por semana' },
+  { valor: 'MUITO_ATIVO', titulo: 'Bastante ativo', descricao: 'Exercício intenso quase todos os dias' },
+];
+
+const SEXOS = [
+  { valor: 'M', titulo: 'Masculino' },
+  { valor: 'F', titulo: 'Feminino' },
 ];
 
 const DADOS_INICIAIS = {
@@ -34,6 +42,11 @@ const DADOS_INICIAIS = {
   peso: '',
   pesoAlvo: '',
 };
+
+const CLASSES_CAMPO =
+  'h-12 w-full rounded-xl border border-zinc-300 bg-white px-4 text-base text-zinc-900 outline-none transition ' +
+  'placeholder:text-zinc-400 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/15 ' +
+  'disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100';
 
 /** Calcula a idade (anos completos) a partir da data de nascimento. */
 function calcularIdade(dataNascimentoISO) {
@@ -52,273 +65,368 @@ function calcularIdade(dataNascimentoISO) {
   return idade >= 0 ? idade : null;
 }
 
+/** Botão de escolha grande, com borda dinâmica ao ser selecionado. */
+function OpcaoCartao({ titulo, descricao, selecionado, aoSelecionar }) {
+  return (
+    <button
+      type="button"
+      onClick={aoSelecionar}
+      aria-pressed={selecionado}
+      className={`flex w-full items-center gap-3 rounded-xl border-2 px-4 py-4 text-left transition-all duration-150 ${
+        selecionado
+          ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-500/10'
+          : 'border-zinc-200 bg-white hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700'
+      }`}
+    >
+      <span className="min-w-0 flex-1">
+        <span
+          className={`block font-bold ${
+            selecionado ? 'text-emerald-700 dark:text-emerald-400' : 'text-zinc-900 dark:text-zinc-100'
+          }`}
+        >
+          {titulo}
+        </span>
+        {descricao && (
+          <span className="mt-0.5 block text-sm text-zinc-500 dark:text-zinc-400">{descricao}</span>
+        )}
+      </span>
+      <span
+        aria-hidden="true"
+        className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 transition ${
+          selecionado
+            ? 'border-emerald-600 bg-emerald-600 text-white'
+            : 'border-zinc-300 text-transparent dark:border-zinc-600'
+        }`}
+      >
+        <Check size={14} strokeWidth={3} />
+      </span>
+    </button>
+  );
+}
+
+OpcaoCartao.propTypes = {
+  titulo: PropTypes.string.isRequired,
+  descricao: PropTypes.string,
+  selecionado: PropTypes.bool,
+  aoSelecionar: PropTypes.func.isRequired,
+};
+
+function Campo({ rotulo, dica, children }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-sm font-semibold text-zinc-700 dark:text-zinc-300">{rotulo}</span>
+      {children}
+      {dica && <span className="mt-1.5 block text-xs text-zinc-400">{dica}</span>}
+    </label>
+  );
+}
+
+Campo.propTypes = {
+  rotulo: PropTypes.string.isRequired,
+  dica: PropTypes.string,
+  children: PropTypes.node.isRequired,
+};
+
 export default function OnboardingPage() {
   const [etapa, setEtapa] = useState(1);
   const [dados, setDados] = useState(DADOS_INICIAIS);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState('');
+
   const navigate = useNavigate();
+  const { user, marcarPerfilCompleto } = useAuth();
+  const primeiroNome = obterPrimeiroNome(user);
+
+  const percentual = useMemo(() => Math.round((etapa / TOTAL_ETAPAS) * 100), [etapa]);
+  const ehUltimaEtapa = etapa === TOTAL_ETAPAS;
 
   const atualizarCampo = (campo, valor) => {
+    setErro('');
     setDados((prev) => ({ ...prev, [campo]: valor }));
   };
 
-  const etapaValida = () => {
-    if (etapa === 1) return Boolean(dados.objetivo);
-    if (etapa === 2) return Boolean(dados.nivelAtividade);
-    if (etapa === 3) return Boolean(dados.sexo) && Boolean(dados.dataNascimento);
-    if (etapa === 4) {
+  const validarEtapa = (numero) => {
+    if (numero === 1) return dados.objetivo ? null : 'Escolha um objetivo para continuar.';
+    if (numero === 2) return dados.nivelAtividade ? null : 'Escolha o seu nível de atividade.';
+    if (numero === 3) {
+      if (!dados.sexo) return 'Selecione o sexo biológico usado no cálculo calórico.';
+      if (!dados.dataNascimento) return 'Informe a sua data de nascimento.';
+      if (calcularIdade(dados.dataNascimento) === null) return 'Data de nascimento inválida.';
+      return null;
+    }
+    if (numero === 4) {
       const altura = Number(dados.altura);
       const peso = Number(dados.peso);
       // Faixas plausíveis (50-250cm, 20-300kg) — sem isso, alguém digitando
       // "1.82" (pensando em metros) num campo de cm passava validação e
-      // gerava um IMC absurdo mais adiante (ex: 240740.7).
-      return altura >= 50 && altura <= 250 && peso >= 20 && peso <= 300;
+      // gerava um IMC absurdo mais adiante.
+      if (!(altura >= 50 && altura <= 250)) return 'Altura deve estar entre 50 e 250 cm (1,82 m = 182 cm).';
+      if (!(peso >= 20 && peso <= 300)) return 'Peso deve estar entre 20 e 300 kg.';
+      return null;
     }
-    return true;
+    return null;
   };
 
   const avancar = () => {
-    if (!etapaValida()) {
-      setError('Preencha os campos desta etapa antes de continuar.');
+    const problema = validarEtapa(etapa);
+    if (problema) {
+      setErro(problema);
       return;
     }
-    setError('');
-    setEtapa((prev) => Math.min(prev + 1, TOTAL_ETAPAS));
+    setErro('');
+    setEtapa((prev) => prev + 1);
   };
 
   const voltar = () => {
-    setError('');
+    setErro('');
     setEtapa((prev) => Math.max(prev - 1, 1));
   };
 
-  const finalizar = async (evento) => {
-    evento.preventDefault();
-
-    if (!etapaValida()) {
-      setError('Altura deve estar entre 50 e 250cm e peso entre 20 e 300kg (dica: 1,82m = 182cm).');
+  const finalizar = async () => {
+    const problema = validarEtapa(TOTAL_ETAPAS);
+    if (problema) {
+      setErro(problema);
       return;
     }
 
-    setLoading(true);
-    setError('');
+    setSalvando(true);
+    setErro('');
 
     try {
-      // 1. CAPTURA O TOKEN SALVO NO LOGIN (A SOLUÇÃO DIRETA)
-      const token = localStorage.getItem('token');
-      
-      // 2. CONFIGURA O CABEÇALHO COM O "CRACHÁ" DE SEGURANÇA
-      const configSeguranca = {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      };
+      // Usa a instância Axios do projeto (baseURL de ambiente + token via
+      // interceptor). Antes daqui saíam chamadas com `http://localhost:8080`
+      // no código — em produção isso nunca funcionaria.
+      const { data: perfilAtual } = await fitnessApi.getProfile();
 
-      // 3. FAZ AS REQUISIÇÕES DIRETAMENTE COM O AXIOS (Passando o configSeguranca)
-      // Substituímos o 'fitnessApi.getProfile()' para garantir o envio do token
-      const respostaPerfil = await axios.get('http://localhost:8080/usuarios/me', configSeguranca);
-      const perfilAtual = respostaPerfil.data;
-
-      const payload = {
-        ...perfilAtual, // Spread direto nos dados recebidos
-        peso: Number(dados.peso) || 0,
-        altura: Number(dados.altura) || 0,
+      await fitnessApi.updateMetrics({
+        ...perfilAtual,
+        peso: Number(dados.peso),
+        altura: Number(dados.altura),
         idade: calcularIdade(dados.dataNascimento) ?? perfilAtual?.idade ?? null,
         objetivo: dados.objetivo,
         sexo: dados.sexo || perfilAtual?.sexo || null,
-      };
-
-      // 4. ATUALIZA AS MÉTRICAS COM O TOKEN (Substituímos o 'fitnessApi.updateMetrics()')
-      await axios.put('http://localhost:8080/usuarios/me/metricas', payload, configSeguranca);
+      });
 
       // Preferências que o backend ainda não tem coluna para guardar.
       window.localStorage.setItem(
         'perfil-preferencias-locais',
         JSON.stringify({
           nivelAtividade: dados.nivelAtividade,
-          pais: dados.pais,
+          pais: dados.pais.trim(),
           pesoAlvo: Number(dados.pesoAlvo) || null,
-        })
+        }),
       );
 
-      localStorage.setItem('profile_complete', 'true');
-      
-      // 5. REDIRECIONAMENTO COM SUCESSO!
-      navigate('/dashboard/inicio');
-      
+      // Estado do React, não só localStorage: é isso que libera a guarda de
+      // /dashboard no App e encerra o loop de volta para o passo 1.
+      marcarPerfilCompleto();
+      navigate('/dashboard/inicio', { replace: true });
     } catch (err) {
-      const mensagem =
+      setErro(
         err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        err?.message ||
-        'Não foi possível salvar seus dados. Tente novamente.';
-      setError(mensagem);
+          err?.response?.data?.error ||
+          err?.message ||
+          'Não foi possível salvar seus dados. Tente novamente.',
+      );
     } finally {
-      setLoading(false);
+      setSalvando(false);
     }
   };
 
-  return (
-    <div className="page">
-      <div className="card">
-        <p className="eyebrow">Passo {etapa} de {TOTAL_ETAPAS}</p>
-        <div className="progresso">
-          {Array.from({ length: TOTAL_ETAPAS }).map((_, indice) => (
-            <span
-              key={indice}
-              className={`progressoPasso ${indice < etapa ? 'progressoPassoAtivo' : ''}`}
+  const conteudo = {
+    1: {
+      titulo: `Vamos começar, ${primeiroNome}.`,
+      subtitulo: 'Qual é o seu objetivo principal? Isso ajusta suas metas de calorias e macros.',
+      corpo: (
+        <div className="flex flex-col gap-3">
+          {OBJETIVOS.map((opcao) => (
+            <OpcaoCartao
+              key={opcao.valor}
+              titulo={opcao.titulo}
+              descricao={opcao.descricao}
+              selecionado={dados.objetivo === opcao.valor}
+              aoSelecionar={() => atualizarCampo('objetivo', opcao.valor)}
             />
           ))}
         </div>
-
-        {etapa === 1 && (
-          <>
-            <h1 className="title">Qual é o seu objetivo?</h1>
-            <p className="subtitle">Isso ajusta suas metas de calorias e macros na Dieta.</p>
-            <div className="gradeOpcoes">
-              {OBJETIVOS.map((opcao) => (
-                <button
+      ),
+    },
+    2: {
+      titulo: 'Qual é o seu nível básico de atividade?',
+      subtitulo: 'Sem contar os treinos — esses entram separadamente.',
+      corpo: (
+        <div className="flex flex-col gap-3">
+          {NIVEIS_ATIVIDADE.map((opcao) => (
+            <OpcaoCartao
+              key={opcao.valor}
+              titulo={opcao.titulo}
+              descricao={opcao.descricao}
+              selecionado={dados.nivelAtividade === opcao.valor}
+              aoSelecionar={() => atualizarCampo('nivelAtividade', opcao.valor)}
+            />
+          ))}
+        </div>
+      ),
+    },
+    3: {
+      titulo: 'Seus dados pessoais',
+      subtitulo: 'Usamos essas informações para calcular uma meta calórica precisa para você.',
+      corpo: (
+        <div className="flex flex-col gap-5">
+          <fieldset>
+            <legend className="mb-1.5 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+              Sexo usado no cálculo calórico
+            </legend>
+            <div className="grid grid-cols-2 gap-3">
+              {SEXOS.map((opcao) => (
+                <OpcaoCartao
                   key={opcao.valor}
-                  type="button"
-                  onClick={() => atualizarCampo('objetivo', opcao.valor)}
-                  className={`opcaoCartao ${dados.objetivo === opcao.valor ? 'opcaoCartaoAtiva' : ''}`}
-                >
-                  <span className="opcaoCartaoTitulo">{opcao.titulo}</span>
-                  <span className="opcaoCartaoDescricao">{opcao.descricao}</span>
-                </button>
+                  titulo={opcao.titulo}
+                  selecionado={dados.sexo === opcao.valor}
+                  aoSelecionar={() => atualizarCampo('sexo', opcao.valor)}
+                />
               ))}
             </div>
-          </>
-        )}
+          </fieldset>
 
-        {etapa === 2 && (
-          <>
-            <h1 className="title">Qual seu nível de atividade?</h1>
-            <p className="subtitle">Usamos isso para estimar melhor seu gasto calórico diário.</p>
-            <div className="gradeOpcoes">
-              {NIVEIS_ATIVIDADE.map((opcao) => (
-                <button
-                  key={opcao.valor}
-                  type="button"
-                  onClick={() => atualizarCampo('nivelAtividade', opcao.valor)}
-                  className={`opcaoCartao ${dados.nivelAtividade === opcao.valor ? 'opcaoCartaoAtiva' : ''}`}
-                >
-                  <span className="opcaoCartaoTitulo">{opcao.titulo}</span>
-                  <span className="opcaoCartaoDescricao">{opcao.descricao}</span>
-                </button>
-              ))}
-            </div>
-          </>
-        )}
+          <Campo rotulo="Quando você nasceu?">
+            <input
+              type="date"
+              value={dados.dataNascimento}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => atualizarCampo('dataNascimento', e.target.value)}
+              className={CLASSES_CAMPO}
+            />
+          </Campo>
 
-        {etapa === 3 && (
-          <>
-            <h1 className="title">Seus dados pessoais</h1>
-            <p className="subtitle">O sexo biológico ajuda a calcular sua necessidade calórica com mais precisão.</p>
-            <div className="form">
-              <div className="gradeOpcoes">
-                <button
-                  type="button"
-                  onClick={() => atualizarCampo('sexo', 'M')}
-                  className={`opcaoCartao ${dados.sexo === 'M' ? 'opcaoCartaoAtiva' : ''}`}
-                >
-                  <span className="opcaoCartaoTitulo">Masculino</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => atualizarCampo('sexo', 'F')}
-                  className={`opcaoCartao ${dados.sexo === 'F' ? 'opcaoCartaoAtiva' : ''}`}
-                >
-                  <span className="opcaoCartaoTitulo">Feminino</span>
-                </button>
-              </div>
+          <Campo rotulo="Onde você vive?" dica="Opcional.">
+            <input
+              type="text"
+              placeholder="Brasil"
+              value={dados.pais}
+              onChange={(e) => atualizarCampo('pais', e.target.value)}
+              className={CLASSES_CAMPO}
+            />
+          </Campo>
+        </div>
+      ),
+    },
+    4: {
+      titulo: 'Suas métricas corporais',
+      subtitulo: 'Pode ser uma estimativa — dá para atualizar depois no Perfil.',
+      corpo: (
+        <div className="flex flex-col gap-5">
+          <Campo rotulo="Qual a sua altura?" dica="Em centímetros. Ex: 1,82 m = 182.">
+            <input
+              type="number"
+              inputMode="numeric"
+              min="50"
+              max="250"
+              step="1"
+              placeholder="182"
+              value={dados.altura}
+              onChange={(e) => atualizarCampo('altura', e.target.value)}
+              className={CLASSES_CAMPO}
+            />
+          </Campo>
 
-              <label className="field">
-                <span>Data de nascimento</span>
-                <input
-                  type="date"
-                  value={dados.dataNascimento}
-                  onChange={(e) => atualizarCampo('dataNascimento', e.target.value)}
-                  className="input"
-                />
-              </label>
+          <Campo rotulo="Quanto você pesa hoje?" dica="Em quilogramas.">
+            <input
+              type="number"
+              inputMode="decimal"
+              min="20"
+              max="300"
+              step="0.1"
+              placeholder="78,5"
+              value={dados.peso}
+              onChange={(e) => atualizarCampo('peso', e.target.value)}
+              className={CLASSES_CAMPO}
+            />
+          </Campo>
 
-              <label className="field">
-                <span>País</span>
-                <input
-                  type="text"
-                  placeholder="Brasil"
-                  value={dados.pais}
-                  onChange={(e) => atualizarCampo('pais', e.target.value)}
-                  className="input"
-                />
-              </label>
-            </div>
-          </>
-        )}
+          <Campo rotulo="Qual é a sua meta de peso?" dica="Opcional — não altera sua meta diária de calorias.">
+            <input
+              type="number"
+              inputMode="decimal"
+              min="20"
+              max="300"
+              step="0.1"
+              placeholder="72,0"
+              value={dados.pesoAlvo}
+              onChange={(e) => atualizarCampo('pesoAlvo', e.target.value)}
+              className={CLASSES_CAMPO}
+            />
+          </Campo>
+        </div>
+      ),
+    },
+  }[etapa];
 
-        {etapa === 4 && (
-          <>
-            <h1 className="title">Métricas corporais</h1>
-            <p className="subtitle">Sua altura, peso atual e a meta de peso que você quer alcançar.</p>
-            <div className="form">
-              <label className="field">
-                <span>Altura (cm)</span>
-                <input
-                  type="number"
-                  min="50"
-                  max="250"
-                  step="1"
-                  placeholder="Ex: 182"
-                  value={dados.altura}
-                  onChange={(e) => atualizarCampo('altura', e.target.value)}
-                  className="input"
-                />
-              </label>
-              <label className="field">
-                <span>Peso atual (kg)</span>
-                <input
-                  type="number"
-                  min="20"
-                  max="300"
-                  step="0.1"
-                  value={dados.peso}
-                  onChange={(e) => atualizarCampo('peso', e.target.value)}
-                  className="input"
-                />
-              </label>
-              <label className="field">
-                <span>Peso alvo (kg)</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  value={dados.pesoAlvo}
-                  onChange={(e) => atualizarCampo('pesoAlvo', e.target.value)}
-                  className="input"
-                />
-              </label>
-            </div>
-          </>
-        )}
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-6 dark:bg-zinc-950 sm:py-10">
+      <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
+        {/* Barra de progresso superior, colada na borda do cartão. */}
+        <div
+          className="h-1.5 w-full bg-zinc-200 dark:bg-zinc-800"
+          role="progressbar"
+          aria-valuenow={etapa}
+          aria-valuemin={1}
+          aria-valuemax={TOTAL_ETAPAS}
+          aria-label={`Passo ${etapa} de ${TOTAL_ETAPAS}`}
+        >
+          <div
+            className="h-full rounded-r-full bg-emerald-600 transition-[width] duration-500 ease-out motion-reduce:transition-none"
+            style={{ width: `${percentual}%` }}
+          />
+        </div>
 
-        {error && <div className="error">{error}</div>}
+        <div className="px-6 pb-6 pt-7 sm:px-10 sm:pb-8 sm:pt-9">
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+            Passo {etapa} de {TOTAL_ETAPAS}
+          </p>
+          <h1 className="mt-2 text-2xl font-bold leading-tight text-zinc-900 dark:text-zinc-100">
+            {conteudo.titulo}
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">{conteudo.subtitulo}</p>
 
-        <div className="linhaBotoes">
+          <div className="mt-7">{conteudo.corpo}</div>
+
+          {erro && (
+            <p
+              role="alert"
+              className="mt-5 rounded-xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"
+            >
+              {erro}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3 border-t border-zinc-100 px-6 py-4 dark:border-zinc-800 sm:px-10">
           {etapa > 1 && (
-            <button type="button" className="botaoVoltar" onClick={voltar} disabled={loading}>
-              Voltar
+            <button
+              type="button"
+              onClick={voltar}
+              disabled={salvando}
+              className="flex h-12 items-center gap-1 rounded-xl border-2 border-zinc-200 px-5 text-sm font-bold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            >
+              <ChevronLeft size={18} strokeWidth={2.5} /> Voltar
             </button>
           )}
-          {etapa < TOTAL_ETAPAS ? (
-            <button type="button" className="submit" onClick={avancar}>
-              Avançar
-            </button>
-          ) : (
-            <button type="button" className="submit" onClick={finalizar} disabled={loading}>
-              {loading ? 'Salvando...' : 'Concluir'}
-            </button>
-          )}
+
+          <button
+            type="button"
+            onClick={ehUltimaEtapa ? finalizar : avancar}
+            disabled={salvando}
+            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white transition hover:bg-emerald-700 active:scale-[0.99] disabled:opacity-60"
+          >
+            {salvando && (
+              <span
+                aria-hidden="true"
+                className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+              />
+            )}
+            {salvando ? 'Salvando seu perfil…' : ehUltimaEtapa ? 'Concluir e ir para o painel' : 'Próximo'}
+          </button>
         </div>
       </div>
     </div>

@@ -40,12 +40,18 @@ export const LIMITES_ALIMENTO = Object.freeze({
 
 /** Valida os valores nutricionais antes de qualquer persistência. */
 export function validarValoresAlimento(alimento = {}) {
-  const quantidade = Number(alimento.quantidade);
+  const textoQuantidade = String(alimento.quantidade ?? '').trim().toLowerCase();
+  const correspondencia = textoQuantidade.match(/^([0-9]+(?:[.,][0-9]+)?)\s*(g|kg|ml\.?|l|litros?|mililitros?|unidades?|un|copos?)?$/i);
+  const quantidade = correspondencia ? Number(correspondencia[1].replace(',', '.')) : Number.NaN;
   if (!Number.isFinite(quantidade) || quantidade <= 0) {
-    return 'A quantidade deve ser maior que 0';
+    return 'Informe uma quantidade válida (ex: 150g, 200ml, 1l ou 2 unidades)';
   }
-  if (quantidade > LIMITES_ALIMENTO.quantidade) {
-    return `A quantidade deve ser menor ou igual a ${LIMITES_ALIMENTO.quantidade} g`;
+  const unidade = correspondencia?.[2]?.replace('.', '') || 'g';
+  const quantidadeBase = unidade === 'kg' || unidade === 'l' || unidade.startsWith('litro')
+    ? quantidade * 1000
+    : unidade.startsWith('copo') ? quantidade * 250 : quantidade;
+  if (quantidadeBase > LIMITES_ALIMENTO.quantidade) {
+    return `A quantidade deve ser menor ou igual ao equivalente a ${LIMITES_ALIMENTO.quantidade} g/ml`;
   }
 
   for (const campo of ['proteina', 'carboidratos', 'gordura']) {

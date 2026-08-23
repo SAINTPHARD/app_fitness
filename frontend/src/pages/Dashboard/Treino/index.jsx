@@ -4,16 +4,30 @@ import { useSessaoExecucao } from './hooks/useSessaoExecucao';
 import { useCronometro } from './hooks/useCronometro';
 import { useTemporizadorDescanso } from './hooks/useTemporizadorDescanso';
 import { DIAS_SEMANA, obterIdDiaDaSemanaAtual } from './utils/diasSemana';
-import { gruposMusculares } from './utils/catalogoExercicios';
 import { contarExerciciosConcluidos } from './utils/progressoTreino';
-import { notificarErro } from '../../../utils/notificacoes';
+import { notificarErro, notificarSucesso } from '../../../utils/notificacoes';
 import CardExercicioExecucao from './components/CardExercicioExecucao';
 import CronometroSessao from './components/CronometroSessao';
 import TemporizadorDescanso from './components/TemporizadorDescanso';
 import ResumoTreinoModal from './components/ResumoTreinoModal';
+import CatalogoExercicios from './components/CatalogoExercicios';
+import ModalAdicionarExercicio from './components/ModalAdicionarExercicio';
 import './treino.css';
 
 const DURACAO_DESCANSO_PADRAO_SEGUNDOS = 60;
+
+const ALVOS_API_NINJAS = [
+  { id: 'pectorals', nome: 'Peitoral' },
+  { id: 'biceps', nome: 'Bíceps' },
+  { id: 'triceps', nome: 'Tríceps' },
+  { id: 'quads', nome: 'Quadríceps' },
+  { id: 'hamstrings', nome: 'Posteriores de coxa' },
+  { id: 'glutes', nome: 'Glúteos' },
+  { id: 'lats', nome: 'Dorsais' },
+  { id: 'delts', nome: 'Deltoides' },
+  { id: 'abs', nome: 'Abdominais' },
+  { id: 'calves', nome: 'Panturrilhas' },
+];
 
 const ROTULO_STATUS = {
   PENDENTE: 'Pendente',
@@ -27,7 +41,7 @@ export default function TreinoPage() {
   const { treinosPorDia, carregando, removerExercicio, adicionarExercicio } = useFichasTreino();
 
   const [modalAberto, setModalAberto] = useState(false);
-  const [grupoCatalogoAtivo, setGrupoCatalogoAtivo] = useState(null);
+  const [musculoCatalogoExterno, setMusculoCatalogoExterno] = useState(ALVOS_API_NINJAS[0].id);
 
   const treinoDoDia = treinosPorDia[diaSelecionado] || null;
   const exerciciosDoDia = treinoDoDia?.exercicios || [];
@@ -70,9 +84,6 @@ export default function TreinoPage() {
     cronometro.retomar();
   };
 
-  // Item "quando o usuário concluir uma série: iniciar automaticamente o
-  // temporizador de descanso" — a série já foi salva no backend por
-  // `concluirSerie` antes deste callback rodar.
   const handleConcluirSerie = async (idSerie) => {
     const resultado = await concluirSerie(idSerie);
     if (resultado) {
@@ -93,6 +104,27 @@ export default function TreinoPage() {
     setModalAberto(false);
   };
 
+  const adicionarExercicioExternoAoTreino = async (exercicioExterno) => {
+    const exercicioCatalogo = {
+      nome: exercicioExterno.name,
+      seriesPadrao: '3x10',
+      descricao: exercicioExterno.instructions,
+    };
+
+    const jaExiste = exerciciosDoDia.some(
+      (exercicio) => exercicio.nome.trim().toLowerCase() === exercicioCatalogo.nome.trim().toLowerCase()
+    );
+    if (jaExiste) {
+      notificarErro('Este exercício já faz parte do treino atual.');
+      return;
+    }
+
+    const adicionado = await adicionarExercicio(diaSelecionado, exercicioCatalogo);
+    if (adicionado) {
+      notificarSucesso(`"${exercicioCatalogo.nome}" foi adicionado ao treino.`);
+    }
+  };
+
   const handleRemoverExercicio = async (idExercicio) => {
     await removerExercicio(diaSelecionado, idExercicio);
   };
@@ -102,9 +134,6 @@ export default function TreinoPage() {
   const percentualProgresso = totalExercicios > 0 ? Math.round((exerciciosComProgresso / totalExercicios) * 100) : 0;
   const statusSessao = sessao?.status || 'PENDENTE';
 
-  // "Verificar se existem exercícios ou séries pendentes" antes de encerrar
-  // — pendente = algum exercício que ainda não teve TODAS as séries
-  // concluídas, incluindo exercícios sem séries registradas.
   const haPendencias =
     exerciciosComProgresso < totalExercicios ||
     (sessao?.series || []).some((serie) => serie.status === 'EM_ANDAMENTO');
@@ -144,7 +173,7 @@ export default function TreinoPage() {
         </button>
       </div>
 
-      {/* Seletor de Dias da Semana (Abas Horizontais) */}
+      {/* Seletor de Dias da Semana */}
       <div className="diasSemanaScroll">
         {DIAS_SEMANA.map((dia) => (
           <button
@@ -159,7 +188,7 @@ export default function TreinoPage() {
         ))}
       </div>
 
-      {/* Cabeçalho da sessão de execução do dia */}
+      {/* Cabeçalho da sessão */}
       <div className="statsCard cabecalhoSessao">
         <div className="cabecalhoSessaoTopo">
           <div>
@@ -172,13 +201,9 @@ export default function TreinoPage() {
           </div>
           <div className="cabecalhoSessaoAcoes">
             {!online ? (
-              <span className="indicadorConexao indicadorConexaoOffline" title="Sem conexão — as alterações ficam salvas localmente">
-                Offline
-              </span>
+              <span className="indicadorConexao indicadorConexaoOffline">Offline</span>
             ) : filaPendente.length > 0 ? (
-              <span className="indicadorConexao indicadorConexaoSincronizando" title="Enviando alterações salvas localmente">
-                Sincronizando…
-              </span>
+              <span className="indicadorConexao indicadorConexaoSincronizando">Sincronizando…</span>
             ) : null}
             <span className={`statusSessaoBadge statusSessao-${statusSessao}`}>{ROTULO_STATUS[statusSessao]}</span>
             {treinoDoDia && (
@@ -198,22 +223,19 @@ export default function TreinoPage() {
             )}
           </div>
         </div>
-        <div className="barraProgresso" role="progressbar" aria-valuenow={percentualProgresso} aria-valuemin={0} aria-valuemax={100}>
+        <div className="barraProgresso">
           <div className="barraProgressoPreenchida" style={{ width: `${percentualProgresso}%` }} />
         </div>
       </div>
 
-      {/* Temporizador de descanso: aparece inativo (presets) sempre que há
-          uma ficha, e vira o painel ativo assim que uma série é concluída. */}
+      {/* Temporizador */}
       {treinoDoDia && <TemporizadorDescanso temporizador={temporizadorDescanso} />}
 
-      {/* Lista de Exercícios da Ficha do Dia, cada um expansível com séries */}
+      {/* Lista de Exercícios */}
       <div className="sessionContainer">
         <h3>Exercícios Programados</h3>
         {carregando ? (
-          <div className="emptyStateCard">
-            <p>Carregando ficha…</p>
-          </div>
+          <div className="emptyStateCard"><p>Carregando ficha…</p></div>
         ) : exerciciosDoDia.length === 0 ? (
           <div className="emptyStateCard">
             <p>Nenhum exercício cadastrado para {diaAtualInfo?.label}.</p>
@@ -238,51 +260,29 @@ export default function TreinoPage() {
         )}
       </div>
 
-      {/* Modal / Gaveta para Escolher Exercícios do Catálogo */}
+      {/* Catálogo externo da API Ninjas */}
+      <div className="catalogoExternoContainer">
+        <label className="catalogoExternoSeletor">
+          <span>Grupo muscular do catálogo</span>
+          <select value={musculoCatalogoExterno} onChange={(event) => setMusculoCatalogoExterno(event.target.value)}>
+            {ALVOS_API_NINJAS.map((alvo) => (
+              <option key={alvo.id} value={alvo.id}>{alvo.nome}</option>
+            ))}
+          </select>
+        </label>
+        <CatalogoExercicios
+          musculoAlvo={musculoCatalogoExterno}
+          onAdicionarExercicio={adicionarExercicioExternoAoTreino}
+        />
+      </div>
+
+      {/* Gaveta de seleção manual de exercícios */}
       {modalAberto && (
-        <div className="modalOverlay">
-          <div className="modalCatalogo">
-            <div className="modalHeader">
-              <h3>Adicionar à Ficha: {diaAtualInfo?.label}</h3>
-              <button className="btnClose" onClick={() => setModalAberto(false)}>
-                ✕
-              </button>
-            </div>
-            <p className="modalSub">Selecione um grupo muscular para escolher o exercício:</p>
-
-            <div className="catalogoAcordeon">
-              {gruposMusculares.map((grupo) => {
-                const isOpen = grupoCatalogoAtivo === grupo.id;
-                return (
-                  <div key={grupo.id} className="grupoBox">
-                    <div className="grupoBoxHeader" onClick={() => setGrupoCatalogoAtivo(isOpen ? null : grupo.id)}>
-                      <span>
-                        {grupo.icone} {grupo.nome} ({grupo.exercicios.length})
-                      </span>
-                      <span>{isOpen ? '▲' : '▼'}</span>
-                    </div>
-
-                    {isOpen && (
-                      <div className="grupoBoxItens">
-                        {grupo.exercicios.map((ex) => (
-                          <div key={ex.id} className="itemExercicioCatalogo">
-                            <div>
-                              <strong>{ex.nome}</strong>
-                              <span className="subSugerido">Sugestão: {ex.seriesPadrao}</span>
-                            </div>
-                            <button className="btnAddItem" onClick={() => adicionarAoTreinoDoDia(ex)}>
-                              + Escolher
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+        <ModalAdicionarExercicio
+          diaLabel={diaAtualInfo?.label}
+          aoFechar={() => setModalAberto(false)}
+          aoSelecionar={adicionarAoTreinoDoDia}
+        />
       )}
 
       {resumo && <ResumoTreinoModal resumo={resumo} aoFechar={() => setResumo(null)} />}
