@@ -1,103 +1,67 @@
-version: "3.8"
-
 services:
   postgres:
     image: postgres:16-alpine
     container_name: appfitness-postgres
     restart: unless-stopped
-    
-    # Environment via env_file + overrides
     env_file: .env
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-appfitness_db}
       POSTGRES_USER: ${POSTGRES_USER:-appfitness_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-appfitness_secure_password_123}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=pt_BR.UTF-8"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       TZ: ${TZ:-America/Sao_Paulo}
-    
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/app_fitness-main/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
-    
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
-    
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-appfitness_user} -d ${POSTGRES_DB:-appfitness_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
-    
-    networks:
-      - appfitness-network
-    
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    networks: [appfitness-network]
 
   backend:
     build:
       context: ./backend/app_fitness-main
-      dockerfile: Dockerfile
     container_name: appfitness-backend
     restart: unless-stopped
-    
     env_file: .env
     environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/appfitness_db}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-appfitness_user}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-appfitness_secure_password_123}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
-      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL:-false}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
       TZ: ${TZ:-America/Sao_Paulo}
-    
     depends_on:
       postgres:
         condition: service_healthy
-    
     ports:
       - "8080:8080"
-    
-    networks:
-      - appfitness-network
-    
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks: [appfitness-network]
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
     container_name: appfitness-frontend
     restart: unless-stopped
-    
     depends_on:
       backend:
         condition: service_healthy
-    
     ports:
       - "80:80"
-    
-    networks:
-      - appfitness-network
-    
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    networks: [appfitness-network]
 
 volumes:
   postgres_data:
-    driver: local
 
 networks:
   appfitness-network:
