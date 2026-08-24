@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NutritionProvider } from './context/NutritionContext';
@@ -5,16 +6,16 @@ import { MetasProvider } from './context/MetasContext';
 import ToastHost from './components/ui/Toast';
 import TelaCarregamento from './components/ui/TelaCarregamento';
 import ErrorBoundary from './components/ErrorBoundary';
-import LoginPage from './pages/Login';
-import OnboardingPage from './pages/Onboarding';
-import DashboardLayout from './pages/Dashboard';
-import HomePage from './pages/Dashboard/Home';
-import DietaPage from './pages/Dashboard/Dieta/PainelDieta';
-import TreinoPage from './pages/Dashboard/Treino';
-import EvolucaoPage from './pages/Dashboard/Evolucao';
-import RelatoriosPage from './pages/Dashboard/Relatorios';
-import PerfilPage from './pages/Dashboard/Perfil';
-import ConfiguracoesPage from './pages/Dashboard/Configuracoes';
+const LoginPage = lazy(() => import('./pages/Login'));
+const OnboardingPage = lazy(() => import('./pages/Onboarding'));
+const DashboardLayout = lazy(() => import('./pages/Dashboard'));
+const HomePage = lazy(() => import('./pages/Dashboard/Home'));
+const DietaPage = lazy(() => import('./pages/Dashboard/Dieta/PainelDieta'));
+const TreinoPage = lazy(() => import('./pages/Dashboard/Treino'));
+const EvolucaoPage = lazy(() => import('./pages/Dashboard/Evolucao'));
+const RelatoriosPage = lazy(() => import('./pages/Dashboard/Relatorios'));
+const PerfilPage = lazy(() => import('./pages/Dashboard/Perfil'));
+const ConfiguracoesPage = lazy(() => import('./pages/Dashboard/Configuracoes'));
 
 function AppRoutes() {
   // `perfilCompleto` vem do contexto (estado do React), e não mais de uma
@@ -29,7 +30,8 @@ function AppRoutes() {
 
   return (
     <BrowserRouter>
-      <Routes>
+      <Suspense fallback={<TelaCarregamento mensagem="Carregando página…" />}>
+        <Routes>
         <Route
           path="/login"
           element={
@@ -82,7 +84,8 @@ function AppRoutes() {
             />
           }
         />
-      </Routes>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
