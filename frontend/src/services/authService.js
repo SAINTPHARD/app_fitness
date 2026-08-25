@@ -27,7 +27,7 @@ export const authService = {
 
       throw {
         status: 0,
-        message: 'Servidor indisponível. Verifique se o Spring Boot está a correr na porta 8080.',
+        message: 'Não foi possível conectar ao servidor. Se for o seu primeiro acesso do dia, o sistema pode levar alguns segundos para acordar. Tente novamente.',
       };
     }
   },
@@ -68,7 +68,7 @@ export const authService = {
 
       throw {
         status: 0,
-        message: 'Servidor indisponível. Verifique se o Spring Boot está a correr na porta 8080.',
+        message: 'Não foi possível conectar ao servidor. Se for o seu primeiro acesso do dia, o sistema pode levar alguns segundos para acordar. Tente novamente.',
       };
     }
   },
