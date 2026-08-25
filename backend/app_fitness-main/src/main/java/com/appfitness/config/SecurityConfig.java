@@ -2,6 +2,7 @@ package com.appfitness.config;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -28,6 +29,9 @@ import com.appfitness.security.SecurityFilter;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+	@Value("${app.cors.allowed-origins}")
+	private List<String> allowedOrigins;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(
@@ -86,21 +90,8 @@ public class SecurityConfig {
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
 
-		// Libera explicitamente as URLs locais usadas pelo seu React no VS Code.
-		// Inclui 5174/5175 como rede de segurança: o Vite cai nessas portas
-		// quando 5173 já está ocupada (ex: dois terminais rodando "npm run dev"
-		// ao mesmo tempo, ou um deles iniciado com "--port 5174" explícito,
-		// que ignora o "strictPort" do vite.config.js) — sem isso, o navegador
-		// bloqueia a chamada por CORS e o Axios reporta um "Network Error"
-		// genérico, mesmo com o backend saudável e o token JWT correto.
-		configuration.setAllowedOrigins(List.of(
-				"http://localhost:5173",
-				"http://127.0.0.1:5173",
-				"http://localhost:5174",
-				"http://127.0.0.1:5174",
-				"http://localhost:5175",
-				"http://127.0.0.1:5175"
-		));
+		// Aceita origens exatas e padrões configurados externamente (por exemplo, previews da Vercel).
+		configuration.setAllowedOriginPatterns(allowedOrigins);
 		
 		// Métodos HTTP permitidos para o ecossistema full-stack
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
