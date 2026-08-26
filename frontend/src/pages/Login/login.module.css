@@ -23,6 +23,16 @@
   }
 }
 
+@media (max-width: 480px) {
+  .formSection {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .formTitle {
+    font-size: 1.5rem;
+  }
+}
+
 .welcomeContent {
   max-width: 500px;
 }
@@ -72,6 +82,24 @@
 .card {
   width: 100%;
   max-width: 400px;
+  animation: fadeInUp 0.35s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
 }
 
 .formTitle {
@@ -95,7 +123,14 @@
 
 .rowInputs {
   display: flex;
+  flex-direction: column;
   gap: 1rem;
+}
+
+@media (min-width: 480px) {
+  .rowInputs {
+    flex-direction: row;
+  }
 }
 
 .input {
@@ -125,12 +160,16 @@
   border: none;
   border-radius: 0.5rem;
   cursor: pointer;
-  transition: filter 0.2s;
+  transition: all 0.25s ease-in-out;
   margin-top: 0.5rem;
 }
 
 .submitBtn:hover:not(:disabled) {
   filter: brightness(0.95);
+}
+
+.submitBtn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .submitBtn:disabled,
@@ -160,6 +199,7 @@
   border: none;
   padding: 0;
   font: inherit;
+  transition: color 0.2s ease-in-out;
 }
 
 .toggleLink:hover {

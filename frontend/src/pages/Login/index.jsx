@@ -18,6 +18,9 @@ const FORMULARIO_VAZIO = {
   confirmPassword: '',
 };
 
+// Mínimo 8 caracteres, pelo menos uma letra e um número.
+const REGEX_SENHA_FORTE = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+
 export default function LoginPage() {
   // Estado para alternar entre o formulário de Login (false) e Cadastro (true)
   const [isSignUp, setIsSignUp] = useState(false);
@@ -32,6 +35,8 @@ export default function LoginPage() {
   const { login, reiniciarPerfilCompleto } = useAuth();
 
   const timeoutRef = useRef(null);
+
+  const senhaValida = REGEX_SENHA_FORTE.test(formData.password);
 
   // Cancela o redirecionamento pendente se a tela sair antes da hora.
   useEffect(() => () => clearTimeout(timeoutRef.current), []);
@@ -97,6 +102,11 @@ export default function LoginPage() {
     e.preventDefault();
     if (enviando) return;
 
+    if (isSignUp && !senhaValida) {
+      notificarErro('A senha deve ter no mínimo 8 caracteres, com letras e números.');
+      return;
+    }
+
     if (isSignUp && formData.password !== formData.confirmPassword) {
       notificarErro('As senhas não coincidem!');
       return;
@@ -142,7 +152,7 @@ export default function LoginPage() {
 
       {/* SEÇÃO DIREITA: Aba de Acesso Dinâmica (Login / Cadastro) */}
       <div className={styles.formSection}>
-        <div className={styles.card}>
+        <div key={isSignUp ? 'cadastro' : 'login'} className={styles.card}>
           <h2 className={styles.formTitle}>
             {isSignUp ? 'Crie sua conta' : 'Bem-vindo de volta'}
           </h2>
@@ -201,6 +211,18 @@ export default function LoginPage() {
             />
 
             {isSignUp && (
+              <p
+                style={{
+                  margin: '-0.5rem 0 0',
+                  fontSize: '0.75rem',
+                  color: formData.password.length === 0 ? '#71717a' : senhaValida ? '#16a34a' : '#dc2626',
+                }}
+              >
+                A senha deve ter no mínimo 8 caracteres, com letras e números
+              </p>
+            )}
+
+            {isSignUp && (
               <input
                 className={styles.input}
                 name="confirmPassword"
@@ -214,13 +236,17 @@ export default function LoginPage() {
               />
             )}
 
-            <button type="submit" className={styles.submitBtn} disabled={enviando}>
+            <button
+              type="submit"
+              className={styles.submitBtn}
+              disabled={enviando || (isSignUp && !senhaValida)}
+            >
               {enviando
                 ? isSignUp
-                  ? 'Criando a sua conta…'
+                  ? 'Criando sua conta…'
                   : 'Entrando…'
                 : isSignUp
-                  ? 'Finalizar Cadastro'
+                  ? 'Criar Minha Conta'
                   : 'Entrar no Sistema'}
             </button>
           </form>
