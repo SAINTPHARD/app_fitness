@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
-import { obterEmojiAlimento, obterEmojiRefeicao, PALETA_FUNDO_ICONE } from '../utils/emojiAlimento';
+import { obterIconeAlimento, obterIconeRefeicao, PALETA_FUNDO_ICONE } from '../utils/iconesAlimento';
 import {
   calcularCaloriasPelosMacros,
   LIMITES_ALIMENTO,
@@ -32,6 +32,7 @@ export default function CartaoRefeicao({
   aoRemoverRefeicao,
   aoConcluir,
 }) {
+  const IconeRefeicao = obterIconeRefeicao(refeicao?.nome);
   const [novoAlimento, setNovoAlimento] = useState(RASCUNHO_VAZIO);
   const [indiceEmEdicao, setIndiceEmEdicao] = useState(null);
   const [rascunhoEdicao, setRascunhoEdicao] = useState(RASCUNHO_VAZIO);
@@ -262,7 +263,7 @@ export default function CartaoRefeicao({
     <article className={`mb-4 rounded-3xl bg-white shadow-xl shadow-slate-200/50 transition-all dark:bg-zinc-800 dark:shadow-none ${excedeuAlgumaMeta ? 'ring-2 ring-rose-300' : ''}`}>
       <div className="flex w-full min-w-0 items-center justify-between gap-2 px-4 py-4 sm:gap-3 sm:px-5">
         <button type="button" onClick={aoAlternarExpandida} aria-expanded={expandida} className="flex min-w-0 flex-1 items-center gap-3 text-left transition-opacity hover:opacity-90">
-          <span className="text-xl" aria-hidden="true">{obterEmojiRefeicao(refeicao.nome)}</span>
+          <span aria-hidden="true"><IconeRefeicao size={20} className="text-lime-600 dark:text-lime-400" /></span>
           <span className="truncate font-bold text-slate-800 dark:text-zinc-50">{refeicao.nome}</span>
         </button>
 
@@ -359,7 +360,10 @@ export default function CartaoRefeicao({
                   ) : (
                     <div className="flex items-center justify-between gap-2 rounded-2xl bg-slate-50 px-3 py-2 dark:bg-zinc-900/40">
                       <div className="flex items-center gap-3">
-                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg ${PALETA_FUNDO_ICONE[indice % PALETA_FUNDO_ICONE.length]}`}>{obterEmojiAlimento(alimento.nome)}</span>
+                        {(() => {
+                          const IconeAlimento = obterIconeAlimento(alimento.nome);
+                          return <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${PALETA_FUNDO_ICONE[indice % PALETA_FUNDO_ICONE.length]}`}><IconeAlimento size={18} className="text-zinc-700" aria-hidden="true" /></span>;
+                        })()}
                         <div>
                           <p className="m-0 text-sm font-semibold text-slate-700 dark:text-zinc-200">{alimento.nome}</p>
                           {alimento.quantidade && <p className="m-0 text-xs text-slate-400 dark:text-zinc-500">{alimento.quantidade}</p>}

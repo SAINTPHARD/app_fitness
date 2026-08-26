@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Zap } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 import { notificarErro } from '../../utils/notificacoes';
@@ -128,9 +129,9 @@ export default function LoginPage() {
       {/* SEÇÃO ESQUERDA: Aba Home / Boas-vindas (Estilo CalAI) */}
       <div className={styles.welcomeSection}>
         <div className={styles.welcomeContent}>
-          <span className={styles.logoIcon}>⚡</span>
+          <span className={styles.logoIcon}><Zap aria-hidden="true" /></span>
           <h1>System Fitness</h1>
-          <p>Conquiste a sua melhor versão. Monitorize os seus treinos, calcule os seus macros e alcance hipertrofia com inteligência.</p>
+          <p>Conquiste sua melhor versão. Acompanhe seus treinos, calcule seus macros e alcance seus objetivos com inteligência.</p>
           <div className={styles.featuresBadge}>
             <span>✓ Plano Nutricional</span>
             <span>✓ Fichas de Treino</span>
@@ -143,10 +144,10 @@ export default function LoginPage() {
       <div className={styles.formSection}>
         <div className={styles.card}>
           <h2 className={styles.formTitle}>
-            {isSignUp ? 'Crie a sua conta' : 'Bem-vindo de volta'}
+            {isSignUp ? 'Crie sua conta' : 'Bem-vindo de volta'}
           </h2>
           <p className={styles.formSubtitle}>
-            {isSignUp ? 'Preencha os dados abaixo para começar.' : 'Insira as suas credenciais para aceder ao painel.'}
+            {isSignUp ? 'Preencha os dados abaixo para começar.' : 'Entre com seu e-mail e senha.'}
           </p>
 
           <form className={styles.form} onSubmit={handleSubmit}>
@@ -191,7 +192,7 @@ export default function LoginPage() {
               className={styles.input}
               name="password"
               type="password"
-              placeholder="Palavra-passe"
+              placeholder="Senha"
               autoComplete={isSignUp ? 'new-password' : 'current-password'}
               value={formData.password}
               onChange={handleInputChange}
@@ -204,7 +205,7 @@ export default function LoginPage() {
                 className={styles.input}
                 name="confirmPassword"
                 type="password"
-                placeholder="Confirmar Palavra-passe"
+                placeholder="Confirmar senha"
                 autoComplete="new-password"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
@@ -228,7 +229,7 @@ export default function LoginPage() {
           <p className={styles.toggleText}>
             {isSignUp ? 'Já tem uma conta?' : 'Ainda não tem conta?'}
             <button type="button" className={styles.toggleLink} onClick={alternarModo} disabled={enviando}>
-              {isSignUp ? ' Inicie sessão aqui' : ' Registe-se agora'}
+              {isSignUp ? ' Entre aqui' : ' Cadastre-se agora'}
             </button>
           </p>
         </div>

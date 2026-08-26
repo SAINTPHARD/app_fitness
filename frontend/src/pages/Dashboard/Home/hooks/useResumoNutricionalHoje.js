@@ -16,7 +16,7 @@ export function useResumoNutricionalHoje() {
 
   const { metas } = useMetas();
   const { refeicoesDoDia, totaisDoDia, adicionarRefeicao, removerRefeicao } = useRefeicoes(hojeISO);
-  const { registros, totalMl, metaMl } = useHidratacao(hojeISO);
+  const { registros, totalMl, metaMl, adicionarAgua } = useHidratacao(hojeISO);
 
   const percentuais = useMemo(
     () => ({
@@ -41,6 +41,7 @@ export function useResumoNutricionalHoje() {
     percentuais,
     metaDoDiaPercentual,
     agua: { registros, totalMl, metaMl },
+    adicionarAgua,
     proximaRefeicao,
     refeicoesDoDia,
     adicionarRefeicao,

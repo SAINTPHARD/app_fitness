@@ -1,7 +1,7 @@
 package com.appfitness.dto.usuario;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import model.enums.Objetivo;
+import com.appfitness.model.enums.Objetivo;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 

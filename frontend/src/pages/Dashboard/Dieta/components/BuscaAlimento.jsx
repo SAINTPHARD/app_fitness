@@ -31,7 +31,7 @@ export default function BuscaAlimento({ valor, aoDigitar, aoSelecionar }) {
     setSugestoes(resultadosLocais);
 
     // ==========================================
-    // 2. BUSCA DA INTERNET (Espera o utilizador parar de digitar — debounce
+    // 2. BUSCA DA INTERNET (Espera o usuário parar de digitar — debounce
     //    de 600ms já existente, evita bater a API a cada tecla)
     // ==========================================
     if (timerBuscaRef.current) clearTimeout(timerBuscaRef.current);

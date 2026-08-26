@@ -3,9 +3,15 @@ import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { Bell, ChevronDown, Droplet, LogOut, Menu, Moon, Plus, Scale, Settings, Sun, User as UserIcon } from 'lucide-react';
 import { useTema } from '../../../hooks/useTema';
-import { obterFraseMotivacionalDoDia, obterSaudacaoPorHorario } from './frasesMotivacionais';
 import { obterIniciaisUsuario, obterNomeExibicao, obterPrimeiroNome } from '../../../utils/nomeUsuario';
 import './header.css';
+
+function obterSaudacaoPorHorario() {
+  const hora = new Date().getHours();
+  if (hora < 12) return 'Bom dia';
+  if (hora < 18) return 'Boa tarde';
+  return 'Boa noite';
+}
 
 // Atalhos rápidos do Header: navegação direta para as ações mais comuns do
 // dia a dia, sem precisar abrir o menu e procurar a página certa.
@@ -60,7 +66,6 @@ export default function Header({ user, onLogout, aoAbrirMenu }) {
         <p className="greeting">
           {obterSaudacaoPorHorario()}, {primeiroNome} 👋
         </p>
-        <p className="motivationalPhrase">{obterFraseMotivacionalDoDia()}</p>
       </div>
 
       <div className="headerActions">

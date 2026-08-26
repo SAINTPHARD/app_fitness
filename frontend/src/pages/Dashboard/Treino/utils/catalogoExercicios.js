@@ -4,7 +4,6 @@ export const gruposMusculares = [
   {
     id: 'peito',
     nome: 'Peito',
-    icone: '💪',
     exercicios: [
       { id: 1, nome: 'Supino Reto com Barra', seriesPadrao: '4x8-10' },
       { id: 2, nome: 'Supino Inclinado com Barra', seriesPadrao: '4x8-10' },
@@ -16,7 +15,6 @@ export const gruposMusculares = [
   {
     id: 'costas',
     nome: 'Costas',
-    icone: '🦾',
     exercicios: [
       { id: 20, nome: 'Puxada Alta', seriesPadrao: '4x10' },
       { id: 21, nome: 'Remada Curvada', seriesPadrao: '4x8-10' },
@@ -27,7 +25,6 @@ export const gruposMusculares = [
   {
     id: 'pernas',
     nome: 'Pernas',
-    icone: '🦵',
     exercicios: [
       { id: 100, nome: 'Agachamento Livre', seriesPadrao: '4x8' },
       { id: 101, nome: 'Leg Press 45°', seriesPadrao: '4x10' },
@@ -39,7 +36,6 @@ export const gruposMusculares = [
   {
     id: 'ombros',
     nome: 'Ombros',
-    icone: '🏋️',
     exercicios: [
       { id: 40, nome: 'Desenvolvimento Militar', seriesPadrao: '4x8-10' },
       { id: 41, nome: 'Elevação Lateral', seriesPadrao: '3x15' },
@@ -49,7 +45,6 @@ export const gruposMusculares = [
   {
     id: 'bracos',
     nome: 'Bíceps e Tríceps',
-    icone: '💥',
     exercicios: [
       { id: 60, nome: 'Rosca Direta', seriesPadrao: '4x10' },
       { id: 61, nome: 'Rosca Martelo', seriesPadrao: '3x12' },

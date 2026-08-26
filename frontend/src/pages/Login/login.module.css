@@ -1,4 +1,4 @@
-/* Container que divide o ecrã em duas metades perfeitas no computador */
+/* Container que divide a tela em duas metades no computador. */
 .loginContainer {
   display: flex;
   min-height: 100vh;

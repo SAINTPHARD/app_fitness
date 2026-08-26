@@ -25,9 +25,6 @@ const PERIODOS = [
  */
 export default function HistoricoTabela({ historicoPeso }) {
   const [periodoDias, setPeriodoDias] = useState(7);
-  // CORREÇÃO: refeições agora vêm de verdade do backend (`useHistoricoRefeicoes`)
-  // em vez da chave de localStorage órfã que `obterHistoricoDiario` lia antes
-  // — ver esse hook para o diagnóstico completo dessa família de bugs.
   const { refeicoesPorDia, carregando } = useHistoricoRefeicoes(periodoDias);
   const linhas = useMemo(
     () => obterHistoricoDiario(historicoPeso, refeicoesPorDia, periodoDias),

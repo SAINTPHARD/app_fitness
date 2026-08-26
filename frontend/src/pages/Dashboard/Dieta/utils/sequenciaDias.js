@@ -6,7 +6,6 @@ import { somarMacrosDeAlimentos } from './macros';
  * registrada, contando a partir de hoje para trás. Recebe os dados reais já
  * buscados do backend (`refeicoesPorDia`, de `useHistoricoRefeicoes`) — ver
  * o comentário nesse hook sobre a correção da causa raiz: esta função lia
- * antes de uma chave de localStorage órfã que `useRefeicoes` não escreve
  * mais, então o streak nunca refletia refeições registradas de verdade.
  */
 export function obterSequenciaDeDias(refeicoesPorDia) {

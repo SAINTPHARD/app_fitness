@@ -16,7 +16,6 @@ const COR_BARRA = '#a3e635';
  * últimos 7 dias — construído inteiramente a partir dos dados reais já
  * salvos na Dieta, buscados de verdade no backend via
  * `useHistoricoRefeicoes` (ver esse hook para o histórico da correção —
- * antes isto lia uma chave de localStorage órfã e mostrava dados zerados);
  * dias sem refeições aparecem com a barra zerada, nenhum valor é inventado.
  */
 export default function GraficoSemanal() {
