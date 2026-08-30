@@ -55,14 +55,14 @@ export default function ModalAdicionarExercicio({ diaLabel, aoFechar, aoSelecion
     <div
       role="presentation"
       onMouseDown={aoFechar}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-zinc-950/60 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex animate-fade-in items-end justify-center bg-zinc-950/60 backdrop-blur-sm sm:items-center sm:p-4"
     >
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="adicionar-exercicio-titulo"
         onMouseDown={(event) => event.stopPropagation()}
-        className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-zinc-900 sm:rounded-3xl"
+        className="flex max-h-[90vh] w-full max-w-lg animate-fade-in-up flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-zinc-900 sm:rounded-3xl"
       >
         <header className="flex items-start justify-between gap-3 px-5 pb-3 pt-5">
           <div className="min-w-0">

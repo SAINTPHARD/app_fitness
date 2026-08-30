@@ -1,4 +1,4 @@
-package model.enums;
+package com.appfitness.model.enums;
 
 /**
  * Define o objetivo do usuário.

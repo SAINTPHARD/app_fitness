@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, Clock, Plus, Salad, X } from 'lucide-react';
 import { ordenarPorHorario, refeicaoConcluida } from '../../Dieta/utils/proximaRefeicao';
-import { obterEmojiRefeicao } from '../../Dieta/utils/emojiAlimento';
+import { obterIconeRefeicao } from '../../Dieta/utils/iconesAlimento';
 
 const FORMULARIO_VAZIO = { nome: '', horario: '' };
 
@@ -132,13 +132,14 @@ export default function CardTimelineDieta({ refeicoes, aoAdicionarRefeicao, aoRe
         <ul className="m-0 flex flex-1 list-none flex-col gap-2 overflow-y-auto p-0">
           {lista.map((refeicao) => {
             const concluida = refeicaoConcluida(refeicao);
+            const IconeRefeicao = obterIconeRefeicao(refeicao.nome);
             return (
               <li
                 key={refeicao.id}
                 className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700 dark:bg-zinc-900/40"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-lg shadow-[0_4px_6px_rgba(15,23,42,0.05)] dark:bg-zinc-800">
-                  {obterEmojiRefeicao(refeicao.nome)}
+                  <IconeRefeicao size={19} className="text-lime-600 dark:text-lime-400" aria-hidden="true" />
                 </div>
                 <div className="flex-1">
                   <p className="m-0 text-sm font-bold text-slate-800 dark:text-zinc-50">{refeicao.nome}</p>

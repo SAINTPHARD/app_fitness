@@ -20,7 +20,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import model.enums.Objetivo;
+import com.appfitness.model.enums.Objetivo;
 
 /**
  * Classe de entidade para representar um Usuário no sistema.

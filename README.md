@@ -4,6 +4,30 @@ Plataforma full stack para gestão de treinos, nutrição e acompanhamento de ev
 
 O projeto utiliza uma arquitetura desacoplada, com frontend em React e API REST em Spring Boot, autenticação via JWT, persistência em PostgreSQL e deploy em serviços cloud.
 
+## 📸 Demonstração Visual
+
+### Dashboard Principal
+Resumo diário com metas de calorias e macronutrientes, próximo treino, refeições programadas e evolução do peso em um único painel.
+
+![Dashboard Principal do System Fitness](./docs/images/dashboard.jpg)
+
+### Gestão Nutricional e Dieta
+Registro de refeições com cálculo de macros assistido por IA, controle de hidratação e histórico nutricional detalhado.
+
+![Tela de Gestão Nutricional e Dieta](./docs/images/dieta.jpg)
+
+### Catálogo e Fichas de Treino
+Ficha de treino organizada por dia da semana, com catálogo de exercícios filtrável por grupo muscular e nível de dificuldade.
+
+![Tela de Catálogo e Fichas de Treino](./docs/images/treino.jpg)
+
+### Evolução e Acompanhamento Corporal
+Acompanhamento de peso, medidas corporais e fotos de progresso para visualizar a evolução física ao longo do tempo.
+
+![Tela de Evolução e Acompanhamento Corporal](./docs/images/evolucao.jpg)
+
+---
+
 ## Produção
 
 - **Frontend:** https://app-fitness-murex.vercel.app

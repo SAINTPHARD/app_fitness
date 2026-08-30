@@ -1,101 +1,31 @@
-.pagina {
-  display: flex;
-  flex-direction: column;
-  gap: 1.75rem;
-}
-
-.heroCard {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding: 1.75rem;
-  border-radius: var(--radius);
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-}
-
-.label {
-  display: inline-flex;
-  padding: 0.35rem 0.8rem;
-  border-radius: 999px;
-  background: var(--brand-soft);
-  color: #3f6212;
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-:root[data-theme='dark'] .label {
-  color: var(--brand);
-}
-
-.titulo {
-  margin: 0.85rem 0 0;
-  font-size: 1.75rem;
-  line-height: 1.15;
-  color: var(--text-primary);
-}
-
-.subtitulo {
-  margin: 0.75rem 0 0;
-  color: var(--text-secondary);
-  max-width: 42rem;
-}
-
-.heroStatus {
-  display: grid;
-  justify-content: end;
-  align-items: center;
-  padding: 1rem 1.25rem;
-  background: var(--brand-soft);
-  border-radius: var(--radius-sm);
-  min-width: 10rem;
-  text-align: right;
-  color: #3f6212;
-  font-weight: 700;
-}
-
-:root[data-theme='dark'] .heroStatus {
-  color: var(--brand);
-}
-
-.secaoTitulo {
-  margin: 0 0 -0.75rem;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-}
-
-.gradeMetricas {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 1.25rem;
-}
-
-.gradeWidgets {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.25rem;
-}
-
-.gradeGraficos {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 1.25rem;
-}
-
-@media (max-width: 860px) {
-  .heroCard {
-    flex-direction: column;
-  }
-}
-
-@media (max-width: 420px) {
-  .chartsGrid,
-  .mainGrid,
-  .metricsGrid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
+.pagina { display: flex; flex-direction: column; gap: 1.75rem; animation: fadeIn 0.35s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .pagina { animation: none; } }
+.cabecalhoDireto h1 { margin: 0; color: var(--text-secondary); font-size: clamp(1.15rem, 2vw, 1.55rem); font-weight: 600; line-height: 1.4; }
+.cabecalhoDireto strong { color: var(--text-primary); font-weight: 800; }
+.resumoNutricional { display: grid; grid-template-columns: minmax(0, 2fr) minmax(230px, .8fr); gap: 1rem; align-items: stretch; }
+.cartaoCalorias { grid-row: span 2; display: flex; flex-direction: column; justify-content: center; min-height: 250px; padding: clamp(1.5rem, 4vw, 2.5rem); border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-surface); box-shadow: var(--shadow); transition: transform 0.25s ease-in-out, box-shadow 0.25s ease-in-out; }
+.cartaoCalorias:hover { transform: translateY(-2px); }
+.rotuloComIcone { display: flex; align-items: center; gap: .6rem; color: var(--text-muted); font-size: .9rem; font-weight: 700; }
+.rotuloComIcone svg { color: var(--brand); }
+.valorCalorias { margin: 1rem 0 1.5rem; color: var(--text-primary); font-size: clamp(2.5rem, 7vw, 4.5rem); font-weight: 800; letter-spacing: -.05em; line-height: 1; }
+.valorCalorias span { color: var(--text-muted); font-size: clamp(.9rem, 2vw, 1.15rem); font-weight: 600; letter-spacing: normal; }
+.barraCalorias { height: 12px; overflow: hidden; border-radius: 999px; background: var(--bg-muted); }
+.barraCaloriasPreenchida { height: 100%; border-radius: inherit; background: var(--brand); transition: width .4s ease; }
+.barraAlerta { background: var(--danger); }
+.linhaMacros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 1.25rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-surface); }
+.macro { display: flex; min-width: 0; flex-direction: column; gap: .3rem; padding: 0 1rem; border-right: 1px solid var(--border); }
+.macro:first-child { padding-left: 0; } .macro:last-child { padding-right: 0; border-right: 0; }
+.macroRotulo { display: flex; align-items: center; gap: .35rem; color: var(--text-muted); font-size: .75rem; font-weight: 700; }
+.macro strong { color: var(--text-primary); font-size: 1.2rem; } .macro small { color: var(--text-muted); }
+.widgetAgua { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-surface); box-shadow: var(--shadow); }
+.aguaInformacao { display: flex; align-items: center; gap: .75rem; }
+.aguaIcone { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border-radius: 50%; background: #e0f2fe; color: #0284c7; }
+.aguaInformacao div { display: flex; flex-direction: column; color: var(--text-muted); font-size: .8rem; font-weight: 700; }
+.aguaInformacao strong { color: var(--text-primary); font-size: 1rem; white-space: nowrap; } .aguaInformacao small { color: var(--text-muted); font-weight: 600; }
+.botaoAgua { display: inline-flex; align-items: center; gap: .3rem; padding: .65rem .8rem; border: 0; border-radius: 999px; background: #e0f2fe; color: #0369a1; font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; transition: transform .2s ease, background .2s ease; }
+.botaoAgua:hover { background: #bae6fd; transform: translateY(-1px); }
+.gradeWidgets { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; }
+.gradeGraficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem; }
+@media (max-width: 900px) { .resumoNutricional { grid-template-columns: 1fr; } .cartaoCalorias { grid-row: auto; min-height: 220px; } }
+@media (max-width: 520px) { .linhaMacros { padding: 1rem .75rem; } .macro { padding: 0 .55rem; } .macroRotulo svg { display: none; } .macroRotulo { font-size: .68rem; } .macro strong { font-size: 1rem; } .widgetAgua { align-items: stretch; flex-direction: column; } .botaoAgua { justify-content: center; } .gradeGraficos { grid-template-columns: minmax(0, 1fr); } }

@@ -1,6 +1,6 @@
 package com.appfitness.dto.usuario;
 
-import model.enums.Objetivo;
+import com.appfitness.model.enums.Objetivo;
 
 public class UsuarioResponseDTO {
 

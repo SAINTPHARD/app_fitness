@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Zap } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 import { notificarErro } from '../../utils/notificacoes';
@@ -17,6 +18,9 @@ const FORMULARIO_VAZIO = {
   confirmPassword: '',
 };
 
+// Mínimo 8 caracteres, pelo menos uma letra e um número.
+const REGEX_SENHA_FORTE = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+
 export default function LoginPage() {
   // Estado para alternar entre o formulário de Login (false) e Cadastro (true)
   const [isSignUp, setIsSignUp] = useState(false);
@@ -31,6 +35,8 @@ export default function LoginPage() {
   const { login, reiniciarPerfilCompleto } = useAuth();
 
   const timeoutRef = useRef(null);
+
+  const senhaValida = REGEX_SENHA_FORTE.test(formData.password);
 
   // Cancela o redirecionamento pendente se a tela sair antes da hora.
   useEffect(() => () => clearTimeout(timeoutRef.current), []);
@@ -96,6 +102,11 @@ export default function LoginPage() {
     e.preventDefault();
     if (enviando) return;
 
+    if (isSignUp && !senhaValida) {
+      notificarErro('A senha deve ter no mínimo 8 caracteres, com letras e números.');
+      return;
+    }
+
     if (isSignUp && formData.password !== formData.confirmPassword) {
       notificarErro('As senhas não coincidem!');
       return;
@@ -128,9 +139,9 @@ export default function LoginPage() {
       {/* SEÇÃO ESQUERDA: Aba Home / Boas-vindas (Estilo CalAI) */}
       <div className={styles.welcomeSection}>
         <div className={styles.welcomeContent}>
-          <span className={styles.logoIcon}>⚡</span>
+          <span className={styles.logoIcon}><Zap aria-hidden="true" /></span>
           <h1>System Fitness</h1>
-          <p>Conquiste a sua melhor versão. Monitorize os seus treinos, calcule os seus macros e alcance hipertrofia com inteligência.</p>
+          <p>Conquiste sua melhor versão. Acompanhe seus treinos, calcule seus macros e alcance seus objetivos com inteligência.</p>
           <div className={styles.featuresBadge}>
             <span>✓ Plano Nutricional</span>
             <span>✓ Fichas de Treino</span>
@@ -141,12 +152,12 @@ export default function LoginPage() {
 
       {/* SEÇÃO DIREITA: Aba de Acesso Dinâmica (Login / Cadastro) */}
       <div className={styles.formSection}>
-        <div className={styles.card}>
+        <div key={isSignUp ? 'cadastro' : 'login'} className={styles.card}>
           <h2 className={styles.formTitle}>
-            {isSignUp ? 'Crie a sua conta' : 'Bem-vindo de volta'}
+            {isSignUp ? 'Crie sua conta' : 'Bem-vindo de volta'}
           </h2>
           <p className={styles.formSubtitle}>
-            {isSignUp ? 'Preencha os dados abaixo para começar.' : 'Insira as suas credenciais para aceder ao painel.'}
+            {isSignUp ? 'Preencha os dados abaixo para começar.' : 'Entre com seu e-mail e senha.'}
           </p>
 
           <form className={styles.form} onSubmit={handleSubmit}>
@@ -191,7 +202,7 @@ export default function LoginPage() {
               className={styles.input}
               name="password"
               type="password"
-              placeholder="Palavra-passe"
+              placeholder="Senha"
               autoComplete={isSignUp ? 'new-password' : 'current-password'}
               value={formData.password}
               onChange={handleInputChange}
@@ -200,11 +211,23 @@ export default function LoginPage() {
             />
 
             {isSignUp && (
+              <p
+                style={{
+                  margin: '-0.5rem 0 0',
+                  fontSize: '0.75rem',
+                  color: formData.password.length === 0 ? '#71717a' : senhaValida ? '#16a34a' : '#dc2626',
+                }}
+              >
+                A senha deve ter no mínimo 8 caracteres, com letras e números
+              </p>
+            )}
+
+            {isSignUp && (
               <input
                 className={styles.input}
                 name="confirmPassword"
                 type="password"
-                placeholder="Confirmar Palavra-passe"
+                placeholder="Confirmar senha"
                 autoComplete="new-password"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
@@ -213,13 +236,17 @@ export default function LoginPage() {
               />
             )}
 
-            <button type="submit" className={styles.submitBtn} disabled={enviando}>
+            <button
+              type="submit"
+              className={styles.submitBtn}
+              disabled={enviando || (isSignUp && !senhaValida)}
+            >
               {enviando
                 ? isSignUp
-                  ? 'Criando a sua conta…'
+                  ? 'Criando sua conta…'
                   : 'Entrando…'
                 : isSignUp
-                  ? 'Finalizar Cadastro'
+                  ? 'Criar Minha Conta'
                   : 'Entrar no Sistema'}
             </button>
           </form>
@@ -228,7 +255,7 @@ export default function LoginPage() {
           <p className={styles.toggleText}>
             {isSignUp ? 'Já tem uma conta?' : 'Ainda não tem conta?'}
             <button type="button" className={styles.toggleLink} onClick={alternarModo} disabled={enviando}>
-              {isSignUp ? ' Inicie sessão aqui' : ' Registe-se agora'}
+              {isSignUp ? ' Entre aqui' : ' Cadastre-se agora'}
             </button>
           </p>
         </div>

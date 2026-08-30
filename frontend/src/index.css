@@ -4,16 +4,16 @@
 
 :root {
   color-scheme: light;
-  --bg-primary: #f4f6f2;
+  --bg-primary: #f5f6f2;
   --bg-surface: #ffffff;
   --bg-muted: #eef2ea;
   --text-primary: #18181b;
   --text-secondary: #3f3f46;
   --text-muted: #71717a;
   --border: #d4d4d8;
-  --brand: #a3e635;
-  --brand-ink: #18181b;
-  --brand-soft: #ecfccb;
+  --brand: #15803d;
+  --brand-ink: #ffffff;
+  --brand-soft: #dcfce7;
   --success: #16a34a;
   --success-soft: #dcfce7;
   --danger: #dc2626;
@@ -21,10 +21,10 @@
   --warning: #d97706;
   --warning-soft: #fef3c7;
   --radius-sm: 12px;
-  --radius: 24px;
-  --radius-lg: 28px;
-  --shadow-sm: 0 8px 20px rgba(24, 24, 27, 0.06);
-  --shadow: 0 24px 70px rgba(24, 24, 27, 0.08);
+  --radius: 16px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 2px 8px rgba(23, 32, 24, 0.06);
+  --shadow: var(--shadow-sm);
 }
 
 /* Tema escuro: sobrescreve os mesmos tokens usados em todo o app (Home,
@@ -40,12 +40,14 @@
   --text-secondary: #d4d4d8;
   --text-muted: #a1a1aa;
   --border: #3f3f46;
-  --brand-soft: #365314;
+  --brand: #4ade80;
+  --brand-ink: #052e16;
+  --brand-soft: #14532d;
   --success-soft: #0f2e1d;
   --danger-soft: #3a1620;
   --warning-soft: #3a2a10;
-  --shadow-sm: 0 8px 20px rgba(0, 0, 0, 0.25);
-  --shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow: var(--shadow-sm);
 }
 
 * {
@@ -62,8 +64,7 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at top, rgba(163, 230, 53, 0.12), transparent 32%),
-    var(--bg-primary);
+  background: var(--bg-primary);
 }
 
 #root {

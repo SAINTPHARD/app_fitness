@@ -32,9 +32,23 @@ const SEXOS = [
   { valor: 'F', titulo: 'Feminino' },
 ];
 
+// Dias da semana para o planejamento de treino — o array de valores (ex:
+// ['SEG', 'QUA', 'SEX']) é o mesmo formato que o backend deverá aceitar
+// quando ganhar uma coluna própria para isso.
+const DIAS_TREINO = [
+  { valor: 'SEG', titulo: 'Seg' },
+  { valor: 'TER', titulo: 'Ter' },
+  { valor: 'QUA', titulo: 'Qua' },
+  { valor: 'QUI', titulo: 'Qui' },
+  { valor: 'SEX', titulo: 'Sex' },
+  { valor: 'SAB', titulo: 'Sáb' },
+  { valor: 'DOM', titulo: 'Dom' },
+];
+
 const DADOS_INICIAIS = {
   objetivo: '',
   nivelAtividade: '',
+  diasTreino: [],
   sexo: '',
   dataNascimento: '',
   pais: '',
@@ -65,6 +79,31 @@ function calcularIdade(dataNascimentoISO) {
   return idade >= 0 ? idade : null;
 }
 
+/** Aplica a máscara DD/MM/AAAA enquanto o usuário digita (só dígitos, 8 no máximo). */
+function aplicarMascaraDataBR(valorDigitado) {
+  const digitos = valorDigitado.replace(/\D/g, '').slice(0, 8);
+  if (digitos.length > 4) return `${digitos.slice(0, 2)}/${digitos.slice(2, 4)}/${digitos.slice(4)}`;
+  if (digitos.length > 2) return `${digitos.slice(0, 2)}/${digitos.slice(2)}`;
+  return digitos;
+}
+
+/** Converte "DD/MM/AAAA" para o formato ISO ("YYYY-MM-DD") esperado pelo backend. */
+function converterDataBRParaISO(dataBR) {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dataBR || '');
+  if (!match) return null;
+
+  const [, dia, mes, ano] = match;
+  const iso = `${ano}-${mes}-${dia}`;
+  const data = new Date(iso);
+  const dataValida =
+    !Number.isNaN(data.getTime()) &&
+    data.getUTCFullYear() === Number(ano) &&
+    data.getUTCMonth() + 1 === Number(mes) &&
+    data.getUTCDate() === Number(dia);
+
+  return dataValida ? iso : null;
+}
+
 /** Botão de escolha grande, com borda dinâmica ao ser selecionado. */
 function OpcaoCartao({ titulo, descricao, selecionado, aoSelecionar }) {
   return (
@@ -72,7 +111,7 @@ function OpcaoCartao({ titulo, descricao, selecionado, aoSelecionar }) {
       type="button"
       onClick={aoSelecionar}
       aria-pressed={selecionado}
-      className={`flex w-full items-center gap-3 rounded-xl border-2 px-4 py-4 text-left transition-all duration-150 ${
+      className={`flex w-full items-center gap-3 rounded-xl border-2 px-4 py-4 text-left transition-all duration-300 ease-in-out active:scale-[0.98] ${
         selecionado
           ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-500/10'
           : 'border-zinc-200 bg-white hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700'
@@ -145,13 +184,23 @@ export default function OnboardingPage() {
     setDados((prev) => ({ ...prev, [campo]: valor }));
   };
 
+  const alternarDiaTreino = (valorDia) => {
+    setErro('');
+    setDados((prev) => ({
+      ...prev,
+      diasTreino: prev.diasTreino.includes(valorDia)
+        ? prev.diasTreino.filter((dia) => dia !== valorDia)
+        : [...prev.diasTreino, valorDia],
+    }));
+  };
+
   const validarEtapa = (numero) => {
     if (numero === 1) return dados.objetivo ? null : 'Escolha um objetivo para continuar.';
     if (numero === 2) return dados.nivelAtividade ? null : 'Escolha o seu nível de atividade.';
     if (numero === 3) {
       if (!dados.sexo) return 'Selecione o sexo biológico usado no cálculo calórico.';
       if (!dados.dataNascimento) return 'Informe a sua data de nascimento.';
-      if (calcularIdade(dados.dataNascimento) === null) return 'Data de nascimento inválida.';
+      if (calcularIdade(converterDataBRParaISO(dados.dataNascimento)) === null) return 'Data de nascimento inválida.';
       return null;
     }
     if (numero === 4) {
@@ -202,16 +251,20 @@ export default function OnboardingPage() {
         ...perfilAtual,
         peso: Number(dados.peso),
         altura: Number(dados.altura),
-        idade: calcularIdade(dados.dataNascimento) ?? perfilAtual?.idade ?? null,
+        idade: calcularIdade(converterDataBRParaISO(dados.dataNascimento)) ?? perfilAtual?.idade ?? null,
         objetivo: dados.objetivo,
         sexo: dados.sexo || perfilAtual?.sexo || null,
       });
 
       // Preferências que o backend ainda não tem coluna para guardar.
+      // `diasTreino` já nasce no formato de array de siglas (ex: ['SEG',
+      // 'QUA', 'SEX']) — é só isso que precisa migrar para o JSON de
+      // `updateMetrics`/endpoint próprio quando o backend ganhar essa coluna.
       window.localStorage.setItem(
         'perfil-preferencias-locais',
         JSON.stringify({
           nivelAtividade: dados.nivelAtividade,
+          diasTreino: dados.diasTreino,
           pais: dados.pais.trim(),
           pesoAlvo: Number(dados.pesoAlvo) || null,
         }),
@@ -255,16 +308,45 @@ export default function OnboardingPage() {
       titulo: 'Qual é o seu nível básico de atividade?',
       subtitulo: 'Sem contar os treinos — esses entram separadamente.',
       corpo: (
-        <div className="flex flex-col gap-3">
-          {NIVEIS_ATIVIDADE.map((opcao) => (
-            <OpcaoCartao
-              key={opcao.valor}
-              titulo={opcao.titulo}
-              descricao={opcao.descricao}
-              selecionado={dados.nivelAtividade === opcao.valor}
-              aoSelecionar={() => atualizarCampo('nivelAtividade', opcao.valor)}
-            />
-          ))}
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-3">
+            {NIVEIS_ATIVIDADE.map((opcao) => (
+              <OpcaoCartao
+                key={opcao.valor}
+                titulo={opcao.titulo}
+                descricao={opcao.descricao}
+                selecionado={dados.nivelAtividade === opcao.valor}
+                aoSelecionar={() => atualizarCampo('nivelAtividade', opcao.valor)}
+              />
+            ))}
+          </div>
+
+          <fieldset>
+            <legend className="mb-1.5 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+              Em quais dias você pretende treinar?
+            </legend>
+            <p className="mb-3 text-xs text-zinc-400">Opcional — dá para ajustar isso depois.</p>
+            <div className="flex flex-wrap gap-2">
+              {DIAS_TREINO.map((dia) => {
+                const selecionado = dados.diasTreino.includes(dia.valor);
+                return (
+                  <button
+                    key={dia.valor}
+                    type="button"
+                    onClick={() => alternarDiaTreino(dia.valor)}
+                    aria-pressed={selecionado}
+                    className={`h-11 min-w-[3.25rem] flex-1 rounded-xl border-2 text-sm font-bold transition-all duration-300 ease-in-out active:scale-95 sm:flex-none sm:px-4 ${
+                      selecionado
+                        ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
+                        : 'border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-zinc-700'
+                    }`}
+                  >
+                    {dia.titulo}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
         </div>
       ),
     },
@@ -291,10 +373,12 @@ export default function OnboardingPage() {
 
           <Campo rotulo="Quando você nasceu?">
             <input
-              type="date"
+              type="text"
+              inputMode="numeric"
+              placeholder="DD/MM/AAAA"
+              maxLength={10}
               value={dados.dataNascimento}
-              max={new Date().toISOString().slice(0, 10)}
-              onChange={(e) => atualizarCampo('dataNascimento', e.target.value)}
+              onChange={(e) => atualizarCampo('dataNascimento', aplicarMascaraDataBR(e.target.value))}
               className={CLASSES_CAMPO}
             />
           </Campo>
@@ -364,7 +448,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-6 dark:bg-zinc-950 sm:py-10">
-      <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
+      <div className="w-full max-w-lg animate-fade-in overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
         {/* Barra de progresso superior, colada na borda do cartão. */}
         <div
           className="h-1.5 w-full bg-zinc-200 dark:bg-zinc-800"
@@ -389,7 +473,9 @@ export default function OnboardingPage() {
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">{conteudo.subtitulo}</p>
 
-          <div className="mt-7">{conteudo.corpo}</div>
+          <div key={etapa} className="mt-7 animate-fade-in-up">
+            {conteudo.corpo}
+          </div>
 
           {erro && (
             <p
@@ -407,7 +493,7 @@ export default function OnboardingPage() {
               type="button"
               onClick={voltar}
               disabled={salvando}
-              className="flex h-12 items-center gap-1 rounded-xl border-2 border-zinc-200 px-5 text-sm font-bold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              className="flex h-12 items-center gap-1 rounded-xl border-2 border-zinc-200 px-5 text-sm font-bold text-zinc-700 transition-all duration-300 ease-in-out hover:border-zinc-300 hover:bg-zinc-50 active:scale-[0.98] disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
             >
               <ChevronLeft size={18} strokeWidth={2.5} /> Voltar
             </button>
@@ -417,7 +503,7 @@ export default function OnboardingPage() {
             type="button"
             onClick={ehUltimaEtapa ? finalizar : avancar}
             disabled={salvando}
-            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white transition hover:bg-emerald-700 active:scale-[0.99] disabled:opacity-60"
+            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all duration-300 ease-in-out hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-60"
           >
             {salvando && (
               <span

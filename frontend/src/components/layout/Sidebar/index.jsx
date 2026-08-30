@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { NavLink } from 'react-router-dom';
-import { Home, LogOut, Salad, Dumbbell, User, TrendingUp, BarChart3, Settings, X } from 'lucide-react';
+import { Home, LogOut, Salad, Dumbbell, User, TrendingUp, BarChart3, Settings, X, Zap } from 'lucide-react';
 
 const navigation = [
   { label: 'Início', path: '/dashboard/inicio', icon: Home },
@@ -55,7 +55,7 @@ export default function Sidebar({ onLogout, abertoNoMobile = false, aoFecharNoMo
     >
       <div className="flex items-center gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-lime-400 text-xl text-zinc-900">
-          ⚡
+          <Zap size={22} strokeWidth={2.8} aria-hidden="true" />
         </span>
         <Rotulo expandido={abertoNoMobile || expandido}>
           <strong className="block text-lg font-bold text-white">System Fitness</strong>
