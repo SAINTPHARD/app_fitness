@@ -53,7 +53,7 @@ export default function CardTimelineDieta({ refeicoes, aoAdicionarRefeicao, aoRe
   };
 
   return (
-    <article className="flex min-h-[300px] flex-col gap-4 rounded-3xl bg-white p-6 shadow-xl shadow-slate-200/50 dark:bg-zinc-800 dark:shadow-none">
+    <article className="flex min-h-[300px] flex-col gap-4 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       <div className="flex items-center justify-between gap-3">
         <h3 className="m-0 text-base font-bold text-slate-800 dark:text-zinc-50">Refeições do dia</h3>
         <div className="flex items-center gap-3">
@@ -61,7 +61,7 @@ export default function CardTimelineDieta({ refeicoes, aoAdicionarRefeicao, aoRe
             type="button"
             onClick={() => setCriando((prev) => !prev)}
             aria-label="Adicionar refeição"
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-lime-400 text-zinc-900 transition-transform hover:scale-110 active:scale-95"
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 transition-colors hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950/60"
           >
             <Plus size={15} strokeWidth={3} />
           </button>
@@ -85,21 +85,21 @@ export default function CardTimelineDieta({ refeicoes, aoAdicionarRefeicao, aoRe
               placeholder="Nome da refeição"
               value={novaRefeicao.nome}
               onChange={(e) => setNovaRefeicao((prev) => ({ ...prev, nome: e.target.value }))}
-              className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-lime-400 focus:ring-4 focus:ring-lime-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+              className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-200 focus:ring-4 focus:ring-emerald-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:focus:border-emerald-800 dark:focus:ring-emerald-950/40"
               autoFocus
             />
             <input
               type="time"
               value={novaRefeicao.horario}
               onChange={(e) => setNovaRefeicao((prev) => ({ ...prev, horario: e.target.value }))}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-lime-400 focus:ring-4 focus:ring-lime-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-200 focus:ring-4 focus:ring-emerald-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:focus:border-emerald-800 dark:focus:ring-emerald-950/40"
             />
           </div>
           <div className="flex gap-2">
             <button
               type="submit"
               disabled={salvando}
-              className="flex-1 rounded-xl bg-zinc-900 py-2 text-xs font-bold text-white transition-transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 dark:bg-lime-400 dark:text-zinc-900"
+              className="flex-1 rounded-xl bg-emerald-100 py-2 text-xs font-bold text-emerald-800 transition-colors hover:bg-emerald-200 disabled:opacity-60 dark:bg-emerald-950/50 dark:text-emerald-300 dark:hover:bg-emerald-950/70"
             >
               {salvando ? 'Adicionando...' : 'Adicionar'}
             </button>
@@ -109,7 +109,7 @@ export default function CardTimelineDieta({ refeicoes, aoAdicionarRefeicao, aoRe
                 setCriando(false);
                 setNovaRefeicao(FORMULARIO_VAZIO);
               }}
-              className="rounded-xl bg-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-300 dark:bg-zinc-700 dark:text-zinc-300"
+              className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
             >
               Cancelar
             </button>
@@ -118,7 +118,7 @@ export default function CardTimelineDieta({ refeicoes, aoAdicionarRefeicao, aoRe
       )}
 
       {erro && (
-        <span className="w-fit rounded-full bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-500 dark:bg-rose-500/10 dark:text-rose-300">
+        <span className="w-fit rounded-full bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
           {erro}
         </span>
       )}
@@ -136,10 +136,10 @@ export default function CardTimelineDieta({ refeicoes, aoAdicionarRefeicao, aoRe
             return (
               <li
                 key={refeicao.id}
-                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700 dark:bg-zinc-900/40"
+                className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/60"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-lg shadow-[0_4px_6px_rgba(15,23,42,0.05)] dark:bg-zinc-800">
-                  <IconeRefeicao size={19} className="text-lime-600 dark:text-lime-400" aria-hidden="true" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-lg dark:border-emerald-950 dark:bg-emerald-950/40">
+                  <IconeRefeicao size={19} className="text-emerald-700 dark:text-emerald-300" aria-hidden="true" />
                 </div>
                 <div className="flex-1">
                   <p className="m-0 text-sm font-bold text-slate-800 dark:text-zinc-50">{refeicao.nome}</p>
@@ -152,7 +152,7 @@ export default function CardTimelineDieta({ refeicoes, aoAdicionarRefeicao, aoRe
                   className={[
                     'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2',
                     concluida
-                      ? 'border-lime-500 bg-lime-500 text-white'
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300'
                       : 'border-slate-200 text-transparent dark:border-zinc-600',
                   ].join(' ')}
                 >
