@@ -51,7 +51,7 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.25s ease-in-out;
-  box-shadow: 0 4px 12px rgba(163, 230, 53, 0.35);
+  box-shadow: 0 4px 12px rgba(var(--brand-rgb), 0.35);
 }
 
 .btnPrincipal:active {
@@ -94,7 +94,7 @@
   background: var(--brand);
   border-color: var(--brand);
   color: var(--brand-ink);
-  box-shadow: 0 6px 15px rgba(163, 230, 53, 0.35);
+  box-shadow: 0 6px 15px rgba(var(--brand-rgb), 0.35);
 }
 
 .diaLabel {
@@ -402,7 +402,7 @@
 .subSugerido {
   display: block;
   font-size: 0.75rem;
-  color: #65a30d;
+  color: var(--brand);
   font-weight: 600;
   margin-top: 0.1rem;
 }
@@ -751,7 +751,7 @@
 }
 
 .resumoPositivo {
-  color: #16a34a;
+  color: var(--success);
 }
 
 .resumoNegativo {
@@ -1060,10 +1060,10 @@
 
 @keyframes pulseDescansoFinalizado {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(163, 230, 53, 0.5);
+    box-shadow: 0 0 0 0 rgba(var(--brand-rgb), 0.5);
   }
   50% {
-    box-shadow: 0 0 0 10px rgba(163, 230, 53, 0);
+    box-shadow: 0 0 0 10px rgba(var(--brand-rgb), 0);
   }
 }
 

@@ -1,6 +1,6 @@
 // Componente Dashboard.jsx: Tela principal do sistema, exibindo indicadores de desempenho e navegação para outras seções.
-O "./" significa "procura nesta mesma pasta"
-import React, { useEffect, useState } from 'react'; // Importa o React e os hooks useEffect e useState para gerenciar o estado e efeitos colaterais
+// O "./" significa "procura nesta mesma pasta"
+import { useEffect, useState } from 'react'; // Importa o React e os hooks useEffect e useState para gerenciar o estado e efeitos colaterais
 import api from '../../services/api';  // Importa o serviço de API que criamos para fazer requisições ao backend
 import './Dashboard.css'; // Importr o css do dashboard
 

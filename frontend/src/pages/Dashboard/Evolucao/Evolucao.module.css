@@ -12,7 +12,7 @@
 
 .eyebrow {
   margin: 0;
-  color: #65a30d;
+  color: var(--brand);
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -174,7 +174,7 @@
 .formMedidas input:focus {
   outline: none;
   border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.2);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb), 0.2);
 }
 
 .botaoPrimario {

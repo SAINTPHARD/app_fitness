@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { refeicoesService } from '../services/dominio/refeicoesService';
 import { hidratacaoService } from '../services/dominio/hidratacaoService';
@@ -74,6 +74,24 @@ export function NutritionProvider({ children }) {
   const [hidratacaoPorData, setHidratacaoPorData] = useState(() => lerJsonLocalStorage(CHAVE_HIDRATACAO, {}));
   const [metaMl, setMetaMl] = useState(lerMetaMlSalva);
 
+  // Espelhos em ref dos caches por data. `carregarRefeicoes`/`carregarAgua`
+  // precisam consultar o cache para decidir se buscam de novo, mas se lessem
+  // o state direto teriam de declará-lo como dependência — e aí trocariam de
+  // identidade a cada refeição adicionada ou copo de água registrado,
+  // re-disparando os `useEffect` de `useRefeicoes`/`useHidratacao` a cada
+  // mutação. Com o espelho em ref as duas funções ficam estáveis e o efeito
+  // roda só quando a data selecionada muda, que é a intenção real.
+  const refeicoesPorDataRef = useRef(refeicoesPorData);
+  const aguaPorDataRef = useRef(aguaPorData);
+
+  useEffect(() => {
+    refeicoesPorDataRef.current = refeicoesPorData;
+  }, [refeicoesPorData]);
+
+  useEffect(() => {
+    aguaPorDataRef.current = aguaPorData;
+  }, [aguaPorData]);
+
   useEffect(() => {
     window.localStorage.setItem(CHAVE_HIDRATACAO, JSON.stringify(hidratacaoPorData));
   }, [hidratacaoPorData]);
@@ -98,7 +116,7 @@ export function NutritionProvider({ children }) {
 
   const carregarRefeicoes = useCallback(
     async (dataISO = obterDataDeHojeISO(), { forcar = false } = {}) => {
-      if (!forcar && refeicoesPorData[dataISO]) return refeicoesPorData[dataISO];
+      if (!forcar && refeicoesPorDataRef.current[dataISO]) return refeicoesPorDataRef.current[dataISO];
 
       setStatusPorData((prev) => ({ ...prev, [dataISO]: { loading: true, erro: null } }));
 
@@ -122,7 +140,7 @@ export function NutritionProvider({ children }) {
         return fallback;
       }
     },
-    [refeicoesPorData, salvarRefeicoesNaData]
+    [salvarRefeicoesNaData]
   );
 
   const obterRefeicoesDaData = useCallback(
@@ -266,7 +284,7 @@ export function NutritionProvider({ children }) {
 
   const carregarAgua = useCallback(
     async (dataISO = obterDataDeHojeISO(), { forcar = false } = {}) => {
-      if (!forcar && aguaPorData[dataISO]) return aguaPorData[dataISO];
+      if (!forcar && aguaPorDataRef.current[dataISO]) return aguaPorDataRef.current[dataISO];
 
       setStatusAguaPorData((prev) => ({ ...prev, [dataISO]: { loading: true, erro: null } }));
 
@@ -281,10 +299,10 @@ export function NutritionProvider({ children }) {
           ...prev,
           [dataISO]: { loading: false, erro: mapearErroApi(erro, 'carregar o consumo de água').mensagem },
         }));
-        return aguaPorData[dataISO] || [];
+        return aguaPorDataRef.current[dataISO] || [];
       }
     },
-    [aguaPorData]
+    []
   );
 
   const obterRegistrosAguaDaData = useCallback((dataISO) => aguaPorData[dataISO] || [], [aguaPorData]);

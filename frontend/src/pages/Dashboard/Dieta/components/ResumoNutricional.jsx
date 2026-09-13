@@ -16,10 +16,10 @@ const formatar1Casa = (valor) => (Number(valor) || 0).toFixed(1);
  */
 export default function ResumoNutricional({ totais, metas, percentuais }) {
   return (
-    <div className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-xl shadow-slate-200/50 dark:bg-zinc-800 dark:shadow-none">
+    <div className="flex flex-col gap-4 rounded-3xl border border-line bg-surface p-6 shadow-sm">
       <div className="flex items-center justify-between">
-        <h3 className="m-0 text-base font-bold text-slate-800 dark:text-zinc-50">Resumo Nutricional</h3>
-        <span title="Consumido/meta e % do dia para cada macro." className="text-slate-300 dark:text-zinc-600">
+        <h3 className="m-0 text-base font-bold text-content">Resumo Nutricional</h3>
+        <span title="Consumido/meta e % do dia para cada macro." className="text-subtle">
           <Info size={16} strokeWidth={2} />
         </span>
       </div>
@@ -35,19 +35,19 @@ export default function ResumoNutricional({ totais, metas, percentuais }) {
             return (
               <>
           <div className="mb-1.5 flex items-center justify-between text-sm">
-            <span className="font-semibold text-slate-700 dark:text-zinc-200">{rotulo}</span>
-            <span className="text-slate-500 dark:text-zinc-400">
+            <span className="font-semibold text-secondary">{rotulo}</span>
+            <span className="text-subtle">
               {formatar1Casa(totais?.[chave])}g / {metaDefinida ? `${meta}g` : 'Meta não definida'}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-700">
+            <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
               <div
                 className={`h-full rounded-full transition-all duration-500 ${corBarra}`}
                 style={{ width: `${Math.min(percentual, 100)}%` }}
               />
             </div>
-            <span className="w-10 text-right text-xs font-bold text-slate-500 dark:text-zinc-400">
+            <span className="w-10 text-right text-xs font-bold text-subtle">
               {metaDefinida ? `${Math.round(percentual)}%` : '--'}
             </span>
           </div>

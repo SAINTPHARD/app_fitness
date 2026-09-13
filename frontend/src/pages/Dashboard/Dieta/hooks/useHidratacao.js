@@ -34,6 +34,11 @@ export function useHidratacao(dataSelecionadaISO) {
     [atualizarMetas, metas]
   );
 
+  const recarregar = useCallback(
+    () => carregarAgua(dataSelecionadaISO, { forcar: true }),
+    [carregarAgua, dataSelecionadaISO]
+  );
+
   return {
     registros,
     totalMl,
@@ -43,6 +48,6 @@ export function useHidratacao(dataSelecionadaISO) {
     adicionarAgua,
     removerRegistro,
     definirMetaMl,
-    recarregar: () => carregarAgua(dataSelecionadaISO, { forcar: true }),
+    recarregar,
   };
 }

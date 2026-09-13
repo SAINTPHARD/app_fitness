@@ -81,12 +81,12 @@ export default function BuscaAlimento({ valor, aoDigitar, aoSelecionar }) {
           onBlur={() => setTimeout(() => setSugestoesVisiveis(false), 200)}
           required
           autoComplete="off"
-          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition-shadow focus:border-lime-400 focus:ring-4 focus:ring-lime-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 pr-10"
+          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition-shadow focus:border-brand focus:ring-4 focus:ring-brand-soft dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 pr-10"
         />
         
         {aCarregar && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <span className="flex h-4 w-4 animate-spin rounded-full border-2 border-lime-500 border-t-transparent"></span>
+            <span className="flex h-4 w-4 animate-spin rounded-full border-2 border-brand border-t-transparent"></span>
           </div>
         )}
       </div>
@@ -111,7 +111,7 @@ export default function BuscaAlimento({ valor, aoDigitar, aoSelecionar }) {
                     aoSelecionar(alimento);
                     setSugestoesVisiveis(false);
                   }}
-                  className="flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm text-slate-700 hover:bg-lime-50 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                  className="flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm text-slate-700 hover:bg-brand-soft dark:text-zinc-200"
                 >
                   <span className="line-clamp-1 flex items-center gap-1.5">
                     {alimento.isLocal && <span title="Alimento Verificado" className="text-amber-400">⭐</span>}

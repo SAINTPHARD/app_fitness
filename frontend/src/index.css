@@ -4,16 +4,25 @@
 
 :root {
   color-scheme: light;
-  --bg-primary: #f5f6f2;
+  --bg-primary: #f7fafa;
   --bg-surface: #ffffff;
-  --bg-muted: #eef2ea;
+  --bg-muted: #eaf0f0;
   --text-primary: #18181b;
   --text-secondary: #3f3f46;
   --text-muted: #71717a;
   --border: #d4d4d8;
-  --brand: #166534;
+  /* Paleta da marca — teal. Fonte única da cor de destaque do app:
+     todo botão/badge/barra de progresso primária deve sair daqui via as
+     classes utilitárias `bg-brand`, `text-brand`, `bg-brand-soft` etc.,
+     nunca com `teal-600` cravado no componente (ver tailwind.config.js). */
+  --brand: #0d9488;
+  /* Canais da marca sem alpha: `rgba()` nao aceita `var(--brand)`, entao
+     halos de foco e sombras coloridas consomem este token. */
+  --brand-rgb: 13, 148, 136;
+  --brand-strong: #0f766e;
   --brand-ink: #ffffff;
-  --brand-soft: #dcfce7;
+  --brand-soft: #ccfbf1;
+  --brand-soft-ink: #0f766e;
   --success: #16a34a;
   --success-soft: #dcfce7;
   --danger: #dc2626;
@@ -41,9 +50,12 @@
   --text-secondary: #d4d4d8;
   --text-muted: #a1a1aa;
   --border: #3f3f46;
-  --brand: #4ade80;
-  --brand-ink: #052e16;
-  --brand-soft: #14532d;
+  --brand: #2dd4bf;
+  --brand-rgb: 45, 212, 191;
+  --brand-strong: #5eead4;
+  --brand-ink: #042f2e;
+  --brand-soft: rgba(45, 212, 191, 0.14);
+  --brand-soft-ink: #5eead4;
   --success-soft: #0f2e1d;
   --danger-soft: #3a1620;
   --warning-soft: #3a2a10;

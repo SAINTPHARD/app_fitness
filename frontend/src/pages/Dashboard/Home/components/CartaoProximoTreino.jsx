@@ -26,29 +26,29 @@ export default function CartaoProximoTreino() {
       : 'Montar ficha de hoje';
 
   return (
-    <article className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-800">
+    <article className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="m-0 text-base font-bold text-slate-800 dark:text-zinc-50">Treino de hoje</h3>
-          <p className="m-0 mt-1 text-xs text-slate-400 dark:text-zinc-500">Sua ficha programada para hoje.</p>
+          <h3 className="m-0 text-base font-bold text-content">Treino de hoje</h3>
+          <p className="m-0 mt-1 text-xs text-subtle">Sua ficha programada para hoje.</p>
         </div>
         <Link
           to="/dashboard/treino"
-          className="shrink-0 whitespace-nowrap text-xs font-bold text-slate-400 transition-colors hover:text-slate-600 dark:text-zinc-500 dark:hover:text-zinc-300"
+          className="shrink-0 whitespace-nowrap text-xs font-bold text-subtle transition-colors hover:text-secondary"
         >
           Ver ficha completa →
         </Link>
       </div>
 
-      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-zinc-700 dark:bg-zinc-900/40">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400">
+      <div className="flex items-center gap-3 rounded-2xl border border-line bg-muted p-4">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-soft-ink">
           <Dumbbell size={20} strokeWidth={2.5} aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="m-0 truncate text-sm font-bold text-slate-800 dark:text-zinc-50">{infoHoje?.foco}</p>
-          <p className="m-0 mt-0.5 text-xs text-slate-400 dark:text-zinc-500">Hoje · {infoHoje?.label}</p>
+          <p className="m-0 truncate text-sm font-bold text-content">{infoHoje?.foco}</p>
+          <p className="m-0 mt-0.5 text-xs text-subtle">Hoje · {infoHoje?.label}</p>
           {!ehDescanso && (
-            <p className="m-0 mt-1 text-xs font-semibold text-slate-500 dark:text-zinc-400">
+            <p className="m-0 mt-1 text-xs font-semibold text-secondary">
               {totalExercicios > 0
                 ? `${totalExercicios} exercícios · ${concluidos}/${totalExercicios} concluídos`
                 : 'Nenhum exercício cadastrado para hoje ainda'}
@@ -59,7 +59,7 @@ export default function CartaoProximoTreino() {
 
       <Link
         to="/dashboard/treino"
-        className="flex items-center justify-center gap-2 rounded-xl bg-teal-600 py-3 text-sm font-bold text-white transition-colors hover:bg-teal-700"
+        className="flex items-center justify-center gap-2 rounded-xl bg-brand py-3 text-sm font-bold text-brand-ink transition-colors hover:bg-brand-strong"
       >
         <Play size={14} strokeWidth={3} fill="currentColor" aria-hidden="true" />
         {textoBotao}

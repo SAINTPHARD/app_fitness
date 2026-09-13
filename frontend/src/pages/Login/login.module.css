@@ -39,8 +39,8 @@
 
 .logoIcon {
   font-size: 2.5rem;
-  background: #a3e635;
-  color: #18181b;
+  background: var(--brand);
+  color: var(--brand-ink);
   padding: 0.5rem 1rem;
   border-radius: 0.75rem;
   display: inline-block;
@@ -65,7 +65,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  color: #a3e635;
+  color: var(--brand);
   font-weight: 500;
 }
 
@@ -158,16 +158,16 @@
 }
 
 .input:focus {
-  border-color: #a3e635;
+  border-color: var(--brand);
   background-color: var(--bg-surface);
-  box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.2);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb), 0.2);
 }
 
 .submitBtn {
   width: 100%;
   padding: 0.85rem;
-  background-color: #a3e635;
-  color: #18181b;
+  background-color: var(--brand);
+  color: var(--brand-ink);
   font-weight: 700;
   border: none;
   border-radius: 0.5rem;
@@ -204,7 +204,7 @@
 /* Renderizado como <button> para funcionar com teclado e leitores de tela;
    os resets abaixo mantêm a aparência de link. */
 .toggleLink {
-  color: #65a30d;
+  color: var(--brand);
   font-weight: 600;
   cursor: pointer;
   background: none;
@@ -219,5 +219,5 @@
 }
 
 :root[data-theme='dark'] .toggleLink {
-  color: #a3e635;
+  color: var(--brand);
 }

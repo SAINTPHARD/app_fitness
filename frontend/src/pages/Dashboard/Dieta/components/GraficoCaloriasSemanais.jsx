@@ -5,7 +5,7 @@ import { useHistoricoRefeicoes } from '../../../../hooks/useHistoricoRefeicoes';
 
 const COR_TEXTO_EIXO = '#94a3b8';
 const COR_BORDA = '#dbe2ef';
-const COR_LINHA = '#a3e635';
+const COR_LINHA = '#14b8a6';
 
 /**
  * Linha com o total de calorias dos últimos 7 dias — mesma fonte de dados
@@ -28,7 +28,7 @@ export default function GraficoCaloriasSemanais() {
       <div className="flex items-center justify-between">
         <h3 className="m-0 text-base font-bold text-slate-800 dark:text-zinc-50">Calorias dos últimos 7 dias</h3>
         {temAlgumDado && (
-          <span className="rounded-full bg-lime-100 px-2.5 py-1 text-xs font-bold text-lime-700 dark:bg-lime-400/10 dark:text-lime-300">
+          <span className="rounded-full bg-brand-soft px-2.5 py-1 text-xs font-bold text-brand-soft-ink">
             Hoje: {ultimoValor} kcal
           </span>
         )}

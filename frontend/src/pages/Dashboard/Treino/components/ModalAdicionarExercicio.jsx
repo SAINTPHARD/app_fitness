@@ -152,7 +152,7 @@ export default function ModalAdicionarExercicio({ diaLabel, aoFechar, aoSelecion
                                 type="button"
                                 onClick={() => aoSelecionar(exercicio)}
                                 aria-label={`Adicionar ${exercicio.nome} à ficha`}
-                                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-600 text-white transition hover:bg-emerald-700 active:scale-95"
+                                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition-colors hover:bg-brand-strong active:scale-95"
                               >
                                 <Plus size={18} strokeWidth={3} />
                               </button>

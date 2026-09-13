@@ -52,31 +52,31 @@ export default function GraficoEvolucaoPeso({ historicoPeso, variacaoPeso, exibi
   }
 
   return (
-    <article className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-800">
-      <h3 className="m-0 text-base font-bold text-slate-800 dark:text-zinc-50">Evolução do peso</h3>
+    <article className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6 shadow-sm">
+      <h3 className="m-0 text-base font-bold text-content">Evolução do peso</h3>
 
       {temPesoRegistrado ? (
         <>
           <div className="flex items-end justify-between gap-3">
             <div>
-              <p className="m-0 text-xs font-semibold text-slate-400 dark:text-zinc-500">Peso atual</p>
-              <p className="m-0 text-2xl font-bold text-slate-800 dark:text-zinc-50">
-                {pesoAtual} <span className="text-sm font-semibold text-slate-400 dark:text-zinc-500">kg</span>
+              <p className="m-0 text-xs font-semibold text-subtle">Peso atual</p>
+              <p className="m-0 text-2xl font-bold text-content">
+                {pesoAtual} <span className="text-sm font-semibold text-subtle">kg</span>
               </p>
               {variacaoPeso !== null && (
-                <p className="m-0 mt-0.5 text-xs font-semibold text-slate-400 dark:text-zinc-500">
+                <p className="m-0 mt-0.5 text-xs font-semibold text-subtle">
                   {variacaoPeso <= 0 ? '↓' : '↑'} {Math.abs(variacaoPeso)} kg desde o primeiro registro
                 </p>
               )}
             </div>
             <div className="text-right">
-              <p className="m-0 text-xs font-semibold text-slate-400 dark:text-zinc-500">Peso meta</p>
+              <p className="m-0 text-xs font-semibold text-subtle">Peso meta</p>
               {metaPeso != null ? (
-                <p className="m-0 text-2xl font-bold text-teal-600 dark:text-teal-400">
-                  {metaPeso} <span className="text-sm font-semibold text-slate-400 dark:text-zinc-500">kg</span>
+                <p className="m-0 text-2xl font-bold text-brand">
+                  {metaPeso} <span className="text-sm font-semibold text-subtle">kg</span>
                 </p>
               ) : (
-                <Link to="/dashboard/perfil" className="text-xs font-bold text-teal-600 hover:text-teal-700 dark:text-teal-400">
+                <Link to="/dashboard/perfil" className="text-xs font-bold text-brand hover:opacity-80">
                   Definir meta →
                 </Link>
               )}
@@ -84,23 +84,23 @@ export default function GraficoEvolucaoPeso({ historicoPeso, variacaoPeso, exibi
           </div>
 
           {progresso !== null && (
-            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-zinc-700">
-              <div className="h-full rounded-full bg-teal-500 transition-all" style={{ width: `${progresso}%` }} />
+            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${progresso}%` }} />
             </div>
           )}
 
-          <p className="m-0 flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-zinc-400">
-            <Target size={14} strokeWidth={2.5} className="shrink-0 text-teal-500" aria-hidden="true" />
+          <p className="m-0 flex items-center gap-2 text-xs font-semibold text-secondary">
+            <Target size={14} strokeWidth={2.5} className="shrink-0 text-brand" aria-hidden="true" />
             {mensagemIncentivo}
           </p>
         </>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 py-4 text-center">
-          <p className="m-0 text-sm text-slate-400 dark:text-zinc-500">
+          <p className="m-0 text-sm text-subtle">
             Registre seu peso para acompanhar a evolução aqui.
           </p>
           {exibirCtaRegistro && (
-            <Link to="/dashboard/evolucao" className="text-xs font-bold text-teal-600 hover:text-teal-700 dark:text-teal-400">
+            <Link to="/dashboard/evolucao" className="text-xs font-bold text-brand hover:opacity-80">
               Registrar peso em Evolução
             </Link>
           )}

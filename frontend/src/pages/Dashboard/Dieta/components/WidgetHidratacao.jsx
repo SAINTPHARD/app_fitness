@@ -96,37 +96,37 @@ export default function WidgetHidratacao({ dataSelecionadaISO, aoEditarMetas }) 
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-xl shadow-slate-200/50 dark:bg-zinc-800 dark:shadow-none">
+    <div className="flex flex-col gap-4 rounded-3xl border border-line bg-surface p-6 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="m-0 text-lg font-bold text-slate-800 dark:text-zinc-50">Consumo de Água</h3>
+            <h3 className="m-0 text-lg font-bold text-content">Consumo de Água</h3>
             <button
               type="button"
               onClick={abrirEdicaoDeMeta}
-              className="flex h-6 w-6 items-center justify-center rounded-full text-slate-300 transition-colors hover:bg-slate-100 hover:text-slate-500 dark:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300"
+              className="flex h-6 w-6 items-center justify-center rounded-full text-subtle transition-colors hover:bg-muted hover:text-secondary"
               aria-label="Definir meta de água"
             >
               <Pencil size={13} strokeWidth={2.5} aria-hidden="true" />
             </button>
           </div>
-          <p className="m-0 mt-1 text-2xl font-bold text-slate-800 dark:text-zinc-50">
+          <p className="m-0 mt-1 text-2xl font-bold text-content">
             {(totalMl / 1000).toFixed(1)}
-            <span className="text-base font-semibold text-slate-400 dark:text-zinc-500"> L</span>
+            <span className="text-base font-semibold text-subtle"> L</span>
             <button
               type="button"
               onClick={abrirAdicaoManual}
-              className="ml-2 inline-flex h-6 w-6 items-center justify-center rounded-full align-middle text-slate-300 transition-colors hover:bg-slate-100 hover:text-slate-500 dark:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300"
+              className="ml-2 inline-flex h-6 w-6 items-center justify-center rounded-full align-middle text-subtle transition-colors hover:bg-muted hover:text-secondary"
               aria-label="Adicionar água manualmente"
             >
               <Plus size={12} strokeWidth={2.5} aria-hidden="true" />
             </button>
           </p>
-          <p className="m-0 text-sm text-slate-400 dark:text-zinc-500">
+          <p className="m-0 text-sm text-subtle">
             {metaDefinida ? `de ${(metaMl / 1000).toFixed(1)} L` : 'Meta de água não definida'}
           </p>
           {metaSuperada && (
-            <p className="m-0 mt-1 text-xs font-bold text-sky-600 dark:text-sky-300">Meta atingida ou superada</p>
+            <p className="m-0 mt-1 text-xs font-bold text-brand-soft-ink">Meta atingida ou superada</p>
           )}
         </div>
 
@@ -146,7 +146,7 @@ export default function WidgetHidratacao({ dataSelecionadaISO, aoEditarMetas }) 
               className="transition-[stroke-dashoffset] duration-500 ease-out"
             />
           </svg>
-          <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-slate-700 dark:text-zinc-200">
+          <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-secondary">
             {metaDefinida ? `${Math.round(percentualReal)}%` : '--'}
           </div>
         </div>
@@ -163,8 +163,8 @@ export default function WidgetHidratacao({ dataSelecionadaISO, aoEditarMetas }) 
       )}
 
       {editandoMeta ? (
-        <form onSubmit={salvarMeta} className="flex items-center gap-2 rounded-2xl bg-slate-50 p-3 dark:bg-zinc-900/40">
-          <label className="flex flex-1 items-center gap-2 text-sm font-semibold text-slate-600 dark:text-zinc-300">
+        <form onSubmit={salvarMeta} className="flex items-center gap-2 rounded-2xl bg-muted p-3">
+          <label className="flex flex-1 items-center gap-2 text-sm font-semibold text-secondary">
             Meta (ml)
             <input
               id="meta-agua-ml"
@@ -176,13 +176,13 @@ export default function WidgetHidratacao({ dataSelecionadaISO, aoEditarMetas }) 
               value={metaEmEdicao}
               onChange={(evento) => setMetaEmEdicao(evento.target.value)}
               aria-describedby={erroFormulario ? 'hidratacao-erro' : undefined}
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-content outline-none focus:border-brand focus:ring-4 focus:ring-brand-soft"
             />
           </label>
           <button
             type="submit"
             aria-label="Salvar meta de água"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-500 text-white transition-colors hover:bg-sky-600"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-brand-ink transition-colors hover:opacity-90"
           >
             <Check size={16} strokeWidth={2.5} aria-hidden="true" />
           </button>
@@ -190,14 +190,14 @@ export default function WidgetHidratacao({ dataSelecionadaISO, aoEditarMetas }) 
             type="button"
             onClick={() => setEditandoMeta(false)}
             aria-label="Cancelar"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 transition-colors hover:bg-slate-300 dark:bg-zinc-700 dark:text-zinc-300"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-secondary transition-colors hover:bg-line"
           >
             <X size={16} strokeWidth={2.5} aria-hidden="true" />
           </button>
         </form>
       ) : adicionandoManual ? (
-        <form onSubmit={salvarConsumoManual} className="flex items-center gap-2 rounded-2xl bg-slate-50 p-3 dark:bg-zinc-900/40">
-          <label className="flex flex-1 items-center gap-2 text-sm font-semibold text-slate-600 dark:text-zinc-300">
+        <form onSubmit={salvarConsumoManual} className="flex items-center gap-2 rounded-2xl bg-muted p-3">
+          <label className="flex flex-1 items-center gap-2 text-sm font-semibold text-secondary">
             Adicionar (ml)
             <input
               id="consumo-agua-ml"
@@ -210,14 +210,14 @@ export default function WidgetHidratacao({ dataSelecionadaISO, aoEditarMetas }) 
               value={quantidadeManual}
               onChange={(evento) => setQuantidadeManual(evento.target.value)}
               aria-describedby={erroFormulario ? 'hidratacao-erro' : undefined}
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+              className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm text-content outline-none focus:border-brand focus:ring-4 focus:ring-brand-soft"
             />
           </label>
           <button
             type="submit"
             aria-label="Salvar consumo de água"
             disabled={salvando}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-500 text-white transition-colors hover:bg-sky-600"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-brand-ink transition-colors hover:opacity-90"
           >
             <Check size={16} strokeWidth={2.5} aria-hidden="true" />
           </button>
@@ -225,7 +225,7 @@ export default function WidgetHidratacao({ dataSelecionadaISO, aoEditarMetas }) 
             type="button"
             onClick={() => setAdicionandoManual(false)}
             aria-label="Cancelar edição de consumo"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 transition-colors hover:bg-slate-300 dark:bg-zinc-700 dark:text-zinc-300"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-secondary transition-colors hover:bg-line"
           >
             <X size={16} strokeWidth={2.5} aria-hidden="true" />
           </button>
@@ -238,7 +238,7 @@ export default function WidgetHidratacao({ dataSelecionadaISO, aoEditarMetas }) 
               type="button"
               disabled={salvando}
               onClick={() => registrarAgua(quantidade)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-2 text-sm font-bold text-sky-600 transition-colors hover:bg-sky-100 disabled:opacity-60 dark:bg-sky-500/10 dark:text-sky-300"
+              className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-2 text-sm font-bold text-brand-soft-ink transition-colors hover:bg-brand/90 hover:text-brand-ink disabled:opacity-60"
             >
               <Droplet size={14} strokeWidth={2.5} aria-hidden="true" />
               {quantidade} ml
@@ -255,7 +255,7 @@ export default function WidgetHidratacao({ dataSelecionadaISO, aoEditarMetas }) 
       <button
         type="button"
         onClick={abrirAdicaoManual}
-        className="inline-flex items-center justify-center gap-1.5 self-start rounded-full bg-sky-50 px-4 py-2 text-sm font-bold text-sky-600 transition-colors hover:bg-sky-100 dark:bg-sky-500/10 dark:text-sky-300 dark:hover:bg-sky-500/20"
+        className="inline-flex items-center justify-center gap-1.5 self-start rounded-full bg-brand-soft px-4 py-2 text-sm font-bold text-brand-soft-ink transition-colors hover:bg-brand/90 hover:text-brand-ink"
       >
         <Plus size={14} strokeWidth={2.5} aria-hidden="true" /> Adicionar água
       </button>

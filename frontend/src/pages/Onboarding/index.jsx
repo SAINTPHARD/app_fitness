@@ -66,7 +66,7 @@ const DADOS_INICIAIS = {
 
 const CLASSES_CAMPO =
   'h-12 w-full rounded-xl border border-zinc-300 bg-white px-4 text-base text-zinc-900 outline-none transition ' +
-  'placeholder:text-zinc-400 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/15 ' +
+  'placeholder:text-zinc-400 focus:border-brand focus:ring-4 focus:ring-brand-soft ' +
   'disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100';
 
 /** Calcula a idade (anos completos) a partir da data de nascimento. */
@@ -120,14 +120,14 @@ function OpcaoCartao({ titulo, descricao, selecionado, aoSelecionar }) {
       aria-pressed={selecionado}
       className={`flex w-full items-center gap-3 rounded-xl border-2 px-4 py-4 text-left transition-all duration-300 ease-in-out active:scale-[0.98] ${
         selecionado
-          ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-500/10'
+          ? 'border-brand bg-brand-soft'
           : 'border-zinc-200 bg-white hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700'
       }`}
     >
       <span className="min-w-0 flex-1">
         <span
           className={`block font-bold ${
-            selecionado ? 'text-emerald-700 dark:text-emerald-400' : 'text-zinc-900 dark:text-zinc-100'
+            selecionado ? 'text-brand' : 'text-zinc-900 dark:text-zinc-100'
           }`}
         >
           {titulo}
@@ -140,7 +140,7 @@ function OpcaoCartao({ titulo, descricao, selecionado, aoSelecionar }) {
         aria-hidden="true"
         className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 transition ${
           selecionado
-            ? 'border-emerald-600 bg-emerald-600 text-white'
+            ? 'border-brand bg-brand text-brand-ink'
             : 'border-zinc-300 text-transparent dark:border-zinc-600'
         }`}
       >
@@ -391,7 +391,7 @@ export default function OnboardingPage() {
                     aria-pressed={selecionado}
                     className={`h-11 min-w-[3.25rem] flex-1 rounded-xl border-2 text-sm font-bold transition-all duration-300 ease-in-out active:scale-95 sm:flex-none sm:px-4 ${
                       selecionado
-                        ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
+                        ? 'border-brand bg-brand text-brand-ink shadow-sm'
                         : 'border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-zinc-700'
                     }`}
                   >
@@ -546,7 +546,7 @@ export default function OnboardingPage() {
           aria-label={`Passo ${etapa} de ${TOTAL_ETAPAS}`}
         >
           <div
-            className="h-full rounded-r-full bg-emerald-600 transition-[width] duration-500 ease-out motion-reduce:transition-none"
+            className="h-full rounded-r-full bg-brand transition-[width] duration-500 ease-out motion-reduce:transition-none"
             style={{ width: `${percentual}%` }}
           />
         </div>
@@ -592,7 +592,7 @@ export default function OnboardingPage() {
             onClick={ehUltimaEtapa ? finalizar : avancar}
             disabled={salvando}
             aria-busy={salvando}
-            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all duration-300 ease-in-out hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-60"
+            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-brand text-sm font-bold text-brand-ink transition-all duration-300 ease-in-out hover:bg-brand-strong active:scale-[0.98] disabled:opacity-60"
           >
             {salvando && (
               <span

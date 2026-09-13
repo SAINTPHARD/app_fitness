@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
 
-const CORES = { proteina: '#22c55e', carboidratos: '#eab308', gordura: '#a855f7' };
+const CORES = { proteina: '#3b82f6', carboidratos: '#f59e0b', gordura: '#f43f5e' };
 const numeroSeguro = (valor) => Number(valor) || 0;
 const formatar1Casa = (valor) => numeroSeguro(valor).toFixed(1);
 
@@ -27,8 +27,8 @@ export default function DistribuicaoMacronutrientes({ totais }) {
   }, [totais, totalGramas]);
 
   return (
-    <div className="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-xl shadow-slate-200/50 dark:bg-zinc-800 dark:shadow-none">
-      <h3 className="m-0 text-base font-bold text-slate-800 dark:text-zinc-50">Distribuição de Macronutrientes</h3>
+    <div className="flex flex-col gap-4 rounded-3xl border border-line bg-surface p-6 shadow-sm">
+      <h3 className="m-0 text-base font-bold text-content">Distribuição de Macronutrientes</h3>
 
       {dados.length > 0 ? (
         <div className="flex items-center gap-6">
@@ -48,8 +48,8 @@ export default function DistribuicaoMacronutrientes({ totais }) {
             {dados.map((fatia) => (
               <li key={fatia.chave} className="flex items-center gap-2 text-sm">
                 <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: CORES[fatia.chave] }} />
-                <span className="font-semibold text-slate-700 dark:text-zinc-200">{fatia.rotulo}</span>
-                <span className="text-slate-400 dark:text-zinc-500">
+                <span className="font-semibold text-secondary">{fatia.rotulo}</span>
+                <span className="text-subtle">
                   {formatar1Casa(fatia.gramas)}g ({Math.round((fatia.gramas / totalGramas) * 100)}%)
                 </span>
               </li>
@@ -57,7 +57,7 @@ export default function DistribuicaoMacronutrientes({ totais }) {
           </ul>
         </div>
       ) : (
-        <p className="m-0 text-sm text-slate-400 dark:text-zinc-500">Registre alimentos hoje para ver a distribuição aqui.</p>
+        <p className="m-0 text-sm text-subtle">Registre alimentos hoje para ver a distribuição aqui.</p>
       )}
     </div>
   );

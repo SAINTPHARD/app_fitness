@@ -117,7 +117,7 @@ export default function BuscaAlimentosIA({ refeicoes = [], aoAdicionarAlimento }
       aria-labelledby="busca-alimentos-ia-titulo"
     >
       <div className="flex items-center gap-2">
-        <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-lime-100 text-lime-600 dark:bg-lime-400/10 dark:text-lime-300">
+        <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-brand-soft text-brand-soft-ink">
           <Sparkles size={18} strokeWidth={2} />
         </span>
         <div>
@@ -139,12 +139,12 @@ export default function BuscaAlimentosIA({ refeicoes = [], aoAdicionarAlimento }
           onChange={(evento) => setQuery(evento.target.value)}
           placeholder='Ex: "100g de frango e 2 ovos"'
           disabled={carregando}
-          className="min-h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-lime-400 focus:ring-4 focus:ring-lime-100 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+          className="min-h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none focus:border-brand focus:ring-4 focus:ring-brand-soft disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
         />
         <button
           type="submit"
           disabled={carregando}
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-bold text-white transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100 dark:bg-lime-400 dark:text-zinc-900"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-brand-ink transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
         >
           {carregando ? (
             <>
@@ -231,7 +231,7 @@ export default function BuscaAlimentosIA({ refeicoes = [], aoAdicionarAlimento }
                   type="button"
                   onClick={() => adicionarNaRefeicao(alimento, indice)}
                   disabled={adicionandoIndice !== null || !alimento.revisado}
-                  className="mt-1 inline-flex min-h-11 items-center justify-center rounded-xl bg-zinc-900 py-2 text-xs font-bold text-white transition-transform hover:scale-[1.02] active:scale-[0.98] dark:bg-lime-400 dark:text-zinc-900"
+                  className="mt-1 inline-flex min-h-11 items-center justify-center rounded-xl bg-brand py-2 text-xs font-bold text-brand-ink transition-transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {adicionandoIndice === indice ? 'Adicionando...' : '➕ Adicionar à refeição'}
                 </button>

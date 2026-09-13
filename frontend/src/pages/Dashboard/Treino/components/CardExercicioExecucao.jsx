@@ -110,7 +110,7 @@ function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) 
     <li>
       <div
         className={`flex items-center gap-2 rounded-xl p-2 transition-colors duration-150 ${
-          concluida ? 'bg-emerald-600 text-white' : 'bg-zinc-50 dark:bg-zinc-800'
+          concluida ? 'bg-success text-white' : 'bg-muted'
         }`}
       >
         <button
@@ -123,7 +123,7 @@ function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) 
           className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 text-sm font-bold transition ${
             concluida
               ? 'border-white/70 bg-white/20 text-white'
-              : 'border-zinc-300 text-zinc-600 hover:border-emerald-500 hover:text-emerald-600 disabled:opacity-40 dark:border-zinc-600 dark:text-zinc-300'
+              : 'border-zinc-300 text-zinc-600 hover:border-brand hover:text-brand disabled:opacity-40 dark:border-zinc-600 dark:text-zinc-300'
           }`}
         >
           {concluida ? <Check size={16} strokeWidth={3} /> : serie.numeroSerie}
@@ -168,7 +168,7 @@ function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) 
 
       {!concluida && (
         <div className="mt-1 pl-12">
-          <button type="button" onClick={() => setDetalhesAbertos((valor) => !valor)} aria-expanded={detalhesAbertos} className="text-xs font-semibold text-zinc-500 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+          <button type="button" onClick={() => setDetalhesAbertos((valor) => !valor)} aria-expanded={detalhesAbertos} className="text-xs font-semibold text-zinc-500 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
             {detalhesAbertos ? 'Ocultar detalhes' : 'Detalhes da série'}
           </button>
           {detalhesAbertos && (
@@ -285,7 +285,7 @@ export default function CardExercicioExecucao({
     <article
       className={`overflow-hidden rounded-2xl border bg-white transition-colors dark:bg-zinc-900 ${
         exercicioCompleto
-          ? 'border-emerald-500/60 dark:border-emerald-500/40'
+          ? 'border-brand'
           : 'border-zinc-200 dark:border-zinc-800'
       }`}
     >
@@ -308,7 +308,7 @@ export default function CardExercicioExecucao({
         <span
           className={`hidden shrink-0 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums sm:block ${
             exercicioCompleto
-              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400'
+              ? 'bg-brand-soft text-brand-soft-ink'
               : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300'
           }`}
         >
@@ -385,7 +385,7 @@ export default function CardExercicioExecucao({
             type="button"
             onClick={adicionarProximaSerie}
             disabled={adicionando}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white transition hover:bg-emerald-700 active:scale-[0.99] disabled:opacity-60"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand text-sm font-bold text-brand-ink transition-colors hover:bg-brand-strong active:scale-[0.99] disabled:opacity-60"
           >
             <Plus size={18} strokeWidth={3} />
             {adicionando

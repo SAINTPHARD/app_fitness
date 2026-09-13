@@ -5,7 +5,7 @@ import { formatarDataParaExibicaoBr } from '../utils/calendario';
 
 const COR_TEXTO_EIXO = '#94a3b8';
 const COR_BORDA = '#dbe2ef';
-const COR_LINHA = '#a3e635';
+const COR_LINHA = '#14b8a6';
 
 /**
  * Linha de evolução do peso (versão Tailwind, para a Dieta) — mesma fonte de
@@ -21,7 +21,7 @@ export default function GraficoEvolucaoPeso({ historicoPeso }) {
       <div className="flex items-center justify-between">
         <h3 className="m-0 text-base font-bold text-slate-800 dark:text-zinc-50">Evolução do peso</h3>
         {ultimoPeso !== null && (
-          <span className="rounded-full bg-lime-100 px-2.5 py-1 text-xs font-bold text-lime-700 dark:bg-lime-400/10 dark:text-lime-300">
+          <span className="rounded-full bg-brand-soft px-2.5 py-1 text-xs font-bold text-brand-soft-ink">
             {ultimoPeso} kg
           </span>
         )}
@@ -57,7 +57,7 @@ export default function GraficoEvolucaoPeso({ historicoPeso }) {
           <p className="m-0 text-sm text-slate-400 dark:text-zinc-500">
             Registre seu peso em Evolução — com pelo menos 2 registros, o gráfico aparece aqui.
           </p>
-          <Link to="/dashboard/evolucao" className="text-sm font-bold text-emerald-700 hover:underline dark:text-emerald-300">
+          <Link to="/dashboard/evolucao" className="text-sm font-bold text-brand hover:underline">
             Abrir Evolução →
           </Link>
         </div>

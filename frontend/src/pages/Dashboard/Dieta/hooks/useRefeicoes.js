@@ -50,6 +50,13 @@ export function useRefeicoes(dataSelecionadaISO) {
     [nutrition, dataSelecionadaISO]
   );
 
+  // Estável para poder ser dependência de `useCallback`/`useEffect` de quem
+  // consome (ex.: o "Tentar novamente" da Home) sem recriar a cada render.
+  const recarregar = useCallback(
+    () => carregarRefeicoes(dataSelecionadaISO, { forcar: true }),
+    [carregarRefeicoes, dataSelecionadaISO]
+  );
+
   return {
     refeicoesDoDia: nutrition.obterRefeicoesDaData(dataSelecionadaISO),
     totaisDoDia: nutrition.obterTotaisDaData(dataSelecionadaISO),
@@ -61,6 +68,6 @@ export function useRefeicoes(dataSelecionadaISO) {
     editarRefeicao,
     removerRefeicao,
     concluirRefeicao,
-    recarregar: () => carregarRefeicoes(dataSelecionadaISO, { forcar: true }),
+    recarregar,
   };
 }

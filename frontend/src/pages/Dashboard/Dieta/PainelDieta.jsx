@@ -114,7 +114,7 @@ export default function PainelDieta() {
         <button
           type="button"
           onClick={() => setModalMetasAberto(true)}
-          className="inline-flex items-center gap-2 rounded-2xl bg-lime-400 px-4 py-2.5 text-base font-bold text-zinc-900 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+          className="inline-flex items-center gap-2 rounded-2xl bg-brand px-4 py-2.5 text-base font-bold text-brand-ink transition-transform hover:scale-[1.02] active:scale-[0.98]"
         >
           <Pencil size={16} strokeWidth={2.5} />
           Definir meta
@@ -246,7 +246,7 @@ export default function PainelDieta() {
             // Empty state orientativo: explica o benefício de registrar e já
             // oferece a ação direta, em vez de só uma frase vazia.
             <div className="flex flex-col items-center gap-3 rounded-3xl bg-white p-8 text-center shadow-xl shadow-slate-200/50 dark:bg-zinc-800 dark:shadow-none">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-lime-100 text-lime-600 dark:bg-lime-400/10 dark:text-lime-300">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-soft text-brand-soft-ink">
                 <Salad size={22} strokeWidth={2} />
               </span>
               <p className="m-0 max-w-xs text-sm text-slate-500 dark:text-zinc-400">
@@ -255,7 +255,7 @@ export default function PainelDieta() {
               <button
                 type="button"
                 onClick={() => setCriandoRefeicao(true)}
-                className="inline-flex items-center gap-2 rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-bold text-zinc-900 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                className="inline-flex items-center gap-2 rounded-2xl bg-brand px-4 py-2.5 text-sm font-bold text-brand-ink transition-transform hover:scale-[1.02] active:scale-[0.98]"
               >
                 <Plus size={15} strokeWidth={2.5} /> Adicionar refeição
               </button>

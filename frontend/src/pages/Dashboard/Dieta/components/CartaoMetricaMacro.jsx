@@ -11,36 +11,34 @@ export default function CartaoMetricaMacro({ icone: Icone, corIcone, rotulo, con
   const percentualSeguro = Number.isFinite(Number(percentual)) ? Number(percentual) : 0;
 
   return (
-    <article className="flex flex-col gap-3 rounded-3xl bg-white p-5 shadow-xl shadow-slate-200/50 dark:bg-zinc-800 dark:shadow-none">
+    <article className="flex flex-col gap-3 rounded-3xl border border-line bg-surface p-5 shadow-sm">
       <div className="flex items-center gap-3">
         <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${corIcone}`}>
           <Icone size={18} strokeWidth={2.5} />
         </span>
-        <p className="m-0 text-sm font-bold text-slate-600 dark:text-zinc-300">{rotulo}</p>
+        <p className="m-0 text-sm font-bold text-secondary">{rotulo}</p>
       </div>
 
-      <p className="m-0 text-xl font-bold text-slate-800 dark:text-zinc-50">
+      <p className="m-0 text-xl font-bold text-content">
         {consumido}
-        <span className="text-sm font-semibold text-slate-400 dark:text-zinc-500">
+        <span className="text-sm font-semibold text-subtle">
           {metaDefinida ? ` / ${meta}${unidade}` : ' / Meta não definida'}
         </span>
       </p>
 
       <div className="flex items-center gap-2">
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-700">
+        <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${alerta ? 'bg-rose-400' : 'bg-lime-400'}`}
+            className={`h-full rounded-full transition-all duration-500 ${alerta ? 'bg-[var(--danger)]' : 'bg-brand'}`}
             style={{ width: `${Math.min(percentualSeguro, 100)}%` }}
           />
         </div>
-        <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">
+        <span className="text-xs font-bold text-subtle">
           {metaDefinida ? `${Math.round(percentualSeguro)}%` : '--'}
         </span>
       </div>
     </article>
   );
 }
-
-CartaoMetricaMacro.propTypes = { icone: PropTypes.elementType.isRequired, corIcone: PropTypes.string, rotulo: PropTypes.string.isRequired, consumido: PropTypes.number.isRequired, meta: PropTypes.number.isRequired, unidade: PropTypes.string.isRequired, percentual: PropTypes.number.isRequired, alerta: PropTypes.bool };
 
 CartaoMetricaMacro.propTypes = { icone: PropTypes.elementType.isRequired, corIcone: PropTypes.string, rotulo: PropTypes.string.isRequired, consumido: PropTypes.number.isRequired, meta: PropTypes.number.isRequired, unidade: PropTypes.string.isRequired, percentual: PropTypes.number.isRequired, alerta: PropTypes.bool };

@@ -42,7 +42,7 @@ function LinhaCatalogo({ exercicio, musculoNormalizado, aoAbrirDetalhes, aoAdici
         type="button"
         onClick={() => aoAdicionar(exercicio)}
         aria-label={`Adicionar ${nome} ao treino`}
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-600 text-white transition hover:bg-emerald-700 active:scale-95"
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition-colors hover:bg-brand-strong active:scale-95"
       >
         <Plus size={18} strokeWidth={3} />
       </button>
@@ -146,7 +146,7 @@ export default function CatalogoExercicios({ musculoAlvo, onAdicionarExercicio }
 
       <div className="grid gap-2 sm:grid-cols-3">
         <label className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">Buscar por nome
-          <input type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Ex.: supino" className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-zinc-700 dark:bg-zinc-800" />
+          <input type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Ex.: supino" className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:border-zinc-700 dark:bg-zinc-800" />
         </label>
         <label className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">Equipamento
           <select value={equipamento} onChange={(e) => setEquipamento(e.target.value)} className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800"><option value="">Todos</option>{equipamentos.map((valor) => <option key={valor} value={valor}>{traduzirMetadadoCatalogo(valor)}</option>)}</select>
