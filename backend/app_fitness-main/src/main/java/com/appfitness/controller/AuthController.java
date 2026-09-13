@@ -24,13 +24,15 @@ import com.appfitness.repository.UsuarioRepository;
 import com.appfitness.security.TokenService;
 import com.appfitness.service.PasswordResetService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
-/**
- * Controller responsável pelos endpoints de autenticação e login da API.
- */
 @RestController
 @RequestMapping("/auth")
+@Tag(name = "Autenticação", description = "Login, renovação de sessão e recuperação de senha")
 public class AuthController {
 
 	private final AuthenticationManager authenticationManager;
@@ -38,7 +40,6 @@ public class AuthController {
 	private final UsuarioRepository usuarioRepository;
 	private final PasswordResetService passwordResetService;
 
-	// Injeção de dependência via construtor (Padrão Sênior)
 	public AuthController(AuthenticationManager authenticationManager, TokenService tokenService,
 			UsuarioRepository usuarioRepository, PasswordResetService passwordResetService) {
 		this.authenticationManager = authenticationManager;
@@ -47,37 +48,28 @@ public class AuthController {
 		this.passwordResetService = passwordResetService;
 	}
 
-	/**
-	 * Endpoint público para autenticar o usuário e retornar o Token JWT.
-	 * Rota: POST http://localhost:8080/auth/login
-	 */
 	@PostMapping("/login")
+	@Operation(summary = "Autenticar usuário", description = "Valida e-mail e senha e retorna access token e refresh token JWT.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Autenticação realizada com sucesso"),
+			@ApiResponse(responseCode = "401", description = "Credenciais inválidas")
+	})
 	public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
 		try {
-			// Validação rápida de campos obrigatórios
 			if (loginDTO.email() == null || loginDTO.password() == null) {
 				throw new BadCredentialsException("E-mail e senha são obrigatórios.");
 			}
 
-			// Normaliza o e-mail (remove espaços e converte para minúsculas)
 			String email = loginDTO.email().trim().toLowerCase();
-			
-			// Cria o token de autenticação para o Spring Security validar
 			var authToken = new UsernamePasswordAuthenticationToken(email, loginDTO.password());
 			Authentication authentication = authenticationManager.authenticate(authToken);
-			
-			// Recupera o usuário autenticado a partir do Principal
 			Usuario usuario = (Usuario) authentication.getPrincipal();
-			
-			// Gera o token JWT real
+
 			String token = tokenService.gerarToken(usuario);
 			String refreshToken = tokenService.gerarRefreshToken(usuario);
 
-			// Retorna o DTO com o token gerado e o e-mail do usuário
 			return ResponseEntity.ok(new TokenDTO(token, refreshToken, usuario.getEmail()));
-			
 		} catch (AuthenticationException ex) {
-			// Tratamento seguro para falhas de credenciais (retorna 401 Unauthorized)
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
 					"message", "E-mail ou senha inválidos."
 			));
@@ -85,6 +77,8 @@ public class AuthController {
 	}
 
 	@PostMapping("/password/forgot")
+	@Operation(summary = "Solicitar redefinição de senha", description = "Inicia o fluxo de recuperação sem revelar se o e-mail está cadastrado.")
+	@ApiResponse(responseCode = "202", description = "Solicitação recebida")
 	public ResponseEntity<Map<String, String>> solicitarRedefinicao(
 			@Valid @RequestBody PasswordResetRequestDTO request) {
 		passwordResetService.solicitar(request.email());
@@ -94,17 +88,23 @@ public class AuthController {
 	}
 
 	@PostMapping("/password/reset")
+	@Operation(summary = "Redefinir senha", description = "Define uma nova senha utilizando um token de recuperação válido.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Senha redefinida com sucesso"),
+			@ApiResponse(responseCode = "400", description = "Token inválido, expirado ou dados inválidos")
+	})
 	public ResponseEntity<Map<String, String>> redefinirSenha(
 			@Valid @RequestBody PasswordResetConfirmDTO request) {
 		passwordResetService.redefinir(request.token(), request.novaSenha());
 		return ResponseEntity.ok(Map.of("message", "Senha redefinida com sucesso."));
 	}
 
-	/**
-	 * Endpoint público para renovar a sessão a partir de um refresh token válido.
-	 * Rota: POST http://localhost:8080/auth/refresh
-	 */
 	@PostMapping("/refresh")
+	@Operation(summary = "Renovar sessão", description = "Troca um refresh token válido por um novo par de tokens JWT.")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Tokens renovados com sucesso"),
+			@ApiResponse(responseCode = "401", description = "Refresh token inválido ou expirado")
+	})
 	public ResponseEntity<?> refresh(@RequestBody RefreshTokenDTO refreshTokenDTO) {
 		String refreshToken = refreshTokenDTO.refreshToken();
 
