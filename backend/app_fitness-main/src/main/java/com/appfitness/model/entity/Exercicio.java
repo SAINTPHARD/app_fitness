@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,6 +30,8 @@ public class Exercicio {
 	private Integer repeticoes;	// Número de repetições por série, ex: 12
 	private Integer duracao;		// Duração do exercício em minutos, ex: 30
 	private String descricao;	// Descrição detalhada do exercício
+	@Column(name = "grupo_muscular", length = 80)
+	private String grupoMuscular;
 	
 	// Associações
 	@JsonIgnore
@@ -99,6 +102,9 @@ public class Exercicio {
 	public void setDescricao(String descricao) {
 		this.descricao = descricao;
 	}
+
+	public String getGrupoMuscular() { return grupoMuscular; }
+	public void setGrupoMuscular(String grupoMuscular) { this.grupoMuscular = grupoMuscular; }
 
 	public Treino getTreino() {
 		return treino;

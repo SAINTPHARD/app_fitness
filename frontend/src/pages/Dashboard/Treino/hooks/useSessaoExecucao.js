@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { fitnessApi } from '../../../../services/fitnessApi';
+import { treinoService } from '../../../../services/dominio/treinoService';
 import { notificarErro } from '../../../../utils/notificacoes';
 import { removerDaFila } from '../utils/filaOffline';
 import { obterErroSerie } from '../utils/validarSerie';
@@ -32,6 +32,7 @@ export function useSessaoExecucao(treino) {
   const [processando, setProcessando] = useState({});
   const sessaoRef = useRef(null);
   const treinoRef = useRef(treino);
+  const conclusaoEmVooRef = useRef(false);
 
   useEffect(() => {
     sessaoRef.current = sessao;
@@ -44,7 +45,7 @@ export function useSessaoExecucao(treino) {
   const recarregarSessaoDoServidor = useCallback(async () => {
     if (!treinoRef.current) return;
     try {
-      const resultado = await fitnessApi.buscarSessaoDeHoje(treinoRef.current.id);
+      const resultado = await treinoService.buscarSessaoDoDia(treinoRef.current.id);
       setSessao(resultado);
     } catch (err) {
       console.error('Erro ao recarregar sessão após sincronização:', err);
@@ -63,8 +64,8 @@ export function useSessaoExecucao(treino) {
     }
 
     setCarregando(true);
-    fitnessApi
-      .buscarSessaoDeHoje(treino.id)
+    treinoService
+      .buscarSessaoDoDia(treino.id)
       .then((resultado) => {
         if (!cancelado) setSessao(resultado);
       })
@@ -86,7 +87,7 @@ export function useSessaoExecucao(treino) {
 
   const garantirSessao = useCallback(async () => {
     if (sessaoRef.current) return sessaoRef.current;
-    const nova = await fitnessApi.obterOuCriarSessaoDoDia(treino.id);
+    const nova = await treinoService.obterOuCriarSessaoDoDia(treino.id);
     setSessao(nova);
     return nova;
   }, [treino]);
@@ -114,6 +115,10 @@ export function useSessaoExecucao(treino) {
         exercicioId,
         carga: dadosIniciais.carga ?? null,
         repeticoes: dadosIniciais.repeticoes ?? null,
+        unidadeCarga: dadosIniciais.unidadeCarga || 'KG',
+        rir: dadosIniciais.rir ?? null,
+        rpe: dadosIniciais.rpe ?? null,
+        observacao: dadosIniciais.observacao || null,
         tipo: dadosIniciais.tipo || 'NORMAL',
         idempotencyKey: chave,
       };
@@ -157,7 +162,7 @@ export function useSessaoExecucao(treino) {
       setSessao((prev) => ({
         ...prev,
         series: (prev?.series || []).map((serie) =>
-          serie.id === serieId ? { ...serie, carga: dados.carga ?? null, repeticoes: dados.repeticoes ?? null } : serie
+          serie.id === serieId ? { ...serie, ...dados, carga: dados.carga ?? null, repeticoes: dados.repeticoes ?? null } : serie
         ),
       }));
       return null;
@@ -170,6 +175,10 @@ export function useSessaoExecucao(treino) {
         exercicioId: dados.exercicioId,
         carga: dados.carga ?? null,
         repeticoes: dados.repeticoes ?? null,
+        unidadeCarga: dados.unidadeCarga || 'KG',
+        rir: dados.rir ?? null,
+        rpe: dados.rpe ?? null,
+        observacao: dados.observacao || null,
         tipo: dados.tipo || 'NORMAL',
       };
       const atualizada = await executar(chave, 'atualizarSerie', [serieId, payload]);
@@ -247,35 +256,40 @@ export function useSessaoExecucao(treino) {
 
   const iniciarSessao = async () => {
     const sessaoAtual = await garantirSessao();
-    const atualizada = await fitnessApi.iniciarSessao(sessaoAtual.id);
+    const atualizada = await treinoService.iniciarSessao(sessaoAtual.id);
     setSessao((prev) => ({ ...(prev || sessaoAtual), ...atualizada }));
     return atualizada;
   };
 
   const pausarSessao = async () => {
     if (!sessaoRef.current) return null;
-    const atualizada = await fitnessApi.pausarSessao(sessaoRef.current.id);
+    const atualizada = await treinoService.pausarSessao(sessaoRef.current.id);
     setSessao((prev) => ({ ...prev, ...atualizada }));
     return atualizada;
   };
 
   const retomarSessao = async () => {
     if (!sessaoRef.current) return null;
-    const atualizada = await fitnessApi.retomarSessao(sessaoRef.current.id);
+    const atualizada = await treinoService.retomarSessao(sessaoRef.current.id);
     setSessao((prev) => ({ ...prev, ...atualizada }));
     return atualizada;
   };
 
   const concluirSessao = async () => {
-    if (!sessaoRef.current) return null;
-    const atualizada = await fitnessApi.concluirSessao(sessaoRef.current.id);
-    setSessao((prev) => ({ ...prev, ...atualizada }));
-    return atualizada;
+    if (!sessaoRef.current || conclusaoEmVooRef.current) return null;
+    conclusaoEmVooRef.current = true;
+    try {
+      const atualizada = await treinoService.concluirSessao(sessaoRef.current.id);
+      setSessao((prev) => ({ ...prev, ...atualizada }));
+      return atualizada;
+    } finally {
+      conclusaoEmVooRef.current = false;
+    }
   };
 
   const buscarResumo = async () => {
     if (!sessaoRef.current) return null;
-    return fitnessApi.buscarResumoSessao(sessaoRef.current.id);
+    return treinoService.buscarResumoSessao(sessaoRef.current.id);
   };
 
   const excluirSerie = async (serie) => {

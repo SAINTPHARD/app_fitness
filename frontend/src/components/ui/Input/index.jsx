@@ -1,4 +1,5 @@
 import './input.css';
+import PropTypes from 'prop-types';
 
 export default function Input({ label, error, ...props }) {
   return (
@@ -9,3 +10,5 @@ export default function Input({ label, error, ...props }) {
     </label>
   );
 }
+
+Input.propTypes = { label: PropTypes.node, error: PropTypes.node };

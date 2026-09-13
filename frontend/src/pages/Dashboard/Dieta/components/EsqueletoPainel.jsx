@@ -8,7 +8,7 @@
  */
 export default function EsqueletoPainel() {
   return (
-    <section className="flex animate-pulse flex-col gap-8" aria-busy="true" aria-label="Carregando painel de dieta">
+    <section className="flex animate-pulse flex-col gap-8" role="status" aria-live="polite" aria-busy="true" aria-label="Carregando painel de dieta">
       <div className="flex flex-col gap-2">
         <div className="h-3 w-40 rounded-full bg-slate-200 dark:bg-zinc-700" />
         <div className="h-7 w-80 max-w-full rounded-full bg-slate-200 dark:bg-zinc-700" />

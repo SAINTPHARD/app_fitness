@@ -84,6 +84,7 @@ export function useFichasTreino() {
         series,
         repeticoes,
         descricao: exercicioCatalogo.descricao || exercicioCatalogo.seriesPadrao,
+        grupoMuscular: exercicioCatalogo.grupoMuscular || null,
       });
       await carregar();
       return true;

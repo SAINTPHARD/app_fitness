@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.appfitness.model.entity.FotoProgresso;
+import com.appfitness.dto.evolucao.FotoProgressoDTO;
+import java.util.Base64;
 import com.appfitness.model.entity.MedidaCorporal;
 import com.appfitness.model.entity.PesoRegistro;
 import com.appfitness.model.entity.Usuario;
@@ -168,9 +171,9 @@ public class EvolucaoController {
      * @return Lista de fotos com status HTTP 200 (OK).
      */
     @GetMapping("/fotos")
-    public ResponseEntity<List<FotoProgresso>> listarFotos(Authentication authentication) {
+    public ResponseEntity<List<FotoProgressoDTO>> listarFotos(Authentication authentication) {
         Usuario usuario = extrairUsuarioAutenticado(authentication);
-        return ResponseEntity.ok(evolucaoService.listarFotos(usuario));
+        return ResponseEntity.ok(evolucaoService.listarFotos(usuario).stream().map(FotoProgressoDTO::fromEntity).toList());
     }
 
     /**
@@ -180,12 +183,12 @@ public class EvolucaoController {
      * @return A foto salva com status HTTP 201 (CREATED).
      */
     @PostMapping("/fotos")
-    public ResponseEntity<FotoProgresso> criarFoto(
+    public ResponseEntity<FotoProgressoDTO> criarFoto(
             @Valid @RequestBody FotoProgresso foto,
             Authentication authentication) {
         Usuario usuario = extrairUsuarioAutenticado(authentication);
         FotoProgresso salva = evolucaoService.salvarFoto(foto, usuario);
-        return ResponseEntity.status(HttpStatus.CREATED).body(salva);
+        return ResponseEntity.status(HttpStatus.CREATED).body(FotoProgressoDTO.fromEntity(salva));
     }
 
     /**
@@ -215,6 +218,17 @@ public class EvolucaoController {
         Usuario usuario = extrairUsuarioAutenticado(authentication);
         evolucaoService.deletarFoto(id, usuario);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/fotos/{id}/imagem")
+    public ResponseEntity<byte[]> buscarImagemFoto(@PathVariable Long id, Authentication authentication) {
+        Usuario usuario = extrairUsuarioAutenticado(authentication);
+        FotoProgresso foto = evolucaoService.buscarFoto(id, usuario);
+        String[] partes = foto.getSrc().split(",", 2);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(foto.getTipoConteudo()))
+                .header("Cache-Control", "private, no-store")
+                .body(Base64.getMimeDecoder().decode(partes[1]));
     }
 
     /**

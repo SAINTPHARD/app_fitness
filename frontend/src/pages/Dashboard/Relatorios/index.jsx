@@ -1,177 +1,58 @@
-import { useMemo, useState } from 'react';
-import { Download, Printer } from 'lucide-react';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import { baixarCsv, montarCsvRelatorio, obterDadosRelatorio } from './utils/agregarRelatorio';
-import { useHistoricoRefeicoes } from '../../../hooks/useHistoricoRefeicoes';
+import { useEffect, useMemo, useState } from 'react';
+import { Download, Printer, RefreshCw } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { baixarCsv, calcularComparacao, formatarNumeroRelatorio, montarCsvRelatorio } from './utils/agregarRelatorio';
+import { fitnessApi } from '../../../services/fitnessApi';
 import { notificarSucesso } from '../../../utils/notificacoes';
 import estilos from './styles.module.css';
 
-const PERIODOS = [
-  { dias: 7, rotulo: '7 dias' },
-  { dias: 30, rotulo: '30 dias' },
-  { dias: 90, rotulo: '90 dias' },
+const PERIODOS = [7, 30, 90];
+const METRICAS = [
+  ['caloriasMedia', 'Média calórica', 'kcal'], ['hidratacaoMediaMl', 'Hidratação média', 'ml'],
+  ['variacaoPeso', 'Variação de peso', 'kg'], ['sessoesConcluidas', 'Sessões concluídas', ''],
+  ['frequenciaSemanal', 'Frequência de treino', '/semana'], ['aderenciaPercentual', 'Aderência à ficha', '%'],
+  ['volumeTotalKg', 'Volume total', 'kg'],
 ];
-
-const COR_LIME = '#a3e635';
-const COR_EIXO = '#71717a';
+const formatarData = (data) => new Intl.DateTimeFormat('pt-BR').format(new Date(`${data}T12:00:00`));
 
 export default function RelatoriosPage() {
   const [periodo, setPeriodo] = useState(30);
+  const [relatorio, setRelatorio] = useState(null);
+  const [estado, setEstado] = useState('carregando');
+  const [tentativa, setTentativa] = useState(0);
 
-  // CORREÇÃO: `obterDadosRelatorio` lia refeições de uma chave de
-  // localStorage órfã ('dieta-refeicoes') que `useRefeicoes` não escreve
-  // mais desde que passou a usar a API real — ver `useHistoricoRefeicoes`
-  // para o diagnóstico completo. Agora busca de verdade no backend.
-  const { refeicoesPorDia, carregando: carregandoHistorico } = useHistoricoRefeicoes(periodo);
-  const { serie, resumo } = useMemo(
-    () => obterDadosRelatorio(refeicoesPorDia, periodo),
-    [refeicoesPorDia, periodo]
-  );
-  const seriePeso = useMemo(() => serie.filter((d) => d.peso != null), [serie]);
+  useEffect(() => {
+    let ativo = true;
+    setEstado(navigator.onLine ? 'carregando' : 'offline');
+    if (!navigator.onLine) return () => { ativo = false; };
+    fitnessApi.obterRelatorioConsolidado(periodo)
+      .then((dados) => { if (ativo) { setRelatorio(dados); setEstado('pronto'); } })
+      .catch(() => { if (ativo) setEstado(navigator.onLine ? 'erro' : 'offline'); });
+    return () => { ativo = false; };
+  }, [periodo, tentativa]);
 
-  const exportarCsv = () => {
-    const csv = montarCsvRelatorio(serie);
-    baixarCsv(csv, `relatorio-system-fitness-${periodo}d.csv`);
-  };
+  const temDados = useMemo(() => relatorio && (relatorio.atual.caloriasMedia > 0 || relatorio.atual.hidratacaoMediaMl > 0 || relatorio.atual.sessoesConcluidas > 0 || relatorio.serie.some((item) => item.peso != null)), [relatorio]);
+  const seriePeso = (relatorio?.serie || []).filter((item) => item.peso != null);
+  const podeExportar = estado === 'pronto' && temDados;
+  const exportarCsv = () => baixarCsv(montarCsvRelatorio(relatorio), `relatorio-system-fitness-${periodo}-dias.csv`);
+  const imprimirRelatorio = () => { notificarSucesso('Abrindo relatório para salvar como PDF…'); window.print(); };
 
-  // CORREÇÃO (auditoria QA #7): `window.print()` já funcionava — abre o
-  // diálogo nativo de impressão do navegador (o usuário escolhe "Salvar como
-  // PDF" ali), e o CSS de impressão (`@media print` em styles.module.css)
-  // já esconde os botões/filtros do impresso via `data-print-hide`. O que
-  // faltava era um feedback *visível em DOM/JS* de que o clique foi
-  // recebido — um diálogo nativo do SO não deixa rastro observável por
-  // ferramentas de QA automatizadas (nem por captura de tela headless), daí
-  // o relato de "nenhum retorno". O toast aqui não substitui o diálogo, só
-  // confirma que a ação disparou.
-  const imprimirRelatorio = () => {
-    notificarSucesso('Abrindo janela de impressão…');
-    window.print();
-  };
+  return <section className={estilos.pagina} aria-busy={estado === 'carregando'}>
+    <header className={estilos.topo}>
+      <div className={estilos.cabecalho}><p className={estilos.eyebrow}>Relatórios</p><h2 className={estilos.titulo}>Desempenho consolidado</h2><p className={estilos.subtitulo}>Dieta, hidratação, peso e treino agregados diretamente da sua conta.</p>{relatorio && <p className={estilos.periodoImpresso}>Período: {formatarData(relatorio.inicio)} a {formatarData(relatorio.fim)} · Gerado em {new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(new Date())}</p>}</div>
+      <div className={estilos.acoes} data-print-hide><div className={estilos.filtros} aria-label="Período do relatório">{PERIODOS.map((dias) => <button key={dias} type="button" aria-pressed={periodo === dias} className={`${estilos.filtro} ${periodo === dias ? estilos.filtroAtivo : ''}`} onClick={() => setPeriodo(dias)}>{dias} dias</button>)}</div><button type="button" className={estilos.botaoSecundario} onClick={exportarCsv} disabled={!podeExportar}><Download size={16} aria-hidden="true" /> CSV</button><button type="button" className={estilos.botaoPrimario} onClick={imprimirRelatorio} disabled={!podeExportar}><Printer size={16} aria-hidden="true" /> PDF</button></div>
+    </header>
 
-  return (
-    <section className={estilos.pagina}>
-      <div className={estilos.topo}>
-        <div className={estilos.cabecalho}>
-          <p className={estilos.eyebrow}>Relatórios</p>
-          <h2 className={estilos.titulo}>Estatísticas e exportação</h2>
-          <p className={estilos.subtitulo}>
-            Resumo do período com base nos seus registros de dieta, água, peso e treino.
-          </p>
-        </div>
+    {estado === 'carregando' && <div className={estilos.esqueletoRelatorio} role="status"><span>Preparando seu relatório. O primeiro carregamento pode levar alguns segundos…</span><div className={estilos.gradeResumo}>{METRICAS.map(([chave]) => <i key={chave} className={estilos.esqueletoMetrica} />)}</div><div className={estilos.esqueletoGraficos}><i className={estilos.esqueletoCartao} /><i className={estilos.esqueletoCartao} /></div></div>}
+    {(estado === 'erro' || estado === 'offline') && <div className={estilos.estadoProblema} role="alert"><h3>{estado === 'offline' ? 'Você está offline' : 'Não foi possível gerar o relatório'}</h3><p>{estado === 'offline' ? 'Reconecte-se para consultar dados atualizados e exportar com segurança.' : 'O backend pode estar iniciando. Aguarde alguns segundos e tente novamente.'}</p><button type="button" className={estilos.botaoSecundario} onClick={() => setTentativa((valor) => valor + 1)}><RefreshCw size={16} aria-hidden="true" /> Tentar novamente</button></div>}
+    {estado === 'pronto' && !temDados && <div className={estilos.cartaoVazio}><h3>Sem dados neste período</h3><p>Registre refeições, água, peso ou sessões de treino para formar comparações confiáveis.</p><div className={estilos.linksVazio}><Link to="/dashboard/dieta">Abrir Dieta</Link><Link to="/dashboard/evolucao">Abrir Evolução</Link><Link to="/dashboard/treino">Abrir Treino</Link></div></div>}
 
-        <div className={estilos.acoes} data-print-hide>
-          <div className={estilos.filtros}>
-            {PERIODOS.map((item) => (
-              <button
-                key={item.dias}
-                type="button"
-                className={`${estilos.filtro} ${periodo === item.dias ? estilos.filtroAtivo : ''}`}
-                onClick={() => setPeriodo(item.dias)}
-              >
-                {item.rotulo}
-              </button>
-            ))}
-          </div>
-          <button type="button" className={estilos.botaoSecundario} onClick={exportarCsv}>
-            <Download size={16} strokeWidth={2.5} />
-            CSV
-          </button>
-          <button type="button" className={estilos.botaoPrimario} onClick={imprimirRelatorio}>
-            <Printer size={16} strokeWidth={2.5} />
-            Imprimir / PDF
-          </button>
-        </div>
-      </div>
-
-      <div className={estilos.gradeResumo}>
-        <article>
-          {/* CORREÇÃO (P2.9): rótulo agora deixa explícito que a média é
-              só dos dias com registro — `kcalMedia` (agregarRelatorio.js)
-              soma e divide apenas por `diasComCalorias`, não pelos N dias
-              inteiros do período, então um período com poucos dias
-              registrados não tem a média "diluída" por zeros. */}
-          <span>Kcal média (dias com registro)</span>
-          <strong>{resumo.kcalMedia || '---'}</strong>
-        </article>
-        <article>
-          <span>Água média / dia</span>
-          <strong>{resumo.aguaMediaMl ? `${(resumo.aguaMediaMl / 1000).toFixed(1)} L` : '---'}</strong>
-        </article>
-        <article>
-          <span>Variação de peso</span>
-          <strong>
-            {resumo.variacaoPeso != null
-              ? `${resumo.variacaoPeso > 0 ? '+' : ''}${resumo.variacaoPeso} kg`
-              : '---'}
-          </strong>
-        </article>
-        <article>
-          <span>Exercícios concluídos</span>
-          <strong>
-            {resumo.treinosTotal > 0 ? `${resumo.treinosConcluidos}/${resumo.treinosTotal}` : '---'}
-          </strong>
-        </article>
-      </div>
-
-      {carregandoHistorico ? (
-        <div className={estilos.esqueletoGraficos} aria-busy="true" aria-label="Carregando relatório">
-          <div className={estilos.esqueletoCartao} />
-          <div className={estilos.esqueletoCartao} />
-        </div>
-      ) : resumo.diasComRegistro === 0 ? (
-        <div className={estilos.cartaoVazio}>
-          <h3>Sem dados neste período</h3>
-          <p>Registre refeições, água ou peso para gerar o relatório automaticamente.</p>
-        </div>
-      ) : (
-        <div className={estilos.gradeGraficos}>
-          <div className={estilos.cartao}>
-            <h3 className={estilos.cartaoTitulo}>Calorias por dia</h3>
-            <div className={estilos.grafico}>
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={serie}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis dataKey="rotulo" tick={{ fill: COR_EIXO, fontSize: 11 }} interval="preserveStartEnd" />
-                  <YAxis tick={{ fill: COR_EIXO, fontSize: 11 }} />
-                  <Tooltip />
-                  <Bar dataKey="calorias" fill={COR_LIME} radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className={estilos.cartao}>
-            <h3 className={estilos.cartaoTitulo}>Evolução do peso</h3>
-            <div className={estilos.grafico}>
-              {seriePeso.length >= 2 ? (
-                <ResponsiveContainer width="100%" height={240}>
-                  <LineChart data={seriePeso}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis dataKey="rotulo" tick={{ fill: COR_EIXO, fontSize: 11 }} />
-                    <YAxis domain={['dataMin - 1', 'dataMax + 1']} tick={{ fill: COR_EIXO, fontSize: 11 }} />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="peso" stroke={COR_LIME} strokeWidth={3} dot={{ r: 3 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className={estilos.vazioGrafico}>
-                  Precisa de pelo menos 2 registros de peso no período para desenhar a linha.
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </section>
-  );
+    {estado === 'pronto' && temDados && <><div className={estilos.gradeResumo}>{METRICAS.map(([chave, rotulo, unidade]) => { const atual = relatorio.atual[chave]; const comparacao = calcularComparacao(atual, relatorio.anterior[chave]); return <article key={chave}><span>{rotulo}</span><strong>{atual == null ? 'Dados insuficientes' : `${formatarNumeroRelatorio(atual)}${unidade ? ` ${unidade}` : ''}`}</strong><small>{comparacao == null ? 'Sem base no período anterior' : `${comparacao > 0 ? '+' : ''}${formatarNumeroRelatorio(comparacao)}% vs. período anterior`}</small></article>; })}</div>
+      <div className={estilos.gradeGraficos}>
+        <article className={estilos.cartao}><h3 className={estilos.cartaoTitulo}>Calorias por dia (kcal)</h3>{relatorio.serie.some((item) => item.calorias > 0) ? <div className={estilos.grafico}><ResponsiveContainer width="100%" height={240}><BarChart data={relatorio.serie}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" /><XAxis dataKey="data" tickFormatter={formatarData} /><YAxis /><Tooltip labelFormatter={formatarData} formatter={(valor) => [`${valor} kcal`, 'Calorias']} /><Bar dataKey="calorias" fill="var(--brand)" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer></div> : <p className={estilos.vazioGrafico}>Nenhuma refeição registrada. <Link to="/dashboard/dieta">Registrar alimentação</Link></p>}</article>
+        <article className={estilos.cartao}><h3 className={estilos.cartaoTitulo}>Evolução do peso (kg)</h3>{seriePeso.length >= 2 ? <div className={estilos.grafico}><ResponsiveContainer width="100%" height={240}><LineChart data={seriePeso}><CartesianGrid strokeDasharray="3 3" stroke="var(--border)" /><XAxis dataKey="data" tickFormatter={formatarData} /><YAxis domain={['dataMin - 1', 'dataMax + 1']} /><Tooltip labelFormatter={formatarData} formatter={(valor) => [`${formatarNumeroRelatorio(valor)} kg`, 'Peso']} /><Line type="monotone" dataKey="peso" stroke="var(--brand)" strokeWidth={3} /></LineChart></ResponsiveContainer></div> : <p className={estilos.vazioGrafico}>São necessários dois pesos no período. <Link to="/dashboard/evolucao">Registrar peso</Link></p>}</article>
+        <article className={estilos.cartao}><h3 className={estilos.cartaoTitulo}>Volume por grupo muscular (kg)</h3>{relatorio.volumePorGrupo.length ? <ul className={estilos.listaVolume}>{relatorio.volumePorGrupo.map((item) => <li key={item.grupoMuscular}><span>{item.grupoMuscular}</span><strong>{formatarNumeroRelatorio(item.volumeKg)} kg</strong></li>)}</ul> : <p className={estilos.vazioGrafico}>Conclua séries com carga para calcular o volume. <Link to="/dashboard/treino">Abrir treino</Link></p>}</article>
+      </div></>}
+  </section>;
 }

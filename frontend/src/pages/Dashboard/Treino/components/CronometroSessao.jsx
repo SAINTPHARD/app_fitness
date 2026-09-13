@@ -1,4 +1,5 @@
 import { Pause, Play } from 'lucide-react';
+import PropTypes from 'prop-types';
 import { formatarDuracao } from '../hooks/useCronometro';
 
 /**
@@ -34,3 +35,5 @@ export default function CronometroSessao({ segundos, rodando, aoIniciar, aoPausa
     </div>
   );
 }
+
+CronometroSessao.propTypes = { segundos: PropTypes.number.isRequired, rodando: PropTypes.bool.isRequired, aoIniciar: PropTypes.func.isRequired, aoPausar: PropTypes.func.isRequired, aoRetomar: PropTypes.func.isRequired, jaComecou: PropTypes.bool.isRequired };

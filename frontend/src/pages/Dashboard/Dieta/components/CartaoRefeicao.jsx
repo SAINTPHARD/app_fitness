@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { obterIconeAlimento, obterIconeRefeicao, PALETA_FUNDO_ICONE } from '../utils/iconesAlimento';
 import {
@@ -42,6 +43,7 @@ export default function CartaoRefeicao({
   const [erroSalvar, setErroSalvar] = useState(null);
   const [alimentosRascunho, setAlimentosRascunho] = useState([]);
   const [confirmandoExclusaoId, setConfirmandoExclusaoId] = useState(null);
+  const [ultimoAlimentoRemovido, setUltimoAlimentoRemovido] = useState(null);
   const [confirmandoExclusaoRefeicao, setConfirmandoExclusaoRefeicao] = useState(false);
   // Refeição já concluída: o formulário de "Novo alimento" fica escondido por
   // padrão (a refeição já está "fechada") e só aparece quando o usuário clica
@@ -111,7 +113,8 @@ export default function CartaoRefeicao({
     try {
       let idAtual = refeicao.id;
       for (const alimento of alimentosRascunho) {
-        const { tempId, ...alimentoParaEnviar } = alimento;
+        const alimentoParaEnviar = { ...alimento };
+        delete alimentoParaEnviar.tempId;
         idAtual = (await aoAdicionarAlimento(idAtual, alimentoParaEnviar)) ?? idAtual;
       }
       await aoConcluir(idAtual);
@@ -154,6 +157,37 @@ export default function CartaoRefeicao({
     } catch (err) {
       console.error('Erro ao remover refeição:', err);
       setErroSalvar('Não foi possível remover a refeição.');
+      setSalvando(false);
+    }
+  };
+
+  const removerAlimentoComDesfazer = async (alimento) => {
+    if (!aoRemoverAlimento || salvando) return;
+    setSalvando(true);
+    setErroSalvar(null);
+    try {
+      await aoRemoverAlimento(refeicao.id, alimento.id);
+      setUltimoAlimentoRemovido(alimento);
+      setConfirmandoExclusaoId(null);
+    } catch (err) {
+      setErroSalvar(err?.message || 'Não foi possível remover o alimento.');
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  const desfazerRemocaoAlimento = async () => {
+    if (!ultimoAlimentoRemovido || !aoAdicionarAlimento || salvando) return;
+    const alimentoParaRestaurar = { ...ultimoAlimentoRemovido };
+    delete alimentoParaRestaurar.id;
+    setSalvando(true);
+    setErroSalvar(null);
+    try {
+      await aoAdicionarAlimento(refeicao.id, alimentoParaRestaurar);
+      setUltimoAlimentoRemovido(null);
+    } catch (err) {
+      setErroSalvar(err?.message || 'Não foi possível restaurar o alimento.');
+    } finally {
       setSalvando(false);
     }
   };
@@ -263,19 +297,19 @@ export default function CartaoRefeicao({
     <article className={`mb-4 rounded-3xl bg-white shadow-xl shadow-slate-200/50 transition-all dark:bg-zinc-800 dark:shadow-none ${excedeuAlgumaMeta ? 'ring-2 ring-rose-300' : ''}`}>
       <div className="flex w-full min-w-0 items-center justify-between gap-2 px-4 py-4 sm:gap-3 sm:px-5">
         <button type="button" onClick={aoAlternarExpandida} aria-expanded={expandida} className="flex min-w-0 flex-1 items-center gap-3 text-left transition-opacity hover:opacity-90">
-          <span aria-hidden="true"><IconeRefeicao size={20} className="text-lime-600 dark:text-lime-400" /></span>
+          <span aria-hidden="true"><IconeRefeicao size={20} className="text-brand" /></span>
           <span className="truncate font-bold text-slate-800 dark:text-zinc-50">{refeicao.nome}</span>
         </button>
 
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-slate-400 dark:text-zinc-500">{refeicao.horario}</span>
-          <span className={`hidden text-[11px] font-bold uppercase tracking-wider sm:inline ${concluida ? 'text-lime-600 dark:text-lime-400' : 'text-amber-500 dark:text-amber-400'}`}>
+          <span className={`hidden text-[11px] font-bold uppercase tracking-wider sm:inline ${concluida ? 'text-brand' : 'text-amber-500 dark:text-amber-400'}`}>
             {concluida ? 'Concluída' : 'Aguardando'}
           </span>
-          <span className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all ${concluida ? 'border-lime-400 bg-lime-400 text-zinc-900' : 'border-slate-200 text-transparent dark:border-zinc-600'}`}>
+          <span className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all ${concluida ? 'border-brand bg-brand text-brand-ink' : 'border-slate-200 text-transparent dark:border-zinc-600'}`}>
             <Check size={13} strokeWidth={3} />
           </span>
-          <button type="button" onClick={() => !expandida && aoAlternarExpandida()} className="flex h-7 w-7 items-center justify-center rounded-xl bg-lime-100 text-lime-700 transition-colors hover:bg-lime-200 dark:bg-lime-400/10 dark:text-lime-300" title="Adicionar alimento" aria-label="Adicionar alimento">
+          <button type="button" onClick={() => !expandida && aoAlternarExpandida()} className="flex h-7 w-7 items-center justify-center rounded-xl bg-brand-soft text-brand-soft-ink transition-colors hover:opacity-80" title="Adicionar alimento" aria-label="Adicionar alimento">
             <Plus size={15} strokeWidth={2.5} />
           </button>
           {aoEditarRefeicao && (
@@ -305,9 +339,9 @@ export default function CartaoRefeicao({
 
       {editandoRefeicao && (
         <form onSubmit={salvarEdicaoRefeicao} className="mx-5 mb-4 grid gap-2 rounded-2xl bg-slate-50 p-3 dark:bg-zinc-900/40 sm:grid-cols-[1fr_auto_auto_auto]">
-          <input type="text" value={rascunhoRefeicao.nome} onChange={(e) => setRascunhoRefeicao((p) => ({ ...p, nome: e.target.value }))} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-lime-400 focus:ring-4 focus:ring-lime-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" aria-label="Nome da refeição" />
-          <input type="time" value={rascunhoRefeicao.horario} onChange={(e) => setRascunhoRefeicao((p) => ({ ...p, horario: e.target.value }))} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-lime-400 focus:ring-4 focus:ring-lime-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" aria-label="Horário da refeição" />
-          <button type="submit" disabled={salvando} className="rounded-xl bg-zinc-900 px-3 py-2 text-xs font-bold text-white disabled:opacity-60 dark:bg-lime-400 dark:text-zinc-900">Salvar</button>
+          <input type="text" value={rascunhoRefeicao.nome} onChange={(e) => setRascunhoRefeicao((p) => ({ ...p, nome: e.target.value }))} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-brand focus:ring-4 focus:ring-brand-soft dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" aria-label="Nome da refeição" />
+          <input type="time" value={rascunhoRefeicao.horario} onChange={(e) => setRascunhoRefeicao((p) => ({ ...p, horario: e.target.value }))} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-brand focus:ring-4 focus:ring-brand-soft dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" aria-label="Horário da refeição" />
+          <button type="submit" disabled={salvando} className="rounded-xl bg-brand px-3 py-2 text-xs font-bold text-brand-ink disabled:opacity-60">Salvar</button>
           <button type="button" onClick={() => setEditandoRefeicao(false)} className="rounded-xl bg-slate-200 px-3 py-2 text-xs font-bold text-slate-600 dark:bg-zinc-700 dark:text-zinc-300">Cancelar</button>
         </form>
       )}
@@ -315,7 +349,7 @@ export default function CartaoRefeicao({
       {expandida && (
         <div className="flex flex-col gap-4 border-t border-slate-100 px-5 pb-5 pt-4 dark:border-zinc-700">
           {aoConcluir && (
-            <button type="button" onClick={salvarRefeicao} disabled={salvando || concluida || !podeSalvar} className={`inline-flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all ${concluida ? 'bg-lime-50 text-lime-600 dark:bg-lime-400/10 dark:text-lime-300' : podeSalvar ? 'bg-lime-400 text-zinc-900 hover:scale-[1.01]' : 'cursor-not-allowed bg-slate-100 text-slate-400 opacity-60 dark:bg-zinc-700/50 dark:text-zinc-500'}`}>
+            <button type="button" onClick={salvarRefeicao} disabled={salvando || concluida || !podeSalvar} className={`inline-flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all ${concluida ? 'bg-brand-soft text-brand-soft-ink' : podeSalvar ? 'bg-brand text-brand-ink hover:scale-[1.01]' : 'cursor-not-allowed bg-slate-100 text-slate-400 opacity-60 dark:bg-zinc-700/50 dark:text-zinc-500'}`}>
               <Check size={15} strokeWidth={2.5} />
               {concluida ? 'Concluída' : salvando ? 'Salvando...' : 'Salvar refeição'}
             </button>
@@ -343,17 +377,17 @@ export default function CartaoRefeicao({
                   {indiceEmEdicao === indice ? (
                     <form noValidate onSubmit={(evento) => salvarEdicao(evento, indice, alimento.id)} className="flex flex-col gap-2 rounded-2xl bg-slate-50 p-3 dark:bg-zinc-900/40">
                       <BuscaAlimento valor={rascunhoEdicao.nome} aoDigitar={(nome) => setRascunhoEdicao((p) => ({ ...p, nome, alimentoRef: null }))} aoSelecionar={selecionarAlimentoRef(setRascunhoEdicao)} />
-                      <input type="text" inputMode="decimal" placeholder="Quantidade (ex: 200ml)" value={rascunhoEdicao.quantidade} onChange={(e) => { alterarQuantidade(setRascunhoEdicao)(e.target.value); setErroValidacaoEdicao(null); }} className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                      <input type="text" inputMode="decimal" placeholder="Quantidade (ex: 200ml)" value={rascunhoEdicao.quantidade} onChange={(e) => { alterarQuantidade(setRascunhoEdicao)(e.target.value); setErroValidacaoEdicao(null); }} className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-800 outline-none focus:border-brand dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
                       <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-3">
                         {['proteina', 'carboidratos', 'gordura'].map((campo) => (
-                          <input key={campo} type="number" step="0.1" min="0" max={LIMITES_ALIMENTO[campo]} value={rascunhoEdicao[campo]} onChange={(e) => { setRascunhoEdicao((p) => ({ ...p, [campo]: e.target.value })); setErroValidacaoEdicao(null); }} className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                          <input key={campo} type="number" step="0.1" min="0" max={LIMITES_ALIMENTO[campo]} value={rascunhoEdicao[campo]} onChange={(e) => { setRascunhoEdicao((p) => ({ ...p, [campo]: e.target.value })); setErroValidacaoEdicao(null); }} className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-800 outline-none focus:border-brand dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
                         ))}
                       </div>
                       {erroValidacaoEdicao && (
                         <span className="w-fit rounded-full bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">{erroValidacaoEdicao}</span>
                       )}
                       <div className="flex gap-2">
-                        <button type="submit" disabled={!!erroValidacaoEdicao} className="flex-1 rounded-lg bg-zinc-900 py-2 text-xs font-bold text-white disabled:opacity-60 dark:bg-lime-400 dark:text-zinc-900">Salvar</button>
+                        <button type="submit" disabled={!!erroValidacaoEdicao} className="flex-1 rounded-lg bg-brand py-2 text-xs font-bold text-brand-ink disabled:opacity-60">Salvar</button>
                         <button type="button" onClick={() => { setIndiceEmEdicao(null); setErroValidacaoEdicao(null); }} className="rounded-lg bg-slate-200 px-3 py-2 text-xs font-bold text-slate-600 dark:bg-zinc-700 dark:text-zinc-300">Cancelar</button>
                       </div>
                     </form>
@@ -376,7 +410,7 @@ export default function CartaoRefeicao({
                           confirmandoExclusaoId === alimento.id ? (
                             <span className="flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300">
                               Remover?
-                              <button type="button" onClick={() => { aoRemoverAlimento(refeicao.id, alimento.id); setConfirmandoExclusaoId(null); }} className="hover:underline">Sim</button>
+                              <button type="button" onClick={() => removerAlimentoComDesfazer(alimento)} disabled={salvando} className="hover:underline">Sim</button>
                               <button type="button" onClick={() => setConfirmandoExclusaoId(null)} className="text-slate-400 hover:underline">Não</button>
                             </span>
                           ) : (
@@ -393,9 +427,18 @@ export default function CartaoRefeicao({
             <p className="m-0 text-sm text-slate-400 dark:text-zinc-500">Nenhum alimento registrado</p>
           )}
 
+          <div aria-live="polite" aria-atomic="true">
+            {ultimoAlimentoRemovido && (
+              <p className="m-0 flex items-center justify-between gap-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
+                “{ultimoAlimentoRemovido.nome}” removido.
+                <button type="button" onClick={desfazerRemocaoAlimento} disabled={salvando} className="font-bold underline">Desfazer</button>
+              </p>
+            )}
+          </div>
+
           {!concluida && alimentosRascunho.length > 0 && (
-            <div className="flex flex-col gap-2 rounded-2xl border-2 border-dashed border-lime-300 bg-lime-50/40 p-3 dark:border-lime-400/30 dark:bg-lime-400/5">
-              <span className="text-xs font-bold text-lime-700 dark:text-lime-300">Prévia: {totaisRascunho.calorias} kcal · P {totaisRascunho.proteina.toFixed(1)}g · C {totaisRascunho.carboidratos.toFixed(1)}g · G {totaisRascunho.gordura.toFixed(1)}g</span>
+            <div className="flex flex-col gap-2 rounded-2xl border-2 border-dashed border-brand bg-brand-soft p-3">
+              <span className="text-xs font-bold text-brand-soft-ink">Prévia: {totaisRascunho.calorias} kcal · P {totaisRascunho.proteina.toFixed(1)}g · C {totaisRascunho.carboidratos.toFixed(1)}g · G {totaisRascunho.gordura.toFixed(1)}g</span>
               {alimentosRascunho.map((alimento) => (
                 <div key={alimento.tempId} className="flex items-center justify-between rounded-xl bg-white px-3 py-2 dark:bg-zinc-800">
                   <span className="text-sm font-semibold text-slate-700 dark:text-zinc-200">{alimento.nome}</span>
@@ -413,7 +456,7 @@ export default function CartaoRefeicao({
             <button
               type="button"
               onClick={() => setMostrarAdicionarAlimento(true)}
-              className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-lime-300 py-2.5 text-sm font-bold text-lime-700 transition-colors hover:bg-lime-50 dark:border-lime-400/30 dark:text-lime-300 dark:hover:bg-lime-400/10"
+              className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-brand py-2.5 text-sm font-bold text-brand-soft-ink transition-colors hover:bg-brand-soft"
             >
               <Plus size={14} strokeWidth={2.5} /> Adicionar alimento
             </button>
@@ -438,17 +481,17 @@ export default function CartaoRefeicao({
                 )}
               </div>
               <BuscaAlimento valor={novoAlimento.nome} aoDigitar={(nome) => setNovoAlimento((p) => ({ ...p, nome, alimentoRef: null }))} aoSelecionar={selecionarAlimentoRef(setNovoAlimento)} />
-              <input type="text" inputMode="decimal" placeholder="Quantidade (ex: 150g ou 200ml)" value={novoAlimento.quantidade} onChange={(e) => { alterarQuantidade(setNovoAlimento)(e.target.value); setErroValidacaoNovoAlimento(null); }} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+              <input type="text" inputMode="decimal" placeholder="Quantidade (ex: 150g ou 200ml)" value={novoAlimento.quantidade} onChange={(e) => { alterarQuantidade(setNovoAlimento)(e.target.value); setErroValidacaoNovoAlimento(null); }} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-brand dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
               <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-3">
                 {['proteina', 'carboidratos', 'gordura'].map((campo) => (
-                  <input key={campo} type="number" step="0.1" min="0" max={LIMITES_ALIMENTO[campo]} placeholder={campo === 'proteina' ? 'Prot' : campo === 'carboidratos' ? 'Carb' : 'Gord'} value={novoAlimento[campo]} onChange={(e) => { setNovoAlimento((p) => ({ ...p, [campo]: e.target.value })); setErroValidacaoNovoAlimento(null); }} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-lime-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
+                  <input key={campo} type="number" step="0.1" min="0" max={LIMITES_ALIMENTO[campo]} placeholder={campo === 'proteina' ? 'Prot' : campo === 'carboidratos' ? 'Carb' : 'Gord'} value={novoAlimento[campo]} onChange={(e) => { setNovoAlimento((p) => ({ ...p, [campo]: e.target.value })); setErroValidacaoNovoAlimento(null); }} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-brand dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100" />
                 ))}
               </div>
               {erroValidacaoNovoAlimento && (
                 <span className="w-fit rounded-full bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">{erroValidacaoNovoAlimento}</span>
               )}
-              <span className="w-fit rounded-full bg-lime-50 px-2.5 py-1 text-xs font-bold text-lime-700 dark:bg-lime-400/10 dark:text-lime-300">Prévia: {Math.round(calcularCaloriasPelosMacros(novoAlimento.proteina, novoAlimento.carboidratos, novoAlimento.gordura))} kcal</span>
-              <button type="submit" disabled={adicionandoAlimento || !!erroValidacaoNovoAlimento} className="flex items-center justify-center gap-2 rounded-xl bg-zinc-900 py-2.5 text-sm font-bold text-white disabled:opacity-60 dark:bg-lime-400 dark:text-zinc-900"><Plus size={14} strokeWidth={2.5} /> {adicionandoAlimento ? 'Adicionando...' : 'Adicionar'}</button>
+              <span className="w-fit rounded-full bg-brand-soft px-2.5 py-1 text-xs font-bold text-brand-soft-ink">Prévia: {Math.round(calcularCaloriasPelosMacros(novoAlimento.proteina, novoAlimento.carboidratos, novoAlimento.gordura))} kcal</span>
+              <button type="submit" disabled={adicionandoAlimento || !!erroValidacaoNovoAlimento} className="flex items-center justify-center gap-2 rounded-xl bg-brand py-2.5 text-sm font-bold text-brand-ink disabled:opacity-60"><Plus size={14} strokeWidth={2.5} /> {adicionandoAlimento ? 'Adicionando...' : 'Adicionar'}</button>
             </form>
           )}
         </div>
@@ -456,3 +499,37 @@ export default function CartaoRefeicao({
     </article>
   );
 }
+
+const alimentoShape = PropTypes.shape({
+  id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+  nome: PropTypes.string,
+  quantidade: PropTypes.string,
+  calorias: PropTypes.number,
+  proteina: PropTypes.number,
+  carboidratos: PropTypes.number,
+  gordura: PropTypes.number,
+});
+
+CartaoRefeicao.propTypes = {
+  refeicao: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+    nome: PropTypes.string.isRequired,
+    horario: PropTypes.string,
+    status: PropTypes.string,
+    alimentos: PropTypes.arrayOf(alimentoShape),
+  }).isRequired,
+  metas: PropTypes.shape({
+    calorias: PropTypes.number,
+    proteinas: PropTypes.number,
+    carboidratos: PropTypes.number,
+    gorduras: PropTypes.number,
+  }).isRequired,
+  expandida: PropTypes.bool.isRequired,
+  aoAlternarExpandida: PropTypes.func.isRequired,
+  aoAdicionarAlimento: PropTypes.func.isRequired,
+  aoRemoverAlimento: PropTypes.func,
+  aoEditarAlimento: PropTypes.func,
+  aoEditarRefeicao: PropTypes.func,
+  aoRemoverRefeicao: PropTypes.func,
+  aoConcluir: PropTypes.func,
+};

@@ -6,15 +6,13 @@
      expande ao hover, sobrepõe o conteúdo em vez de empurrar o layout. */
   min-height: 100vh;
   padding: 1.5rem 1.5rem 1.5rem 6.5rem;
-  background: #f1f5f9;
+  background: var(--bg-primary);
   transition: background-color 0.2s ease;
 }
 
 /* A sidebar permanece escura nos dois temas (visual "premium" intencional);
    só a área de conteúdo inverte quando o usuário liga o modo escuro. */
-:root[data-theme='dark'] .dashboard {
-  background: #0b1120;
-}
+:root[data-theme='dark'] .dashboard { background: var(--bg-primary); }
 
 .main {
   display: flex;
@@ -29,12 +27,6 @@
   flex-direction: column;
   gap: 1.5rem;
   padding: 0.5rem 0 1rem;
-}
-
-@media (max-width: 860px) {
-  .dashboard {
-    padding: 1rem 1rem 1rem 6rem;
-  }
 }
 
 @media (max-width: 767px) {

@@ -171,6 +171,11 @@ export const fitnessApi = {
     return response.data || [];
   },
 
+  obterFotoPrivada: async (id) => {
+    const response = await api.get(`/evolucao/fotos/${id}/imagem`, { responseType: 'blob' });
+    return URL.createObjectURL(response.data);
+  },
+
   criarFoto: async (foto) => {
     const response = await api.post('/evolucao/fotos', foto);
     return response.data;
@@ -183,6 +188,19 @@ export const fitnessApi = {
 
   removerFoto: async (id) => {
     await api.delete(`/evolucao/fotos/${id}`);
+  },
+
+  obterRelatorioConsolidado: async (dias) => {
+    const response = await api.get('/relatorios/consolidado', { params: { dias } });
+    return response.data;
+  },
+
+  alterarSenha: async (senhaAtual, novaSenha) => {
+    await api.put('/usuarios/me/senha', { senhaAtual, novaSenha });
+  },
+
+  excluirMinhaConta: async (senhaAtual, confirmacao) => {
+    await api.delete('/usuarios/me', { data: { senhaAtual, confirmacao } });
   },
 
   // ==========================================

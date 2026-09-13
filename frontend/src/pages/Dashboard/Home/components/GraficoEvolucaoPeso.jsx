@@ -1,110 +1,117 @@
 import { useState } from 'react';
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { obterDataDeHojeISO, formatarDataParaExibicaoBr } from '../../Dieta/utils/calendario';
-import estilos from './GraficoEvolucaoPeso.module.css';
+import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom';
+import { Target } from 'lucide-react';
 
-const COR_TEXTO_EIXO = '#64748b';
-const COR_BORDA = '#dbe2ef';
-const COR_LINHA = '#a3e635';
+const CHAVE_PREFERENCIAS_LOCAIS = 'perfil-preferencias-locais';
 
 /**
- * Linha de evolução do peso, construída a partir do histórico local
- * registrado em `usePerfilResumo` (um ponto por dia, a partir do peso
- * cadastrado no Perfil). Sem pelo menos 2 pontos, mostramos um estado
- * vazio em vez de inventar uma tendência.
+ * `pesoAlvo` (meta de peso) ainda não tem coluna no backend — o Onboarding
+ * já salva esse valor só em localStorage (ver `Onboarding/index.jsx`), então
+ * lemos daqui pela mesma chave, sem inventar uma nova fonte de dado.
  */
-export default function GraficoEvolucaoPeso({ historicoPeso, variacaoPeso, aoRegistrarPeso }) {
-  const [peso, setPeso] = useState('');
-  const [data, setData] = useState(obterDataDeHojeISO());
-  const [salvando, setSalvando] = useState(false);
-  const [erro, setErro] = useState('');
-  const temHistoricoSuficiente = historicoPeso.length >= 2;
-  const ultimoPeso = historicoPeso.length > 0 ? historicoPeso[historicoPeso.length - 1].peso : null;
-  const registrosFaltantes = Math.max(0, 2 - historicoPeso.length);
+function lerPesoAlvoSalvo() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const salvo = window.localStorage.getItem(CHAVE_PREFERENCIAS_LOCAIS);
+    const preferencias = salvo ? JSON.parse(salvo) : null;
+    const valor = Number(preferencias?.pesoAlvo);
+    return Number.isFinite(valor) && valor > 0 ? valor : null;
+  } catch {
+    return null;
+  }
+}
 
-  const salvarPeso = async (evento) => {
-    evento.preventDefault();
-    if (!aoRegistrarPeso) return;
+/**
+ * Widget "Evolução do peso" da Home: peso atual em destaque, meta ao lado e
+ * uma barra ligando os dois — reaproveita o mesmo histórico de peso já
+ * carregado por `usePerfilResumo` (usado também pela Dieta/Evolução), sem
+ * duplicar nenhuma chamada de API. O gráfico de linha completo continua
+ * disponível na página Evolução; aqui o recorte é só o "onde estou vs.
+ * onde quero chegar" pedido para este card.
+ */
+export default function GraficoEvolucaoPeso({ historicoPeso, variacaoPeso, exibirCtaRegistro = false }) {
+  const [metaPeso] = useState(lerPesoAlvoSalvo);
 
-    setErro('');
-    setSalvando(true);
-    try {
-      await aoRegistrarPeso({ data, peso });
-      setPeso('');
-    } catch (error) {
-      setErro(error?.message || 'Não foi possível registrar o peso.');
-    } finally {
-      setSalvando(false);
-    }
-  };
+  const temPesoRegistrado = historicoPeso.length > 0;
+  const pesoAtual = temPesoRegistrado ? historicoPeso[historicoPeso.length - 1].peso : null;
+  const pesoInicial = temPesoRegistrado ? historicoPeso[0].peso : null;
+
+  let progresso = null;
+  if (pesoAtual != null && pesoInicial != null && metaPeso != null) {
+    const distanciaTotal = Math.abs(pesoInicial - metaPeso);
+    const distanciaPercorrida = Math.abs(pesoInicial - pesoAtual);
+    progresso = distanciaTotal > 0 ? Math.min(100, Math.max(0, Math.round((distanciaPercorrida / distanciaTotal) * 100))) : 100;
+  }
+
+  let mensagemIncentivo = 'Continue registrando seu peso para acompanhar sua evolução.';
+  if (progresso !== null) {
+    if (progresso >= 100) mensagemIncentivo = 'Meta alcançada! Continue mantendo o ritmo.';
+    else if (progresso >= 50) mensagemIncentivo = 'Você já percorreu mais da metade do caminho até a meta.';
+    else mensagemIncentivo = 'Cada registro te aproxima da sua meta.';
+  }
 
   return (
-    <div className={estilos.cartao}>
-      <div className={estilos.cabecalho}>
-        <div>
-          <h3 className={estilos.titulo}>Evolução do peso</h3>
-          <p className={estilos.subtitulo}>{ultimoPeso !== null ? `${ultimoPeso} kg` : '--- kg'}</p>
-        </div>
-        {variacaoPeso !== null && (
-          <span className={estilos.variacao}>
-            {variacaoPeso <= 0 ? '↓' : '↑'} {Math.abs(variacaoPeso)}kg
-          </span>
-        )}
-      </div>
+    <article className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6 shadow-sm">
+      <h3 className="m-0 text-base font-bold text-content">Evolução do peso</h3>
 
-      {temHistoricoSuficiente ? (
-        <div className={estilos.areaGrafico}>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={historicoPeso} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-              <XAxis
-                dataKey="data"
-                tickFormatter={formatarDataParaExibicaoBr}
-                tick={{ fill: COR_TEXTO_EIXO, fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                domain={['dataMin - 1', 'dataMax + 1']}
-                tick={{ fill: COR_TEXTO_EIXO, fontSize: 12 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                contentStyle={{ borderRadius: 12, border: `1px solid ${COR_BORDA}`, fontSize: 13 }}
-                formatter={(valor) => [`${valor} kg`, 'Peso']}
-              />
-              <Line type="monotone" dataKey="peso" stroke={COR_LINHA} strokeWidth={3} dot={{ r: 4, fill: COR_LINHA }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      ) : (
-        <div className={estilos.vazio}>
-          <p>
-            {historicoPeso.length === 1
-              ? `Último peso: ${ultimoPeso} kg. Falta 1 registro para exibir o gráfico.`
-              : `Faltam ${registrosFaltantes} registros para exibir o gráfico de evolução.`}
-          </p>
-          {aoRegistrarPeso && (
-            <form className={estilos.formPesoRapido} onSubmit={salvarPeso}>
-              <input type="date" value={data} onChange={(evento) => setData(evento.target.value)} required />
-              <input
-                type="number"
-                min="20"
-                max="300"
-                step="0.1"
-                placeholder="Peso (kg)"
-                value={peso}
-                onChange={(evento) => setPeso(evento.target.value)}
-                required
-              />
-              <button type="submit" disabled={salvando}>
-                {salvando ? 'Salvando...' : 'Registrar peso'}
-              </button>
-            </form>
+      {temPesoRegistrado ? (
+        <>
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="m-0 text-xs font-semibold text-subtle">Peso atual</p>
+              <p className="m-0 text-2xl font-bold text-content">
+                {pesoAtual} <span className="text-sm font-semibold text-subtle">kg</span>
+              </p>
+              {variacaoPeso !== null && (
+                <p className="m-0 mt-0.5 text-xs font-semibold text-subtle">
+                  {variacaoPeso <= 0 ? '↓' : '↑'} {Math.abs(variacaoPeso)} kg desde o primeiro registro
+                </p>
+              )}
+            </div>
+            <div className="text-right">
+              <p className="m-0 text-xs font-semibold text-subtle">Peso meta</p>
+              {metaPeso != null ? (
+                <p className="m-0 text-2xl font-bold text-brand">
+                  {metaPeso} <span className="text-sm font-semibold text-subtle">kg</span>
+                </p>
+              ) : (
+                <Link to="/dashboard/perfil" className="text-xs font-bold text-brand hover:opacity-80">
+                  Definir meta →
+                </Link>
+              )}
+            </div>
+          </div>
+
+          {progresso !== null && (
+            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${progresso}%` }} />
+            </div>
           )}
-          {erro && <span className={estilos.erro}>{erro}</span>}
+
+          <p className="m-0 flex items-center gap-2 text-xs font-semibold text-secondary">
+            <Target size={14} strokeWidth={2.5} className="shrink-0 text-brand" aria-hidden="true" />
+            {mensagemIncentivo}
+          </p>
+        </>
+      ) : (
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 py-4 text-center">
+          <p className="m-0 text-sm text-subtle">
+            Registre seu peso para acompanhar a evolução aqui.
+          </p>
+          {exibirCtaRegistro && (
+            <Link to="/dashboard/evolucao" className="text-xs font-bold text-brand hover:opacity-80">
+              Registrar peso em Evolução
+            </Link>
+          )}
         </div>
       )}
-    </div>
+    </article>
   );
 }
+
+GraficoEvolucaoPeso.propTypes = {
+  historicoPeso: PropTypes.arrayOf(PropTypes.shape({ data: PropTypes.string, peso: PropTypes.number })).isRequired,
+  variacaoPeso: PropTypes.number,
+  exibirCtaRegistro: PropTypes.bool,
+};

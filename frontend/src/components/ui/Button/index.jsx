@@ -1,4 +1,5 @@
 import './button.css';
+import PropTypes from 'prop-types';
 
 export default function Button({ children, variant = 'primary', type = 'button', onClick, disabled }) {
   return (
@@ -12,3 +13,5 @@ export default function Button({ children, variant = 'primary', type = 'button',
     </button>
   );
 }
+
+Button.propTypes = { children: PropTypes.node.isRequired, variant: PropTypes.string, type: PropTypes.string, onClick: PropTypes.func, disabled: PropTypes.bool };

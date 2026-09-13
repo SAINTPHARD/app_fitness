@@ -22,4 +22,6 @@ public interface PesoRegistroRepository extends JpaRepository<PesoRegistro, Long
 
     // Garante que exista apenas um registro de peso por usuário por dia.
     Optional<PesoRegistro> findByUsuarioIdAndData(Long usuarioId, LocalDate data);
+
+    List<PesoRegistro> findByUsuarioIdAndDataBetweenOrderByDataAsc(Long usuarioId, LocalDate inicio, LocalDate fim);
 }

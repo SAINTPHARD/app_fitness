@@ -63,9 +63,9 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 		// 1. Registra o evento de acesso não autorizado
 		// =====================================================
 
-		logger.warn(
-				"Acesso não autorizado na rota protegida: {}",
-				authException.getMessage());
+		// 401 é um resultado esperado do protocolo, não uma falha operacional.
+		// A métrica agregada é registrada pelo filtro de observabilidade.
+		logger.debug("Requisição não autenticada rejeitada");
 
 		// =====================================================
 		// 2. Configura a resposta HTTP
@@ -83,8 +83,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 		body.put("timestamp", Instant.now().toString());
 		body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
 		body.put("error", "Unauthorized");
-		body.put("message", authException.getMessage());
-		body.put("path", request.getRequestURI());
+		body.put("message", "Autenticação necessária para acessar este recurso.");
+		body.put("requestId", response.getHeader("X-Request-ID"));
 
 		// =====================================================
 		// 4. Converte o objeto para JSON e envia ao cliente

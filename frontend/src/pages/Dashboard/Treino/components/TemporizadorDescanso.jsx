@@ -1,4 +1,5 @@
 import { Minus, Pause, Play, Plus, RotateCcw, X } from 'lucide-react';
+import PropTypes from 'prop-types';
 import { DURACOES_PADRAO_SEGUNDOS } from '../hooks/useTemporizadorDescanso';
 
 function formatarMMSS(totalSegundos) {
@@ -6,6 +7,8 @@ function formatarMMSS(totalSegundos) {
   const segundos = totalSegundos % 60;
   return `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
 }
+
+TemporizadorDescanso.propTypes = { temporizador: PropTypes.object.isRequired };
 
 /**
  * Painel do descanso entre séries. Quando `finalizado`, o card pulsa

@@ -3,7 +3,7 @@ import { useFichasTreino } from './hooks/useFichasTreino';
 import { useSessaoExecucao } from './hooks/useSessaoExecucao';
 import { useCronometro } from './hooks/useCronometro';
 import { useTemporizadorDescanso } from './hooks/useTemporizadorDescanso';
-import { DIAS_SEMANA, obterIdDiaDaSemanaAtual } from './utils/diasSemana';
+import { DIAS_SEMANA, ehDiaDeDescanso, obterIdDiaDaSemanaAtual } from './utils/diasSemana';
 import { contarExerciciosConcluidos } from './utils/progressoTreino';
 import { notificarErro, notificarSucesso } from '../../../utils/notificacoes';
 import CardExercicioExecucao from './components/CardExercicioExecucao';
@@ -46,6 +46,7 @@ export default function TreinoPage() {
   const treinoDoDia = treinosPorDia[diaSelecionado] || null;
   const exerciciosDoDia = treinoDoDia?.exercicios || [];
   const diaAtualInfo = DIAS_SEMANA.find((d) => d.id === diaSelecionado);
+  const diaDeDescanso = ehDiaDeDescanso(diaSelecionado) && exerciciosDoDia.length === 0;
 
   const {
     sessao,
@@ -109,6 +110,7 @@ export default function TreinoPage() {
       nome: exercicioExterno.name,
       seriesPadrao: '3x10',
       descricao: exercicioExterno.instructions,
+      grupoMuscular: exercicioExterno.muscle || musculoCatalogoExterno,
     };
 
     const jaExiste = exerciciosDoDia.some(
@@ -195,9 +197,7 @@ export default function TreinoPage() {
             <p>
               {treinoDoDia?.nomeTreino || diaAtualInfo?.foco} — {diaAtualInfo?.label}
             </p>
-            <strong>
-              {exerciciosComProgresso} de {totalExercicios} exercícios concluídos
-            </strong>
+            <strong>{diaDeDescanso ? 'Descanso programado' : `${exerciciosComProgresso} de ${totalExercicios} exercícios concluídos`}</strong>
           </div>
           <div className="cabecalhoSessaoAcoes">
             {!online ? (
@@ -205,7 +205,7 @@ export default function TreinoPage() {
             ) : filaPendente.length > 0 ? (
               <span className="indicadorConexao indicadorConexaoSincronizando">Sincronizando…</span>
             ) : null}
-            <span className={`statusSessaoBadge statusSessao-${statusSessao}`}>{ROTULO_STATUS[statusSessao]}</span>
+            <span className={`statusSessaoBadge statusSessao-${statusSessao}`}>{diaDeDescanso ? 'Descanso' : ROTULO_STATUS[statusSessao]}</span>
             {treinoDoDia && (
               <CronometroSessao
                 segundos={cronometro.segundos}
@@ -223,7 +223,7 @@ export default function TreinoPage() {
             )}
           </div>
         </div>
-        <div className="barraProgresso">
+        <div className="barraProgresso" hidden={diaDeDescanso}>
           <div className="barraProgressoPreenchida" style={{ width: `${percentualProgresso}%` }} />
         </div>
       </div>
@@ -238,10 +238,8 @@ export default function TreinoPage() {
           <div className="emptyStateCard"><p>Carregando ficha…</p></div>
         ) : exerciciosDoDia.length === 0 ? (
           <div className="emptyStateCard">
-            <p>Nenhum exercício cadastrado para {diaAtualInfo?.label}.</p>
-            <button className="btnSecundario" onClick={() => setModalAberto(true)}>
-              Adicionar primeiro exercício
-            </button>
+            <p>{diaDeDescanso ? 'Dia reservado para recuperação. Nenhum exercício pendente.' : `Nenhum exercício cadastrado para ${diaAtualInfo?.label}.`}</p>
+            {!diaDeDescanso && <button className="btnSecundario" onClick={() => setModalAberto(true)}>Adicionar primeiro exercício</button>}
           </div>
         ) : (
           exerciciosDoDia.map((exercicio) => (

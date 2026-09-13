@@ -1,5 +1,10 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { fitnessApi } from '../services/fitnessApi';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import PropTypes from 'prop-types';
+import { refeicoesService } from '../services/dominio/refeicoesService';
+import { hidratacaoService } from '../services/dominio/hidratacaoService';
+import { useBloqueioMutacao } from '../hooks/useBloqueioMutacao';
+import { mapearErroApi } from '../utils/erroApi';
+import { NutritionContext } from './nutritionContextBase';
 import { somarMacrosDeAlimentos, validarValoresAlimento } from '../pages/Dashboard/Dieta/utils/macros';
 import { obterDataDeHojeISO } from '../pages/Dashboard/Dieta/utils/calendario';
 import { ordenarPorHorario } from '../pages/Dashboard/Dieta/utils/proximaRefeicao';
@@ -8,8 +13,6 @@ const CHAVE_HIDRATACAO = 'dieta-hidratacao';
 const CHAVE_META_ML = 'dieta-meta-agua-ml';
 const META_ML_PADRAO = 2000;
 const ML_POR_COPO = 250;
-
-const NutritionContext = createContext(null);
 
 const criarRefeicoesIniciais = (dataISO) => [
   { id: 1, nome: 'Café da manhã', horario: '08:00', data: dataISO, alimentos: [], status: 'PENDENTE', persistida: false },
@@ -62,6 +65,7 @@ function calcularTotaisDoDia(refeicoes = []) {
 }
 
 export function NutritionProvider({ children }) {
+  const executarComBloqueio = useBloqueioMutacao();
   const [refeicoesPorData, setRefeicoesPorData] = useState({});
   const [statusPorData, setStatusPorData] = useState({});
   const [revisaoRefeicoes, setRevisaoRefeicoes] = useState(0);
@@ -69,6 +73,24 @@ export function NutritionProvider({ children }) {
   const [statusAguaPorData, setStatusAguaPorData] = useState({});
   const [hidratacaoPorData, setHidratacaoPorData] = useState(() => lerJsonLocalStorage(CHAVE_HIDRATACAO, {}));
   const [metaMl, setMetaMl] = useState(lerMetaMlSalva);
+
+  // Espelhos em ref dos caches por data. `carregarRefeicoes`/`carregarAgua`
+  // precisam consultar o cache para decidir se buscam de novo, mas se lessem
+  // o state direto teriam de declará-lo como dependência — e aí trocariam de
+  // identidade a cada refeição adicionada ou copo de água registrado,
+  // re-disparando os `useEffect` de `useRefeicoes`/`useHidratacao` a cada
+  // mutação. Com o espelho em ref as duas funções ficam estáveis e o efeito
+  // roda só quando a data selecionada muda, que é a intenção real.
+  const refeicoesPorDataRef = useRef(refeicoesPorData);
+  const aguaPorDataRef = useRef(aguaPorData);
+
+  useEffect(() => {
+    refeicoesPorDataRef.current = refeicoesPorData;
+  }, [refeicoesPorData]);
+
+  useEffect(() => {
+    aguaPorDataRef.current = aguaPorData;
+  }, [aguaPorData]);
 
   useEffect(() => {
     window.localStorage.setItem(CHAVE_HIDRATACAO, JSON.stringify(hidratacaoPorData));
@@ -94,12 +116,12 @@ export function NutritionProvider({ children }) {
 
   const carregarRefeicoes = useCallback(
     async (dataISO = obterDataDeHojeISO(), { forcar = false } = {}) => {
-      if (!forcar && refeicoesPorData[dataISO]) return refeicoesPorData[dataISO];
+      if (!forcar && refeicoesPorDataRef.current[dataISO]) return refeicoesPorDataRef.current[dataISO];
 
       setStatusPorData((prev) => ({ ...prev, [dataISO]: { loading: true, erro: null } }));
 
       try {
-        const dadosBD = await fitnessApi.buscarRefeicoesDoDia(dataISO);
+        const dadosBD = await refeicoesService.listarDoDia(dataISO);
         const refeicoes = dadosBD?.length
           ? dadosBD.map((refeicao) => ({ ...refeicao, persistida: true }))
           : criarRefeicoesIniciais(dataISO);
@@ -113,12 +135,12 @@ export function NutritionProvider({ children }) {
         salvarRefeicoesNaData(dataISO, fallback);
         setStatusPorData((prev) => ({
           ...prev,
-          [dataISO]: { loading: false, erro: 'Não foi possível carregar as refeições do dia.' },
+          [dataISO]: { loading: false, erro: mapearErroApi(err, 'carregar as refeições').mensagem },
         }));
         return fallback;
       }
     },
-    [refeicoesPorData, salvarRefeicoesNaData]
+    [salvarRefeicoesNaData]
   );
 
   const obterRefeicoesDaData = useCallback(
@@ -139,11 +161,12 @@ export function NutritionProvider({ children }) {
   }, []);
 
   const adicionarRefeicao = useCallback(async (dataISO, novaRefeicao) => {
-    const refeicaoCriada = await fitnessApi.criarRefeicao({
+    const refeicaoCriada = await executarComBloqueio(`criar-refeicao:${dataISO}:${novaRefeicao.nome}:${novaRefeicao.horario}`, () => refeicoesService.criar({
       nome: novaRefeicao.nome,
       horario: novaRefeicao.horario,
       data: dataISO,
-    });
+    }));
+    if (!refeicaoCriada) return undefined;
 
     setRefeicoesPorData((prev) => ({
       ...prev,
@@ -152,10 +175,10 @@ export function NutritionProvider({ children }) {
     invalidarHistoricosRefeicoes();
 
     return refeicaoCriada;
-  }, [invalidarHistoricosRefeicoes]);
+  }, [executarComBloqueio, invalidarHistoricosRefeicoes]);
 
   const editarRefeicao = useCallback(async (dataISO, idRefeicao, dadosRefeicao) => {
-    const refeicaoAtualizada = await fitnessApi.atualizarRefeicao(idRefeicao, {
+    const refeicaoAtualizada = await refeicoesService.atualizar(idRefeicao, {
       ...dadosRefeicao,
       data: dadosRefeicao.data || dataISO,
     });
@@ -177,7 +200,7 @@ export function NutritionProvider({ children }) {
       return;
     }
 
-    await fitnessApi.removerRefeicao(idRefeicao);
+    await refeicoesService.remover(idRefeicao);
     setRefeicoesPorData((prev) => ({
       ...prev,
       [dataISO]: (prev[dataISO] || []).filter((refeicao) => refeicao.id !== idRefeicao),
@@ -189,15 +212,16 @@ export function NutritionProvider({ children }) {
     const refeicaoAlvo = obterRefeicoesDaData(dataISO).find((refeicao) => refeicao.id === idRefeicao);
     if (!refeicaoAlvo || refeicaoAlvo.persistida !== false) return idRefeicao;
 
-    const refeicaoCriada = await fitnessApi.criarRefeicao({
+    const refeicaoCriada = await executarComBloqueio(`persistir-refeicao:${dataISO}:${idRefeicao}`, () => refeicoesService.criar({
       nome: refeicaoAlvo.nome,
       horario: refeicaoAlvo.horario,
       data: dataISO,
-    });
+    }));
+    if (!refeicaoCriada) return idRefeicao;
 
     substituirRefeicaoNaData(dataISO, idRefeicao, () => ({ ...refeicaoCriada, alimentos: [], persistida: true }));
     return refeicaoCriada.id;
-  }, [obterRefeicoesDaData, substituirRefeicaoNaData]);
+  }, [executarComBloqueio, obterRefeicoesDaData, substituirRefeicaoNaData]);
 
   const adicionarAlimento = useCallback(async (dataISO, idRefeicao, novoAlimento) => {
     const erroValidacao = validarValoresAlimento(novoAlimento);
@@ -209,19 +233,22 @@ export function NutritionProvider({ children }) {
     // inteira na mesma resposta, em vez de só anexar um item à lista local,
     // então itens antigos + o novo total já vêm garantidamente consistentes
     // com o que o backend persistiu.
-    const refeicaoAtualizada = await fitnessApi.adicionarAlimento(idRefeicaoReal, novoAlimento);
+    const refeicaoAtualizada = await executarComBloqueio(`adicionar-alimento:${idRefeicaoReal}`, () =>
+      refeicoesService.adicionarAlimento(idRefeicaoReal, novoAlimento)
+    );
+    if (!refeicaoAtualizada) return idRefeicaoReal;
 
     substituirRefeicaoNaData(dataISO, idRefeicaoReal, () => ({ ...refeicaoAtualizada, persistida: true }));
     invalidarHistoricosRefeicoes();
 
     return idRefeicaoReal;
-  }, [garantirRefeicaoPersistida, invalidarHistoricosRefeicoes, substituirRefeicaoNaData]);
+  }, [executarComBloqueio, garantirRefeicaoPersistida, invalidarHistoricosRefeicoes, substituirRefeicaoNaData]);
 
   const editarAlimento = useCallback(async (dataISO, idRefeicao, idAlimento, alimentoEditado) => {
     const erroValidacao = validarValoresAlimento(alimentoEditado);
     if (erroValidacao) throw new Error(erroValidacao);
 
-    const alimentoAtualizado = await fitnessApi.atualizarAlimento(idRefeicao, idAlimento, alimentoEditado);
+    const alimentoAtualizado = await refeicoesService.atualizarAlimento(idRefeicao, idAlimento, alimentoEditado);
 
     substituirRefeicaoNaData(dataISO, idRefeicao, (refeicao) => ({
       ...refeicao,
@@ -235,7 +262,7 @@ export function NutritionProvider({ children }) {
   }, [invalidarHistoricosRefeicoes, substituirRefeicaoNaData]);
 
   const removerAlimento = useCallback(async (dataISO, idRefeicao, idAlimento) => {
-    const refeicaoAtualizada = await fitnessApi.removerAlimento(idRefeicao, idAlimento);
+    const refeicaoAtualizada = await refeicoesService.removerAlimento(idRefeicao, idAlimento);
 
     substituirRefeicaoNaData(dataISO, idRefeicao, (refeicao) => ({
       ...refeicao,
@@ -246,20 +273,23 @@ export function NutritionProvider({ children }) {
   }, [invalidarHistoricosRefeicoes, substituirRefeicaoNaData]);
 
   const concluirRefeicao = useCallback(async (dataISO, idRefeicao) => {
-    const refeicaoAtualizada = await fitnessApi.concluirRefeicao(idRefeicao);
+    const refeicaoAtualizada = await executarComBloqueio(`concluir-refeicao:${idRefeicao}`, () =>
+      refeicoesService.concluir(idRefeicao)
+    );
+    if (!refeicaoAtualizada) return undefined;
     substituirRefeicaoNaData(dataISO, idRefeicao, (refeicao) => ({ ...refeicao, ...refeicaoAtualizada }));
     invalidarHistoricosRefeicoes();
     return refeicaoAtualizada;
-  }, [invalidarHistoricosRefeicoes, substituirRefeicaoNaData]);
+  }, [executarComBloqueio, invalidarHistoricosRefeicoes, substituirRefeicaoNaData]);
 
   const carregarAgua = useCallback(
     async (dataISO = obterDataDeHojeISO(), { forcar = false } = {}) => {
-      if (!forcar && aguaPorData[dataISO]) return aguaPorData[dataISO];
+      if (!forcar && aguaPorDataRef.current[dataISO]) return aguaPorDataRef.current[dataISO];
 
       setStatusAguaPorData((prev) => ({ ...prev, [dataISO]: { loading: true, erro: null } }));
 
       try {
-        const registros = await fitnessApi.listarAguaDoDia(dataISO);
+        const registros = await hidratacaoService.listarDoDia(dataISO);
         setAguaPorData((prev) => ({ ...prev, [dataISO]: registros }));
         setStatusAguaPorData((prev) => ({ ...prev, [dataISO]: { loading: false, erro: null } }));
         return registros;
@@ -267,27 +297,21 @@ export function NutritionProvider({ children }) {
         console.error('Erro ao buscar hidratação da API:', erro);
         setStatusAguaPorData((prev) => ({
           ...prev,
-          [dataISO]: { loading: false, erro: 'Não foi possível carregar o consumo de água.' },
+          [dataISO]: { loading: false, erro: mapearErroApi(erro, 'carregar o consumo de água').mensagem },
         }));
-        return aguaPorData[dataISO] || [];
+        return aguaPorDataRef.current[dataISO] || [];
       }
     },
-    [aguaPorData]
+    []
   );
 
   const obterRegistrosAguaDaData = useCallback((dataISO) => aguaPorData[dataISO] || [], [aguaPorData]);
 
   const adicionarAguaMl = useCallback(async (dataISO, quantidadeMl) => {
-    const quantidade = Number(quantidadeMl);
-    if (!Number.isFinite(quantidade) || quantidade <= 0 || quantidade > 5000) {
-      throw new Error('A quantidade deve estar entre 1 e 5000 ml.');
-    }
-
-    const registro = await fitnessApi.criarRegistroAgua({
-      quantidadeMl: Math.round(quantidade),
-      diaReferencia: dataISO,
-      origem: 'manual',
-    });
+    const registro = await executarComBloqueio(`agua:${dataISO}`, () =>
+      hidratacaoService.registrar({ data: dataISO, quantidadeMl })
+    );
+    if (!registro) return undefined;
 
     setAguaPorData((prev) => ({
       ...prev,
@@ -297,10 +321,10 @@ export function NutritionProvider({ children }) {
     }));
 
     return registro;
-  }, []);
+  }, [executarComBloqueio]);
 
   const removerRegistroAgua = useCallback(async (dataISO, idRegistro) => {
-    await fitnessApi.removerRegistroAgua(idRegistro);
+    await hidratacaoService.remover(idRegistro);
     setAguaPorData((prev) => ({
       ...prev,
       [dataISO]: (prev[dataISO] || []).filter((registro) => registro.id !== idRegistro),
@@ -389,10 +413,4 @@ export function NutritionProvider({ children }) {
   return <NutritionContext.Provider value={valor}>{children}</NutritionContext.Provider>;
 }
 
-export function useNutrition() {
-  const contexto = useContext(NutritionContext);
-  if (!contexto) {
-    throw new Error('useNutrition deve ser usado dentro de NutritionProvider.');
-  }
-  return contexto;
-}
+NutritionProvider.propTypes = { children: PropTypes.node.isRequired };

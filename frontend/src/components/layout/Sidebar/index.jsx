@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { NavLink } from 'react-router-dom';
 import { Home, LogOut, Salad, Dumbbell, User, TrendingUp, BarChart3, Settings, X, Zap } from 'lucide-react';
@@ -32,15 +32,69 @@ Rotulo.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-export default function Sidebar({ onLogout, abertoNoMobile = false, aoFecharNoMobile }) {
+export default function Sidebar({ onLogout, abertoNoMobile = false, aoFecharNoMobile, referenciaGatilho }) {
   // Recolhida por padrão (só ícones); passar o mouse por cima expande
   // mostrando os rótulos, e volta a recolher ao tirar o mouse.
   const [expandido, setExpandido] = useState(false);
+  const [ehMobile, setEhMobile] = useState(() => window.matchMedia('(max-width: 767px)').matches);
+  const referenciaDrawer = useRef(null);
+  const referenciaFechar = useRef(null);
+
+  useEffect(() => {
+    const consulta = window.matchMedia('(max-width: 767px)');
+    const atualizar = (evento) => setEhMobile(evento.matches);
+    consulta.addEventListener('change', atualizar);
+    return () => consulta.removeEventListener('change', atualizar);
+  }, []);
+
+  useEffect(() => {
+    if (!ehMobile || !abertoNoMobile) return undefined;
+
+    const overflowAnterior = document.body.style.overflow;
+    const gatilho = referenciaGatilho.current;
+    document.body.style.overflow = 'hidden';
+    referenciaFechar.current?.focus();
+
+    const lidarComTeclado = (evento) => {
+      if (evento.key === 'Escape') {
+        evento.preventDefault();
+        aoFecharNoMobile();
+        return;
+      }
+
+      if (evento.key !== 'Tab') return;
+      const focaveis = referenciaDrawer.current?.querySelectorAll(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focaveis?.length) return;
+      const primeiro = focaveis[0];
+      const ultimo = focaveis[focaveis.length - 1];
+      if (evento.shiftKey && document.activeElement === primeiro) {
+        evento.preventDefault();
+        ultimo.focus();
+      } else if (!evento.shiftKey && document.activeElement === ultimo) {
+        evento.preventDefault();
+        primeiro.focus();
+      }
+    };
+
+    document.addEventListener('keydown', lidarComTeclado);
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+      document.removeEventListener('keydown', lidarComTeclado);
+      gatilho?.focus();
+    };
+  }, [abertoNoMobile, aoFecharNoMobile, ehMobile, referenciaGatilho]);
 
   return (
     <>
       {abertoNoMobile && <button type="button" className="fixed inset-0 z-40 bg-zinc-950/55 backdrop-blur-sm md:hidden" onClick={aoFecharNoMobile} aria-label="Fechar menu" />}
     <aside
+      ref={referenciaDrawer}
+      aria-label="Navegação principal"
+      aria-modal={ehMobile && abertoNoMobile ? 'true' : undefined}
+      role={ehMobile && abertoNoMobile ? 'dialog' : undefined}
+      inert={ehMobile && !abertoNoMobile ? true : undefined}
       onMouseEnter={() => setExpandido(true)}
       onMouseLeave={() => setExpandido(false)}
       className={[
@@ -54,14 +108,14 @@ export default function Sidebar({ onLogout, abertoNoMobile = false, aoFecharNoMo
       ].join(' ')}
     >
       <div className="flex items-center gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-lime-400 text-xl text-zinc-900">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-teal-600 text-xl text-white">
           <Zap size={22} strokeWidth={2.8} aria-hidden="true" />
         </span>
         <Rotulo expandido={abertoNoMobile || expandido}>
           <strong className="block text-lg font-bold text-white">System Fitness</strong>
           <p className="m-0 text-base text-zinc-400">Seu treino diário</p>
         </Rotulo>
-        <button type="button" onClick={aoFecharNoMobile} className="ml-auto flex h-11 w-11 items-center justify-center rounded-xl text-zinc-300 hover:bg-zinc-800 md:hidden" aria-label="Fechar menu"><X size={22} /></button>
+        <button ref={referenciaFechar} type="button" onClick={aoFecharNoMobile} className="ml-auto flex h-11 w-11 items-center justify-center rounded-xl text-zinc-300 hover:bg-zinc-800 md:hidden" aria-label="Fechar menu"><X size={22} aria-hidden="true" /></button>
       </div>
 
       <nav className="grid gap-2" aria-label="Menu principal">
@@ -74,17 +128,19 @@ export default function Sidebar({ onLogout, abertoNoMobile = false, aoFecharNoMo
               onClick={aoFecharNoMobile}
               title={item.label}
               className={({ isActive }) =>
-                // Item ativo em verde-lima néon com texto escuro para máximo contraste;
-                // itens inativos permanecem discretos até o hover.
+                // Item ativo em teal translúcido (fundo suave + borda), no
+                // lugar do verde-lima néon anterior — identidade "premium"
+                // pedida para a sidebar; itens inativos permanecem discretos
+                // até o hover.
                 [
-                  'flex items-center gap-3 rounded-2xl px-4 py-3 text-base font-semibold transition-colors',
+                  'flex items-center gap-3 rounded-2xl border px-4 py-3 text-base font-semibold transition-colors',
                   isActive
-                    ? 'bg-lime-400 text-zinc-900'
-                    : 'text-zinc-400 hover:bg-zinc-800 hover:text-white',
+                    ? 'border-teal-500 bg-teal-600/20 text-teal-400'
+                    : 'border-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white',
                 ].join(' ')
               }
             >
-              <Icon size={20} strokeWidth={2.5} className="shrink-0" />
+              <Icon size={20} strokeWidth={2.5} className="shrink-0" aria-hidden="true" />
               <Rotulo expandido={abertoNoMobile || expandido}>{item.label}</Rotulo>
             </NavLink>
           );
@@ -97,7 +153,7 @@ export default function Sidebar({ onLogout, abertoNoMobile = false, aoFecharNoMo
         title="Sair"
         className="mt-auto flex items-center justify-center gap-2 rounded-2xl bg-zinc-800 px-4 py-3 text-base font-bold text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
       >
-        <LogOut size={18} strokeWidth={2.5} className="shrink-0" />
+        <LogOut size={18} strokeWidth={2.5} className="shrink-0" aria-hidden="true" />
         <Rotulo expandido={abertoNoMobile || expandido}>Sair</Rotulo>
       </button>
     </aside>
@@ -109,4 +165,5 @@ Sidebar.propTypes = {
   onLogout: PropTypes.func.isRequired,
   abertoNoMobile: PropTypes.bool,
   aoFecharNoMobile: PropTypes.func.isRequired,
+  referenciaGatilho: PropTypes.shape({ current: PropTypes.object }).isRequired,
 };

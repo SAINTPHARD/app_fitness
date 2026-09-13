@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import { Check, ChevronLeft } from 'lucide-react';
 import { fitnessApi } from '../../services/fitnessApi';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { obterPrimeiroNome } from '../../utils/nomeUsuario';
+import { calcularMetasNutricionais } from '../Dashboard/Dieta/utils/calculadoraMetabolica';
+import { calcularMetaHidratacao, validarMetasOnboarding } from './onboardingUtils';
 
 const TOTAL_ETAPAS = 4;
 
@@ -55,11 +57,16 @@ const DADOS_INICIAIS = {
   altura: '',
   peso: '',
   pesoAlvo: '',
+  metaCalorias: '',
+  metaProteinas: '',
+  metaCarboidratos: '',
+  metaGorduras: '',
+  metaAguaMl: '',
 };
 
 const CLASSES_CAMPO =
   'h-12 w-full rounded-xl border border-zinc-300 bg-white px-4 text-base text-zinc-900 outline-none transition ' +
-  'placeholder:text-zinc-400 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-600/15 ' +
+  'placeholder:text-zinc-400 focus:border-brand focus:ring-4 focus:ring-brand-soft ' +
   'disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100';
 
 /** Calcula a idade (anos completos) a partir da data de nascimento. */
@@ -113,14 +120,14 @@ function OpcaoCartao({ titulo, descricao, selecionado, aoSelecionar }) {
       aria-pressed={selecionado}
       className={`flex w-full items-center gap-3 rounded-xl border-2 px-4 py-4 text-left transition-all duration-300 ease-in-out active:scale-[0.98] ${
         selecionado
-          ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-500/10'
+          ? 'border-brand bg-brand-soft'
           : 'border-zinc-200 bg-white hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:border-zinc-700'
       }`}
     >
       <span className="min-w-0 flex-1">
         <span
           className={`block font-bold ${
-            selecionado ? 'text-emerald-700 dark:text-emerald-400' : 'text-zinc-900 dark:text-zinc-100'
+            selecionado ? 'text-brand' : 'text-zinc-900 dark:text-zinc-100'
           }`}
         >
           {titulo}
@@ -133,7 +140,7 @@ function OpcaoCartao({ titulo, descricao, selecionado, aoSelecionar }) {
         aria-hidden="true"
         className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 transition ${
           selecionado
-            ? 'border-emerald-600 bg-emerald-600 text-white'
+            ? 'border-brand bg-brand text-brand-ink'
             : 'border-zinc-300 text-transparent dark:border-zinc-600'
         }`}
       >
@@ -171,13 +178,51 @@ export default function OnboardingPage() {
   const [dados, setDados] = useState(DADOS_INICIAIS);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
+  const [rascunhoCarregado, setRascunhoCarregado] = useState(false);
 
   const navigate = useNavigate();
   const { user, marcarPerfilCompleto } = useAuth();
   const primeiroNome = obterPrimeiroNome(user);
+  const chaveRascunho = `onboarding-rascunho:${user?.email || 'sessao'}`;
 
   const percentual = useMemo(() => Math.round((etapa / TOTAL_ETAPAS) * 100), [etapa]);
   const ehUltimaEtapa = etapa === TOTAL_ETAPAS;
+  const idade = calcularIdade(converterDataBRParaISO(dados.dataNascimento));
+  const calculoSugerido = useMemo(() => calcularMetasNutricionais({
+    peso: dados.peso,
+    altura: dados.altura,
+    idade,
+    sexo: dados.sexo,
+    nivelAtividade: dados.nivelAtividade,
+    objetivo: dados.objetivo,
+  }), [dados.altura, dados.nivelAtividade, dados.objetivo, dados.peso, dados.sexo, idade]);
+  const metasRevisadas = useMemo(() => ({
+    calorias: Number(dados.metaCalorias || calculoSugerido?.metas.calorias || 0),
+    proteinas: Number(dados.metaProteinas || calculoSugerido?.metas.proteinas || 0),
+    carboidratos: Number(dados.metaCarboidratos || calculoSugerido?.metas.carboidratos || 0),
+    gorduras: Number(dados.metaGorduras || calculoSugerido?.metas.gorduras || 0),
+    aguaMl: Number(dados.metaAguaMl || calcularMetaHidratacao(dados.peso)),
+  }), [calculoSugerido, dados]);
+
+  useEffect(() => {
+    try {
+      const rascunho = window.sessionStorage.getItem(chaveRascunho);
+      if (rascunho) {
+        const salvo = JSON.parse(rascunho);
+        setDados((atual) => ({ ...atual, ...salvo.dados }));
+        setEtapa(Math.min(Math.max(Number(salvo.etapa) || 1, 1), TOTAL_ETAPAS));
+      }
+    } catch {
+      window.sessionStorage.removeItem(chaveRascunho);
+    } finally {
+      setRascunhoCarregado(true);
+    }
+  }, [chaveRascunho]);
+
+  useEffect(() => {
+    if (!rascunhoCarregado) return;
+    window.sessionStorage.setItem(chaveRascunho, JSON.stringify({ etapa, dados }));
+  }, [chaveRascunho, dados, etapa, rascunhoCarregado]);
 
   const atualizarCampo = (campo, valor) => {
     setErro('');
@@ -211,6 +256,11 @@ export default function OnboardingPage() {
       // gerava um IMC absurdo mais adiante.
       if (!(altura >= 50 && altura <= 250)) return 'Altura deve estar entre 50 e 250 cm (1,82 m = 182 cm).';
       if (!(peso >= 20 && peso <= 300)) return 'Peso deve estar entre 20 e 300 kg.';
+      if (dados.pesoAlvo && !(Number(dados.pesoAlvo) >= 20 && Number(dados.pesoAlvo) <= 300)) {
+        return 'A meta de peso deve estar entre 20 e 300 kg.';
+      }
+      const problemaMetas = validarMetasOnboarding(metasRevisadas);
+      if (problemaMetas) return problemaMetas;
       return null;
     }
     return null;
@@ -256,6 +306,8 @@ export default function OnboardingPage() {
         sexo: dados.sexo || perfilAtual?.sexo || null,
       });
 
+      await fitnessApi.updateMetas(metasRevisadas);
+
       // Preferências que o backend ainda não tem coluna para guardar.
       // `diasTreino` já nasce no formato de array de siglas (ex: ['SEG',
       // 'QUA', 'SEX']) — é só isso que precisa migrar para o JSON de
@@ -269,6 +321,8 @@ export default function OnboardingPage() {
           pesoAlvo: Number(dados.pesoAlvo) || null,
         }),
       );
+
+      window.sessionStorage.removeItem(chaveRascunho);
 
       // Estado do React, não só localStorage: é isso que libera a guarda de
       // /dashboard no App e encerra o loop de volta para o passo 1.
@@ -337,7 +391,7 @@ export default function OnboardingPage() {
                     aria-pressed={selecionado}
                     className={`h-11 min-w-[3.25rem] flex-1 rounded-xl border-2 text-sm font-bold transition-all duration-300 ease-in-out active:scale-95 sm:flex-none sm:px-4 ${
                       selecionado
-                        ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
+                        ? 'border-brand bg-brand text-brand-ink shadow-sm'
                         : 'border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-zinc-700'
                     }`}
                   >
@@ -397,7 +451,7 @@ export default function OnboardingPage() {
     },
     4: {
       titulo: 'Suas métricas corporais',
-      subtitulo: 'Pode ser uma estimativa — dá para atualizar depois no Perfil.',
+      subtitulo: 'Revise os dados e ajuste as metas sugeridas antes de confirmar.',
       corpo: (
         <div className="flex flex-col gap-5">
           <Campo rotulo="Qual a sua altura?" dica="Em centímetros. Ex: 1,82 m = 182.">
@@ -441,6 +495,39 @@ export default function OnboardingPage() {
               className={CLASSES_CAMPO}
             />
           </Campo>
+
+          {calculoSugerido && (
+            <section className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50" aria-labelledby="resumo-onboarding">
+              <h2 id="resumo-onboarding" className="text-base font-bold text-zinc-900 dark:text-zinc-100">Revisão final editável</h2>
+              <p className="mt-1 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+                Estimamos calorias pela equação de Mifflin-St Jeor, ajustada pelo nível de atividade e objetivo. Proteínas e gorduras usam o peso corporal; carboidratos completam as calorias. Hidratação usa 35 ml por kg. São referências iniciais, não orientação médica.
+              </p>
+              <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div><dt className="text-zinc-500 dark:text-zinc-400">Objetivo</dt><dd className="font-semibold text-zinc-800 dark:text-zinc-200">{OBJETIVOS.find((item) => item.valor === dados.objetivo)?.titulo}</dd></div>
+                <div><dt className="text-zinc-500 dark:text-zinc-400">Dados usados</dt><dd className="font-semibold text-zinc-800 dark:text-zinc-200">{dados.peso} kg · {dados.altura} cm · {idade} anos</dd></div>
+                <div className="col-span-2"><dt className="text-zinc-500 dark:text-zinc-400">Treino inicial</dt><dd className="font-semibold text-zinc-800 dark:text-zinc-200">{dados.diasTreino.length ? `${dados.diasTreino.length} dias selecionados: ${dados.diasTreino.join(', ')}` : 'Nenhum dia escolhido; configure depois em Treino.'}</dd></div>
+              </dl>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                {[
+                  ['metaCalorias', 'Calorias', 'kcal', metasRevisadas.calorias],
+                  ['metaProteinas', 'Proteínas', 'g', metasRevisadas.proteinas],
+                  ['metaCarboidratos', 'Carboidratos', 'g', metasRevisadas.carboidratos],
+                  ['metaGorduras', 'Gorduras', 'g', metasRevisadas.gorduras],
+                  ['metaAguaMl', 'Hidratação', 'ml', metasRevisadas.aguaMl],
+                ].map(([campo, rotulo, unidade, valor]) => (
+                  <label key={campo} className={campo === 'metaAguaMl' ? 'col-span-2 block' : 'block'}>
+                    <span className="mb-1 block text-xs font-semibold text-zinc-600 dark:text-zinc-300">{rotulo} ({unidade})</span>
+                    <input type="number" min={campo === 'metaAguaMl' ? 250 : 0} max="10000" step={campo === 'metaAguaMl' ? 50 : 1}
+                      value={dados[campo] || valor} onChange={(e) => atualizarCampo(campo, e.target.value)}
+                      aria-describedby={erro ? 'onboarding-error' : undefined} className={CLASSES_CAMPO} />
+                  </label>
+                ))}
+              </div>
+              <p className="mt-4 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+                Seus dados corporais são vinculados à sua conta para personalizar metas. O rascunho desta tela permanece apenas nesta sessão do navegador e é apagado após a confirmação.
+              </p>
+            </section>
+          )}
         </div>
       ),
     },
@@ -448,7 +535,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-6 dark:bg-zinc-950 sm:py-10">
-      <div className="w-full max-w-lg animate-fade-in overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
+      <div className="w-full max-w-lg animate-fade-in overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         {/* Barra de progresso superior, colada na borda do cartão. */}
         <div
           className="h-1.5 w-full bg-zinc-200 dark:bg-zinc-800"
@@ -459,7 +546,7 @@ export default function OnboardingPage() {
           aria-label={`Passo ${etapa} de ${TOTAL_ETAPAS}`}
         >
           <div
-            className="h-full rounded-r-full bg-emerald-600 transition-[width] duration-500 ease-out motion-reduce:transition-none"
+            className="h-full rounded-r-full bg-brand transition-[width] duration-500 ease-out motion-reduce:transition-none"
             style={{ width: `${percentual}%` }}
           />
         </div>
@@ -479,6 +566,7 @@ export default function OnboardingPage() {
 
           {erro && (
             <p
+              id="onboarding-error"
               role="alert"
               className="mt-5 rounded-xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"
             >
@@ -495,7 +583,7 @@ export default function OnboardingPage() {
               disabled={salvando}
               className="flex h-12 items-center gap-1 rounded-xl border-2 border-zinc-200 px-5 text-sm font-bold text-zinc-700 transition-all duration-300 ease-in-out hover:border-zinc-300 hover:bg-zinc-50 active:scale-[0.98] disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
             >
-              <ChevronLeft size={18} strokeWidth={2.5} /> Voltar
+              <ChevronLeft aria-hidden="true" size={18} strokeWidth={2.5} /> Voltar
             </button>
           )}
 
@@ -503,7 +591,8 @@ export default function OnboardingPage() {
             type="button"
             onClick={ehUltimaEtapa ? finalizar : avancar}
             disabled={salvando}
-            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all duration-300 ease-in-out hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-60"
+            aria-busy={salvando}
+            className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-brand text-sm font-bold text-brand-ink transition-all duration-300 ease-in-out hover:bg-brand-strong active:scale-[0.98] disabled:opacity-60"
           >
             {salvando && (
               <span

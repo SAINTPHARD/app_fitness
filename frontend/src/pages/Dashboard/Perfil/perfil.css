@@ -12,7 +12,7 @@
 
 .perfilEyebrow {
   margin: 0;
-  color: #65a30d;
+  color: var(--brand);
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -72,7 +72,7 @@
 }
 
 .perfilStatsGrid em[data-tom='sucesso'] {
-  color: #65a30d;
+  color: var(--brand);
 }
 
 .perfilStatsGrid em[data-tom='alerta'] {
@@ -101,6 +101,18 @@
   gap: 1.25rem;
   align-items: start;
 }
+
+.perfilSecoes { display: grid; gap: 1.25rem; }
+.perfilTituloLinha { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.perfilTituloLinha h3 { margin: 0; }
+.perfilCard a { color: var(--brand-strong); font-weight: 700; min-height: 44px; display: inline-flex; align-items: center; }
+.perfilAviso { display: flex; gap: 0.75rem; align-items: flex-start; padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-muted); color: var(--text-secondary); }
+.perfilAviso svg { flex: 0 0 auto; }
+.perfilAviso p, .perfilPrivacidade p { margin: 0; }
+.perfilPrivacidade { display: flex; align-items: flex-start; gap: 0.75rem; color: var(--text-secondary); }
+.perfilPrivacidade svg { color: var(--brand-strong); flex: 0 0 auto; }
+.perfilSkeleton { min-height: 260px; display: grid; place-items: center; border-radius: var(--radius); background: var(--bg-muted); color: var(--text-muted); animation: perfilPulso 1.5s ease-in-out infinite; }
+@keyframes perfilPulso { 50% { opacity: 0.55; } }
 
 .perfilCard {
   display: flex;
@@ -136,13 +148,14 @@
   background: var(--bg-muted);
   color: var(--text-primary);
   font-weight: 500;
+  min-height: 44px;
 }
 
 .perfilCampo input:focus,
 .perfilCampo select:focus {
   outline: none;
   border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.2);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb), 0.2);
 }
 
 .perfilLinha {
@@ -160,6 +173,7 @@
   color: var(--brand-ink);
   font-weight: 700;
   cursor: pointer;
+  min-height: 44px;
 }
 
 .perfilBotao:disabled {

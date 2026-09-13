@@ -75,9 +75,12 @@ export function obterProximaRefeicao(refeicoes, agora = new Date()) {
 export function calcularResumoRefeicoes(refeicoes) {
   const lista = refeicoes || [];
   const concluidas = lista.filter(refeicaoConcluida).length;
+  const comAlimentos = lista.filter((refeicao) => (refeicao?.alimentos || []).length > 0).length;
 
   return {
     total: lista.length,
+    planejadas: lista.length,
+    comAlimentos,
     concluidas,
     pendentes: lista.length - concluidas,
   };

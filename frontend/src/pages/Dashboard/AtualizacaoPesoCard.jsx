@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import { Scale, Check } from 'lucide-react';
 import { calcularImc } from '../../utils/imc';
 
@@ -46,7 +47,7 @@ export default function AtualizacaoPesoCard({ perfilAtual, aoAtualizarPerfil }) 
   return (
     <div className="rounded-3xl bg-white p-5 shadow-xl shadow-slate-200/50 dark:bg-zinc-800 dark:shadow-none">
       <div className="mb-3 flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-lime-100 text-lime-700 dark:bg-lime-400/10 dark:text-lime-300">
+        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-soft text-brand-soft-ink">
           <Scale size={20} strokeWidth={2.5} />
         </span>
         <div>
@@ -64,7 +65,7 @@ export default function AtualizacaoPesoCard({ perfilAtual, aoAtualizarPerfil }) 
             value={pesoInput}
             onChange={(e) => setPesoInput(e.target.value)}
             required
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none transition-shadow focus:border-lime-400 focus:bg-white focus:ring-4 focus:ring-lime-100 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 outline-none transition-shadow focus:border-brand focus:ring-4 focus:ring-brand-soft dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">kg</span>
         </div>
@@ -74,7 +75,7 @@ export default function AtualizacaoPesoCard({ perfilAtual, aoAtualizarPerfil }) 
           disabled={salvando}
           className={[
             'flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold transition-transform hover:scale-[1.02] active:scale-[0.98]',
-            sucesso ? 'bg-emerald-500 text-white' : 'bg-zinc-900 text-white dark:bg-lime-400 dark:text-zinc-900',
+            sucesso ? 'bg-success text-white' : 'bg-brand text-brand-ink',
           ].join(' ')}
         >
           {sucesso ? <Check size={16} strokeWidth={3} /> : 'Atualizar'}
@@ -92,3 +93,7 @@ export default function AtualizacaoPesoCard({ perfilAtual, aoAtualizarPerfil }) 
     </div>
   );
 }
+
+AtualizacaoPesoCard.propTypes = { perfilAtual: PropTypes.shape({ peso: PropTypes.number, altura: PropTypes.number }), aoAtualizarPerfil: PropTypes.func.isRequired };
+
+AtualizacaoPesoCard.propTypes = { perfilAtual: PropTypes.shape({ peso: PropTypes.number, altura: PropTypes.number }), aoAtualizarPerfil: PropTypes.func.isRequired };

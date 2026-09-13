@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import PropTypes from 'prop-types';
 import { Plus } from 'lucide-react';
 
 /**
@@ -41,7 +42,7 @@ export default function FormularioNovaRefeicao({ aoAdicionarRefeicao, aoCancelar
         value={nome}
         onChange={(evento) => setNome(evento.target.value)}
         required
-        className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition-shadow focus:border-lime-400 focus:ring-4 focus:ring-lime-100 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
+        className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition-shadow focus:border-brand focus:ring-4 focus:ring-brand-soft dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
       />
       <input
         type="time"
@@ -49,12 +50,12 @@ export default function FormularioNovaRefeicao({ aoAdicionarRefeicao, aoCancelar
         value={horario}
         onChange={(evento) => setHorario(evento.target.value)}
         required
-        className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition-shadow focus:border-lime-400 focus:ring-4 focus:ring-lime-100 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
+        className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition-shadow focus:border-brand focus:ring-4 focus:ring-brand-soft dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
       />
       <div className="flex flex-wrap gap-2">
         <button
           type="submit"
-          className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-bold text-white transition-transform hover:scale-[1.01] active:scale-[0.99] dark:bg-lime-400 dark:text-zinc-900"
+          className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-brand-ink transition-transform hover:scale-[1.01] active:scale-[0.99]"
         >
           <Plus size={15} strokeWidth={2.5} /> Criar refeição
         </button>
@@ -71,3 +72,5 @@ export default function FormularioNovaRefeicao({ aoAdicionarRefeicao, aoCancelar
     </form>
   );
 }
+
+FormularioNovaRefeicao.propTypes = { aoAdicionarRefeicao: PropTypes.func.isRequired, aoCancelar: PropTypes.func.isRequired };

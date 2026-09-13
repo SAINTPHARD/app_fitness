@@ -1,10 +1,13 @@
 import { Award, CheckCircle2, Clock, Dumbbell, TrendingUp, X } from 'lucide-react';
+import PropTypes from 'prop-types';
 import { formatarDuracao } from '../hooks/useCronometro';
 
 function formatarKg(valor) {
   if (valor === null || valor === undefined) return '—';
   return `${Number(valor).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} kg`;
 }
+
+ResumoTreinoModal.propTypes = { resumo: PropTypes.object.isRequired, aoFechar: PropTypes.func.isRequired };
 
 /**
  * Resumo exibido depois de encerrar o treino (ou ao pedir uma prévia antes

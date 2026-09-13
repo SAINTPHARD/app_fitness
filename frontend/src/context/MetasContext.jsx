@@ -1,26 +1,10 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { fitnessApi } from '../services/fitnessApi';
-import { useAuth } from './AuthContext';
-
-export const METAS_PADRAO = {
-  calorias: 2000,
-  proteinas: 150,
-  carboidratos: 250,
-  gorduras: 65,
-  aguaMl: 2000,
-};
-
-const MetasContext = createContext(null);
-
-function normalizarMetas(metas) {
-  return {
-    calorias: Number(metas?.calorias ?? metas?.metaCalorias ?? METAS_PADRAO.calorias),
-    proteinas: Number(metas?.proteinas ?? metas?.metaProteinas ?? METAS_PADRAO.proteinas),
-    carboidratos: Number(metas?.carboidratos ?? metas?.metaCarboidratos ?? METAS_PADRAO.carboidratos),
-    gorduras: Number(metas?.gorduras ?? metas?.metaGorduras ?? METAS_PADRAO.gorduras),
-    aguaMl: Number(metas?.aguaMl ?? metas?.metaAguaMl ?? METAS_PADRAO.aguaMl),
-  };
-}
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
+import { metasService } from '../services/dominio/metasService';
+import { mapearErroApi } from '../utils/erroApi';
+import { METAS_PADRAO, normalizarMetas } from './metasConfig';
+import { MetasContext } from './metasContextBase';
+import { useAuth } from '../hooks/useAuth';
 
 export function MetasProvider({ children }) {
   const { signed } = useAuth();
@@ -34,11 +18,11 @@ export function MetasProvider({ children }) {
     setErro('');
 
     try {
-      const dados = await fitnessApi.getMetas();
+      const dados = await metasService.buscar();
       setMetas(normalizarMetas(dados));
     } catch (error) {
       console.error('Erro ao carregar metas do usuário', error);
-      setErro('Não foi possível carregar suas metas. Usando valores padrão até a conexão voltar.');
+      setErro(mapearErroApi(error, 'carregar suas metas').mensagem);
       setMetas(METAS_PADRAO);
     } finally {
       setLoading(false);
@@ -64,14 +48,14 @@ export function MetasProvider({ children }) {
     setMetas(normalizadas);
 
     try {
-      const salvas = await fitnessApi.updateMetas(normalizadas);
+      const salvas = await metasService.atualizar(normalizadas);
       const metasPersistidas = normalizarMetas(salvas);
       setMetas(metasPersistidas);
       return metasPersistidas;
     } catch (error) {
       console.error('Erro ao atualizar metas', error);
       setMetas(metasAnteriores);
-      setErro('Não foi possível salvar suas metas. Os valores anteriores foram preservados.');
+      setErro(`${mapearErroApi(error, 'salvar suas metas').mensagem} Os valores anteriores foram preservados.`);
       throw error;
     } finally {
       setSalvando(false);
@@ -86,10 +70,4 @@ export function MetasProvider({ children }) {
   return <MetasContext.Provider value={valor}>{children}</MetasContext.Provider>;
 }
 
-export function useMetasContext() {
-  const contexto = useContext(MetasContext);
-  if (!contexto) {
-    throw new Error('useMetasContext deve ser usado dentro de MetasProvider.');
-  }
-  return contexto;
-}
+MetasProvider.propTypes = { children: PropTypes.node.isRequired };

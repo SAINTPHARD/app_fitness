@@ -18,6 +18,10 @@ public record SerieRequestDTO(
 
 		@PositiveOrZero(message = "As repetições não podem ser negativas")
 		Integer repeticoes,
+		String unidadeCarga,
+		Integer rir,
+		BigDecimal rpe,
+		String observacao,
 
 		String tipo,
 
@@ -32,4 +36,7 @@ public record SerieRequestDTO(
 		 */
 		String idempotencyKey
 ) {
+	public SerieRequestDTO(Long exercicioId, BigDecimal carga, Integer repeticoes, String tipo, String idempotencyKey) {
+		this(exercicioId, carga, repeticoes, "KG", null, null, null, tipo, idempotencyKey);
+	}
 }

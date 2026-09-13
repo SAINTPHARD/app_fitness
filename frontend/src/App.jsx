@@ -1,12 +1,14 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
+import { useAuth } from './hooks/useAuth';
 import { NutritionProvider } from './context/NutritionContext';
 import { MetasProvider } from './context/MetasContext';
 import ToastHost from './components/ui/Toast';
 import TelaCarregamento from './components/ui/TelaCarregamento';
 import ErrorBoundary from './components/ErrorBoundary';
 const LoginPage = lazy(() => import('./pages/Login'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPassword'));
 const OnboardingPage = lazy(() => import('./pages/Onboarding'));
 const DashboardLayout = lazy(() => import('./pages/Dashboard'));
 const HomePage = lazy(() => import('./pages/Dashboard/Home'));
@@ -23,7 +25,7 @@ function AppRoutes() {
   // não dispara re-render, então o valor antigo ficava congelado aqui e a
   // guarda de /dashboard jogava o usuário de volta para o onboarding.
   const { signed, loading, perfilCompleto: profileComplete } = useAuth();
-
+ 
   if (loading) {
     return <TelaCarregamento mensagem="Preparando o seu painel…" />;
   }
@@ -32,6 +34,7 @@ function AppRoutes() {
     <BrowserRouter>
       <Suspense fallback={<TelaCarregamento mensagem="Carregando página…" />}>
         <Routes>
+        <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
         <Route
           path="/login"
           element={

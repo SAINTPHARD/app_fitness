@@ -8,6 +8,7 @@ import {
   mensagemErroCatalogo,
   normalizarMusculoCatalogo,
   normalizarRespostaCatalogo,
+  traduzirMetadadoCatalogo,
 } from '../utils/catalogoExerciciosApi';
 
 /** Junta apenas as informações preenchidas, evitando "undefined · undefined". */
@@ -21,7 +22,7 @@ function montarResumo(partes) {
 function LinhaCatalogo({ exercicio, musculoNormalizado, aoAbrirDetalhes, aoAdicionar }) {
   const nome = exercicio?.name?.trim() || 'Exercício sem nome';
   const resumo =
-    montarResumo([exercicio?.muscle || musculoNormalizado, exercicio?.equipment, exercicio?.difficulty]) ||
+    montarResumo([exercicio?.muscle || musculoNormalizado, exercicio?.equipment, exercicio?.difficulty].map(traduzirMetadadoCatalogo)) ||
     'Detalhes não informados';
 
   return (
@@ -41,7 +42,7 @@ function LinhaCatalogo({ exercicio, musculoNormalizado, aoAbrirDetalhes, aoAdici
         type="button"
         onClick={() => aoAdicionar(exercicio)}
         aria-label={`Adicionar ${nome} ao treino`}
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-600 text-white transition hover:bg-emerald-700 active:scale-95"
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand text-brand-ink transition-colors hover:bg-brand-strong active:scale-95"
       >
         <Plus size={18} strokeWidth={3} />
       </button>
@@ -71,7 +72,15 @@ export default function CatalogoExercicios({ musculoAlvo, onAdicionarExercicio }
   const [erro, setErro] = useState('');
   const [tentativa, setTentativa] = useState(0);
   const [exercicioSelecionado, setExercicioSelecionado] = useState(null);
+  const [busca, setBusca] = useState('');
+  const [equipamento, setEquipamento] = useState('');
+  const [dificuldade, setDificuldade] = useState('');
   const musculoNormalizado = normalizarMusculoCatalogo(musculoAlvo);
+  const equipamentos = [...new Set(exercicios.map((item) => item.equipment).filter(Boolean))];
+  const dificuldades = [...new Set(exercicios.map((item) => item.difficulty).filter(Boolean))];
+  const exerciciosFiltrados = exercicios.filter((item) =>
+    String(item.name || '').toLowerCase().includes(busca.trim().toLowerCase()) &&
+    (!equipamento || item.equipment === equipamento) && (!dificuldade || item.difficulty === dificuldade));
 
   useEffect(() => {
     const controller = new AbortController();
@@ -135,6 +144,18 @@ export default function CatalogoExercicios({ musculoAlvo, onAdicionarExercicio }
         )}
       </div>
 
+      <div className="grid gap-2 sm:grid-cols-3">
+        <label className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">Buscar por nome
+          <input type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Ex.: supino" className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:border-zinc-700 dark:bg-zinc-800" />
+        </label>
+        <label className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">Equipamento
+          <select value={equipamento} onChange={(e) => setEquipamento(e.target.value)} className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800"><option value="">Todos</option>{equipamentos.map((valor) => <option key={valor} value={valor}>{traduzirMetadadoCatalogo(valor)}</option>)}</select>
+        </label>
+        <label className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">Dificuldade
+          <select value={dificuldade} onChange={(e) => setDificuldade(e.target.value)} className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-800"><option value="">Todas</option>{dificuldades.map((valor) => <option key={valor} value={valor}>{traduzirMetadadoCatalogo(valor)}</option>)}</select>
+        </label>
+      </div>
+
       {carregando && (
         <p aria-live="polite" className="rounded-xl bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-500 dark:bg-zinc-800/60 dark:text-zinc-400">
           Carregando exercícios…
@@ -165,7 +186,7 @@ export default function CatalogoExercicios({ musculoAlvo, onAdicionarExercicio }
 
       {!carregando && !erro && exercicios.length > 0 && (
         <ul className="flex flex-col gap-2">
-          {exercicios.map((exercicio, indice) => (
+          {exerciciosFiltrados.map((exercicio, indice) => (
             <LinhaCatalogo
               key={`${musculoNormalizado}-${exercicio?.name?.trim() || 'exercicio'}-${indice}`}
               exercicio={exercicio}
@@ -176,6 +197,7 @@ export default function CatalogoExercicios({ musculoAlvo, onAdicionarExercicio }
           ))}
         </ul>
       )}
+      {!carregando && !erro && exercicios.length > 0 && exerciciosFiltrados.length === 0 && <p className="rounded-xl bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-500 dark:bg-zinc-800/60">Nenhum exercício corresponde aos filtros.</p>}
 
       {exercicioSelecionado && (
         <ModalDetalhesExercicio exercicio={exercicioSelecionado} aoFechar={() => setExercicioSelecionado(null)} />

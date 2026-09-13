@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { fitnessApi } from '../services/fitnessApi';
-import { useNutrition } from '../context/NutritionContext';
+import { useNutrition } from './useNutrition';
 import { formatarDataISO } from '../pages/Dashboard/Dieta/utils/calendario';
 
 /**

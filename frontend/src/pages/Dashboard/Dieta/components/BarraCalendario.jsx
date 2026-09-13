@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import PropTypes from 'prop-types';
 import { formatarDataISO, obterDataDeHojeISO, obterDiasDaSemana } from '../utils/calendario';
 
 /**
@@ -53,13 +54,13 @@ export default function BarraCalendario({ dataSelecionadaISO, aoSelecionarDia })
                 // discretos até o hover, mantendo a hierarquia visual clara.
                 'flex min-w-[52px] flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-3 transition-all',
                 estaSelecionado
-                  ? 'bg-lime-400 text-zinc-900 shadow-lg shadow-lime-200'
+                  ? 'bg-brand text-brand-ink shadow-lg'
                   : 'text-slate-500 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-700',
               ].join(' ')}
             >
               <span className="text-xs font-bold uppercase tracking-wide">{dia.rotulo}</span>
               <span className="text-lg font-bold">{dia.numero}</span>
-              {ehHoje && !estaSelecionado && <span className="h-1.5 w-1.5 rounded-full bg-lime-400" />}
+              {ehHoje && !estaSelecionado && <span className="h-1.5 w-1.5 rounded-full bg-brand" />}
             </button>
           );
         })}
@@ -76,3 +77,5 @@ export default function BarraCalendario({ dataSelecionadaISO, aoSelecionarDia })
     </div>
   );
 }
+
+BarraCalendario.propTypes = { dataSelecionadaISO: PropTypes.string.isRequired, aoSelecionarDia: PropTypes.func.isRequired };

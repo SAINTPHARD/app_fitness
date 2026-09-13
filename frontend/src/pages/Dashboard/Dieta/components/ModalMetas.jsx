@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import { X, Sparkles, Info } from 'lucide-react';
 import { validarMetas } from '../utils/validarMetas';
 import { calcularMetasNutricionais } from '../utils/calculadoraMetabolica';
@@ -254,7 +255,7 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
                   min="0"
                   value={dadosCorporais.peso}
                   onChange={(e) => atualizarDadoCorporal('peso', e.target.value)}
-                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-lime-400 focus:ring-4 focus:ring-lime-100 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-brand focus:ring-4 focus:ring-brand-soft dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
                 />
               </label>
               <label className="flex flex-col gap-1 text-sm font-semibold text-slate-600 dark:text-zinc-300">
@@ -264,7 +265,7 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
                   min="0"
                   value={dadosCorporais.altura}
                   onChange={(e) => atualizarDadoCorporal('altura', e.target.value)}
-                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-lime-400 focus:ring-4 focus:ring-lime-100 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-brand focus:ring-4 focus:ring-brand-soft dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
                 />
               </label>
               <label className="flex flex-col gap-1 text-sm font-semibold text-slate-600 dark:text-zinc-300">
@@ -274,7 +275,7 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
                   min="0"
                   value={dadosCorporais.idade}
                   onChange={(e) => atualizarDadoCorporal('idade', e.target.value)}
-                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-lime-400 focus:ring-4 focus:ring-lime-100 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-brand focus:ring-4 focus:ring-brand-soft dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
                 />
               </label>
               <label className="flex flex-col gap-1 text-sm font-semibold text-slate-600 dark:text-zinc-300">
@@ -282,7 +283,7 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
                 <select
                   value={dadosCorporais.sexo}
                   onChange={(e) => atualizarDadoCorporal('sexo', e.target.value)}
-                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-lime-400 focus:ring-4 focus:ring-lime-100 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-brand focus:ring-4 focus:ring-brand-soft dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
                 >
                   <option value="">Selecione</option>
                   <option value="M">Masculino</option>
@@ -296,7 +297,7 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
               <select
                 value={dadosCorporais.nivelAtividade}
                 onChange={(e) => atualizarDadoCorporal('nivelAtividade', e.target.value)}
-                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-lime-400 focus:ring-4 focus:ring-lime-100 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
+                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-brand focus:ring-4 focus:ring-brand-soft dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
               >
                 <option value="">Selecione</option>
                 {NIVEIS_ATIVIDADE.map((nivel) => (
@@ -312,7 +313,7 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
               <select
                 value={dadosCorporais.objetivo}
                 onChange={(e) => atualizarDadoCorporal('objetivo', e.target.value)}
-                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-lime-400 focus:ring-4 focus:ring-lime-100 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
+                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-brand focus:ring-4 focus:ring-brand-soft dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-100"
               >
                 <option value="">Selecione</option>
                 {OBJETIVOS.map((objetivo) => (
@@ -328,7 +329,7 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
             <button
               type="button"
               onClick={gerarMetasAutomaticamente}
-              className="mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-lime-400 py-2.5 text-sm font-bold text-zinc-900 transition-transform hover:scale-[1.01] active:scale-[0.99]"
+              className="mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-brand py-2.5 text-sm font-bold text-brand-ink transition-transform hover:scale-[1.01] active:scale-[0.99]"
             >
               <Sparkles size={16} strokeWidth={2.5} />
               Gerar Metas Automaticamente
@@ -363,7 +364,7 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
                     'rounded-xl border bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none transition-shadow focus:ring-4 dark:bg-zinc-900/40 dark:text-zinc-100',
                     erros[chave]
                       ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-100'
-                      : 'border-slate-200 focus:border-lime-400 focus:ring-lime-100 dark:border-zinc-700',
+                      : 'border-slate-200 focus:border-brand focus:ring-brand-soft dark:border-zinc-700',
                   ].join(' ')}
                 />
                 {erros[chave] && (
@@ -375,13 +376,13 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
             ))}
 
             {erroEnvio && <p className="m-0 text-xs font-bold text-rose-500">{erroEnvio}</p>}
-            {mensagem && <p className="m-0 text-xs font-bold text-emerald-600">{mensagem}</p>}
+            {mensagem && <p className="m-0 text-xs font-bold text-success">{mensagem}</p>}
 
             <div className="mt-2 flex gap-2">
               <button
                 type="submit"
                 disabled={salvando}
-                className="flex-1 rounded-xl bg-zinc-900 py-2.5 text-sm font-bold text-white transition-transform hover:scale-[1.01] active:scale-[0.99] dark:bg-lime-400 dark:text-zinc-900"
+                className="flex-1 rounded-xl bg-brand py-2.5 text-sm font-bold text-brand-ink transition-transform hover:scale-[1.01] active:scale-[0.99]"
               >
                 {salvando ? 'Salvando...' : 'Salvar metas'}
               </button>
@@ -399,3 +400,5 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
     </div>
   );
 }
+
+ModalMetas.propTypes = { aberto: PropTypes.bool.isRequired, metasAtuais: PropTypes.shape({ calorias: PropTypes.number, proteinas: PropTypes.number, carboidratos: PropTypes.number, gorduras: PropTypes.number, aguaMl: PropTypes.number }).isRequired, aoFechar: PropTypes.func.isRequired, aoSalvar: PropTypes.func.isRequired };

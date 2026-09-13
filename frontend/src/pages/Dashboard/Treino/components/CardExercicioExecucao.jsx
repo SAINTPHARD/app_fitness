@@ -73,6 +73,11 @@ CampoSerie.propTypes = {
 function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) {
   const [carga, setCarga] = useState(serie.carga ?? '');
   const [repeticoes, setRepeticoes] = useState(serie.repeticoes ?? '');
+  const [detalhesAbertos, setDetalhesAbertos] = useState(Boolean(serie.rir != null || serie.rpe != null || serie.observacao));
+  const [unidadeCarga, setUnidadeCarga] = useState(serie.unidadeCarga || 'KG');
+  const [rir, setRir] = useState(serie.rir ?? '');
+  const [rpe, setRpe] = useState(serie.rpe ?? '');
+  const [observacao, setObservacao] = useState(serie.observacao ?? '');
 
   const concluida = serie.status === 'CONCLUIDA';
   const pendenteCriacao = String(serie.id).startsWith('temp-');
@@ -83,13 +88,21 @@ function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) 
   useEffect(() => {
     setCarga(serie.carga ?? '');
     setRepeticoes(serie.repeticoes ?? '');
-  }, [serie.carga, serie.repeticoes]);
+    setUnidadeCarga(serie.unidadeCarga || 'KG');
+    setRir(serie.rir ?? '');
+    setRpe(serie.rpe ?? '');
+    setObservacao(serie.observacao ?? '');
+  }, [serie.carga, serie.repeticoes, serie.unidadeCarga, serie.rir, serie.rpe, serie.observacao]);
 
   const salvar = () => {
     aoAtualizar(serie.id, {
       exercicioId: serie.exercicioId,
       carga: numeroOuNull(carga),
       repeticoes: numeroOuNull(repeticoes),
+      unidadeCarga,
+      rir: numeroOuNull(rir),
+      rpe: numeroOuNull(rpe),
+      observacao: observacao.trim() || null,
     });
   };
 
@@ -97,7 +110,7 @@ function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) 
     <li>
       <div
         className={`flex items-center gap-2 rounded-xl p-2 transition-colors duration-150 ${
-          concluida ? 'bg-emerald-600 text-white' : 'bg-zinc-50 dark:bg-zinc-800'
+          concluida ? 'bg-success text-white' : 'bg-muted'
         }`}
       >
         <button
@@ -110,15 +123,15 @@ function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) 
           className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 text-sm font-bold transition ${
             concluida
               ? 'border-white/70 bg-white/20 text-white'
-              : 'border-zinc-300 text-zinc-600 hover:border-emerald-500 hover:text-emerald-600 disabled:opacity-40 dark:border-zinc-600 dark:text-zinc-300'
+              : 'border-zinc-300 text-zinc-600 hover:border-brand hover:text-brand disabled:opacity-40 dark:border-zinc-600 dark:text-zinc-300'
           }`}
         >
           {concluida ? <Check size={16} strokeWidth={3} /> : serie.numeroSerie}
         </button>
 
         <CampoSerie
-          sufixo="kg"
-          rotuloAcessivel={`Carga da série ${serie.numeroSerie} em quilogramas`}
+          sufixo={unidadeCarga.toLowerCase()}
+          rotuloAcessivel={`Carga da série ${serie.numeroSerie} em ${unidadeCarga === 'LB' ? 'libras' : 'quilogramas'}`}
           valor={carga}
           aoDigitar={setCarga}
           aoSalvar={salvar}
@@ -153,6 +166,30 @@ function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) 
         </button>
       </div>
 
+      {!concluida && (
+        <div className="mt-1 pl-12">
+          <button type="button" onClick={() => setDetalhesAbertos((valor) => !valor)} aria-expanded={detalhesAbertos} className="text-xs font-semibold text-zinc-500 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
+            {detalhesAbertos ? 'Ocultar detalhes' : 'Detalhes da série'}
+          </button>
+          {detalhesAbertos && (
+            <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl border border-zinc-200 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-900 sm:grid-cols-4">
+              <label className="text-xs text-zinc-600 dark:text-zinc-300">Unidade
+                <select value={unidadeCarga} onChange={(e) => setUnidadeCarga(e.target.value)} onBlur={salvar} disabled={bloqueada} className="mt-1 w-full rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-800"><option>KG</option><option>LB</option></select>
+              </label>
+              <label className="text-xs text-zinc-600 dark:text-zinc-300">RIR
+                <input type="number" min="0" max="10" value={rir} onChange={(e) => setRir(e.target.value)} onBlur={salvar} disabled={bloqueada} className="mt-1 w-full rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-800" />
+              </label>
+              <label className="text-xs text-zinc-600 dark:text-zinc-300">RPE
+                <input type="number" min="0" max="10" step="0.5" value={rpe} onChange={(e) => setRpe(e.target.value)} onBlur={salvar} disabled={bloqueada} className="mt-1 w-full rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-800" />
+              </label>
+              <label className="col-span-2 text-xs text-zinc-600 dark:text-zinc-300 sm:col-span-1">Observação
+                <input type="text" maxLength="500" value={observacao} onChange={(e) => setObservacao(e.target.value)} onBlur={salvar} disabled={bloqueada} placeholder="Opcional" className="mt-1 w-full rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-800" />
+              </label>
+            </div>
+          )}
+        </div>
+      )}
+
       {(erroPreenchimento || serie.pendenteSincronizacao) && (
         <p className="mt-1 pl-12 text-xs font-medium text-zinc-500 dark:text-zinc-400">
           {erroPreenchimento && (
@@ -177,6 +214,10 @@ LinhaSerie.propTypes = {
     repeticoes: PropTypes.number,
     status: PropTypes.string,
     pendenteSincronizacao: PropTypes.bool,
+    unidadeCarga: PropTypes.string,
+    rir: PropTypes.number,
+    rpe: PropTypes.number,
+    observacao: PropTypes.string,
   }).isRequired,
   processando: PropTypes.bool,
   aoAtualizar: PropTypes.func.isRequired,
@@ -244,7 +285,7 @@ export default function CardExercicioExecucao({
     <article
       className={`overflow-hidden rounded-2xl border bg-white transition-colors dark:bg-zinc-900 ${
         exercicioCompleto
-          ? 'border-emerald-500/60 dark:border-emerald-500/40'
+          ? 'border-brand'
           : 'border-zinc-200 dark:border-zinc-800'
       }`}
     >
@@ -267,7 +308,7 @@ export default function CardExercicioExecucao({
         <span
           className={`hidden shrink-0 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums sm:block ${
             exercicioCompleto
-              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400'
+              ? 'bg-brand-soft text-brand-soft-ink'
               : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300'
           }`}
         >
@@ -344,7 +385,7 @@ export default function CardExercicioExecucao({
             type="button"
             onClick={adicionarProximaSerie}
             disabled={adicionando}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white transition hover:bg-emerald-700 active:scale-[0.99] disabled:opacity-60"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand text-sm font-bold text-brand-ink transition-colors hover:bg-brand-strong active:scale-[0.99] disabled:opacity-60"
           >
             <Plus size={18} strokeWidth={3} />
             {adicionando

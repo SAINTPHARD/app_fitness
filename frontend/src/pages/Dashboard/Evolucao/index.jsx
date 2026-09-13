@@ -3,22 +3,37 @@ import { Camera, Check, Pencil, Plus, Trash2, X } from 'lucide-react';
 import GraficoEvolucaoPeso from '../Home/components/GraficoEvolucaoPeso';
 import { obterDataDeHojeISO } from '../Dieta/utils/calendario';
 import { fitnessApi } from '../../../services/fitnessApi';
+import { pesoService } from '../../../services/dominio/pesoService';
+import { mapearErroApi } from '../../../utils/erroApi';
+import { criarDataLocal } from '../../../utils/dataCivil';
+import { useBloqueioMutacao } from '../../../hooks/useBloqueioMutacao';
 import estilos from './Evolucao.module.css';
 
 const CHAVE_PESOS = 'home-historico-peso';
 const CHAVE_MEDIDAS = 'evolucao-medidas';
-const CHAVE_FOTOS = 'evolucao-fotos';
 const MAX_FOTOS = 6;
 const MAX_HISTORICO = 30;
 
-const MEDIDAS_VAZIAS = { cintura: '', braco: '', perna: '', gordura: '' };
+const CAMPOS_MEDIDAS = [
+  ['cintura', 'Cintura', 30, 200], ['torax', 'Tórax', 30, 250], ['quadril', 'Quadril', 30, 250],
+  ['pescoco', 'Pescoço', 15, 100], ['braco', 'Braço (registro anterior)', 10, 80], ['perna', 'Perna (registro anterior)', 20, 100],
+  ['bracoDireito', 'Braço direito', 10, 100],
+  ['bracoEsquerdo', 'Braço esquerdo', 10, 100], ['pernaDireita', 'Perna direita', 20, 150],
+  ['pernaEsquerda', 'Perna esquerda', 20, 150], ['panturrilhaDireita', 'Panturrilha direita', 10, 100],
+  ['panturrilhaEsquerda', 'Panturrilha esquerda', 10, 100], ['gordura', 'Gordura corporal', 2, 70],
+];
+const MEDIDAS_VAZIAS = Object.fromEntries(CAMPOS_MEDIDAS.map(([campo]) => [campo, '']));
 const PESO_VAZIO = { data: obterDataDeHojeISO(), peso: '' };
+const TIPOS_CONFIGURAVEIS = [
+  { valor: 'torax', rotulo: 'Tórax' }, { valor: 'quadril', rotulo: 'Quadril' },
+  { valor: 'pescoco', rotulo: 'Pescoço' }, { valor: 'braco', rotulo: 'Braço', lateral: true },
+  { valor: 'perna', rotulo: 'Perna', lateral: true }, { valor: 'panturrilha', rotulo: 'Panturrilha', lateral: true },
+];
 
 const LIMITES_MEDIDAS = {
   cintura: { min: 30, max: 200, rotulo: 'Cintura' },
-  braco: { min: 10, max: 80, rotulo: 'Braço' },
-  perna: { min: 20, max: 100, rotulo: 'Perna' },
   gordura: { min: 2, max: 70, rotulo: 'Gordura corporal' },
+  ...Object.fromEntries(CAMPOS_MEDIDAS.filter(([campo]) => !['cintura', 'gordura'].includes(campo)).map(([campo, rotulo, min, max]) => [campo, { min, max, rotulo }])),
 };
 
 function lerJSON(chave, padrao) {
@@ -49,21 +64,15 @@ function trocarRegistro(lista, registro) {
 function mensagemErroApi(erro, fallback) {
   const detalhes = erro?.response?.data?.mensagens || erro?.response?.data?.details;
   if (Array.isArray(detalhes) && detalhes.length > 0) return detalhes[0];
-  return erro?.response?.data?.message || erro?.message || fallback;
+  return mapearErroApi(erro, fallback.replace(/^Falha ao /, '')).mensagem;
 }
 
 function normalizarMedidas(formulario) {
-  return {
-    data: formulario.data || obterDataDeHojeISO(),
-    cintura: formulario.cintura ? Number(formulario.cintura) : null,
-    braco: formulario.braco ? Number(formulario.braco) : null,
-    perna: formulario.perna ? Number(formulario.perna) : null,
-    gordura: formulario.gordura ? Number(formulario.gordura) : null,
-  };
+  return { data: formulario.data || obterDataDeHojeISO(), ...Object.fromEntries(CAMPOS_MEDIDAS.map(([campo]) => [campo, formulario[campo] ? Number(formulario[campo]) : null])) };
 }
 
 function validarMedidas(registro) {
-  if (!registro.cintura && !registro.braco && !registro.perna && !registro.gordura) {
+  if (!CAMPOS_MEDIDAS.some(([campo]) => registro[campo] != null)) {
     return 'Informe ao menos uma medida.';
   }
 
@@ -93,6 +102,7 @@ async function importarRegistrosLocais(listaBackend, chave, salvar) {
 }
 
 export default function EvolucaoPage() {
+  const executarComBloqueio = useBloqueioMutacao();
   const [historicoPeso, setHistoricoPeso] = useState([]);
   const [historicoMedidas, setHistoricoMedidas] = useState([]);
   const [fotos, setFotos] = useState([]);
@@ -105,6 +115,13 @@ export default function EvolucaoPage() {
   const [erroFoto, setErroFoto] = useState('');
   const [erroPeso, setErroPeso] = useState('');
   const [erroMedidas, setErroMedidas] = useState('');
+  const [enviandoFoto, setEnviandoFoto] = useState(false);
+  const [formFoto, setFormFoto] = useState({ data: obterDataDeHojeISO(), pose: 'FRENTE', descricao: '' });
+  const [periodoGrafico, setPeriodoGrafico] = useState('mensal');
+  const [metaPeso, setMetaPeso] = useState('');
+  const [camposAtivos, setCamposAtivos] = useState(['cintura', 'gordura']);
+  const [novaMedida, setNovaMedida] = useState('torax');
+  const [ladoMedida, setLadoMedida] = useState('Direito');
 
   useEffect(() => {
     let cancelado = false;
@@ -114,30 +131,30 @@ export default function EvolucaoPage() {
 
       try {
         const [pesosApi, medidasApi, fotosApi] = await Promise.all([
-          fitnessApi.listarPesos(),
+          pesoService.listar(),
           fitnessApi.listarMedidas(),
           fitnessApi.listarFotos(),
         ]);
 
         if (cancelado) return;
 
-        const [pesos, medidas, fotosImportadas] = await Promise.all([
-          importarRegistrosLocais(pesosApi, CHAVE_PESOS, fitnessApi.criarPeso),
+        const [pesos, medidas] = await Promise.all([
+          importarRegistrosLocais(pesosApi, CHAVE_PESOS, pesoService.criar),
           importarRegistrosLocais(medidasApi, CHAVE_MEDIDAS, fitnessApi.criarMedida),
-          importarRegistrosLocais(fotosApi, CHAVE_FOTOS, fitnessApi.criarFoto),
         ]);
+        const fotosPrivadas = await Promise.all(fotosApi.map(async (foto) => ({ ...foto, src: await fitnessApi.obterFotoPrivada(foto.id) })));
 
         if (!cancelado) {
           setHistoricoPeso(ordenarPorData(pesos).slice(-MAX_HISTORICO));
           setHistoricoMedidas(ordenarPorData(medidas).slice(-MAX_HISTORICO));
-          setFotos(ordenarPorData(fotosImportadas).slice(-MAX_FOTOS));
+          setFotos(ordenarPorData(fotosPrivadas).slice(-MAX_FOTOS));
         }
       } catch (erro) {
         console.error('Falha ao carregar evolução:', erro);
         if (!cancelado) {
           setHistoricoPeso(lerJSON(CHAVE_PESOS, []));
           setHistoricoMedidas(lerJSON(CHAVE_MEDIDAS, []));
-          setFotos(lerJSON(CHAVE_FOTOS, []));
+          setFotos([]);
         }
       } finally {
         if (!cancelado) setCarregando(false);
@@ -154,11 +171,14 @@ export default function EvolucaoPage() {
   const ultimaMedida = historicoMedidas.length > 0 ? historicoMedidas[historicoMedidas.length - 1] : null;
 
   const variacaoPeso = useMemo(() => {
-    if (historicoPeso.length < 2) return null;
-    const primeiro = Number(historicoPeso[0].peso);
-    const ultimo = Number(historicoPeso[historicoPeso.length - 1].peso);
+    const dias = periodoGrafico === 'semanal' ? 7 : 30;
+    const limite = new Date(); limite.setDate(limite.getDate() - dias);
+    const periodo = historicoPeso.filter((item) => criarDataLocal(item.data) >= limite);
+    if (periodo.length < 2) return null;
+    const primeiro = Number(periodo[0].peso);
+    const ultimo = Number(periodo[periodo.length - 1].peso);
     return Number((ultimo - primeiro).toFixed(1));
-  }, [historicoPeso]);
+  }, [historicoPeso, periodoGrafico]);
 
   const salvarPeso = async (evento) => {
     evento.preventDefault();
@@ -170,8 +190,11 @@ export default function EvolucaoPage() {
       return;
     }
 
+    const existente = historicoPeso.find((item) => item.data === registro.data);
+    if (existente && !window.confirm(`Já existe um peso em ${formatarDataCurta(registro.data)}. Deseja substituí-lo?`)) return;
     try {
-      const salvo = await fitnessApi.criarPeso(registro);
+      const salvo = await executarComBloqueio(`peso:${registro.data}`, () => pesoService.criar(registro));
+      if (!salvo) return;
       setHistoricoPeso((anterior) => trocarRegistro(anterior, salvo));
       setFormPeso(PESO_VAZIO);
     } catch (erro) {
@@ -184,7 +207,8 @@ export default function EvolucaoPage() {
     const registro = { data: edicaoPeso.data, peso: Number(edicaoPeso.peso) };
 
     try {
-      const salvo = await fitnessApi.atualizarPeso(edicaoPeso.id, registro);
+      const salvo = await executarComBloqueio(`peso:${registro.data}`, () => pesoService.atualizar(edicaoPeso.id, registro));
+      if (!salvo) return;
       setHistoricoPeso((anterior) => trocarRegistro(anterior, salvo));
       setEdicaoPeso(null);
     } catch (erro) {
@@ -194,7 +218,7 @@ export default function EvolucaoPage() {
 
   const removerPeso = async (id) => {
     try {
-      await fitnessApi.removerPeso(id);
+      await pesoService.remover(id);
       setHistoricoPeso((anterior) => anterior.filter((item) => item.id !== id));
       setConfirmacao(null);
     } catch (erro) {
@@ -250,10 +274,17 @@ export default function EvolucaoPage() {
     }
   };
 
+  const adicionarCampoMedida = () => {
+    const configuracao = TIPOS_CONFIGURAVEIS.find((item) => item.valor === novaMedida);
+    const campo = configuracao?.lateral ? `${novaMedida}${ladoMedida}` : novaMedida;
+    if (campo) setCamposAtivos((atuais) => [...new Set([...atuais, campo])]);
+  };
+
   const adicionarFoto = (evento) => {
     const arquivo = evento.target.files?.[0];
     evento.target.value = '';
     if (!arquivo) return;
+    if (!formFoto.data || !formFoto.pose) { setErroFoto('Informe a data e a pose antes de selecionar a foto.'); return; }
 
     if (fotos.length >= MAX_FOTOS) {
       setErroFoto(`Limite de ${MAX_FOTOS} fotos. Remova uma para adicionar outra.`);
@@ -273,14 +304,19 @@ export default function EvolucaoPage() {
     setErroFoto('');
     const leitor = new FileReader();
     leitor.onload = async () => {
+      setEnviandoFoto(true);
       try {
         const salva = await fitnessApi.criarFoto({
-          data: obterDataDeHojeISO(),
+          ...formFoto,
           src: leitor.result,
         });
-        setFotos((anterior) => ordenarPorData([...anterior, salva]).slice(-MAX_FOTOS));
+        const src = await fitnessApi.obterFotoPrivada(salva.id);
+        setFotos((anterior) => ordenarPorData([...anterior, { ...salva, src }]).slice(-MAX_FOTOS));
+        setFormFoto({ data: obterDataDeHojeISO(), pose: 'FRENTE', descricao: '' });
       } catch (erro) {
         setErroFoto(mensagemErroApi(erro, 'Falha ao salvar foto.'));
+      } finally {
+        setEnviandoFoto(false);
       }
     };
     leitor.readAsDataURL(arquivo);
@@ -338,7 +374,13 @@ export default function EvolucaoPage() {
       {carregando ? (
         <p className={estilos.estadoTexto}>Carregando evolução...</p>
       ) : (
-        <GraficoEvolucaoPeso historicoPeso={historicoPeso} variacaoPeso={variacaoPeso} />
+        <>
+          <div className={estilos.controlesGrafico}>
+            <label>Variação <select value={periodoGrafico} onChange={(e) => setPeriodoGrafico(e.target.value)}><option value="semanal">Semanal</option><option value="mensal">Mensal</option></select></label>
+            <label>Meta de peso (kg) <input type="number" min="20" max="300" step="0.1" value={metaPeso} onChange={(e) => setMetaPeso(e.target.value)} placeholder="Opcional" /></label>
+          </div>
+          <GraficoEvolucaoPeso historicoPeso={historicoPeso} variacaoPeso={variacaoPeso} metaPeso={metaPeso ? Number(metaPeso) : null} />
+        </>
       )}
 
       <div className={estilos.cartao}>
@@ -455,50 +497,13 @@ export default function EvolucaoPage() {
               onChange={(e) => setFormMedidas((p) => ({ ...p, data: e.target.value }))}
             />
           </label>
-          <label>
-            Cintura (cm)
-            <input
-              type="number"
-              step="0.1"
-              min={LIMITES_MEDIDAS.cintura.min}
-              max={LIMITES_MEDIDAS.cintura.max}
-              value={formMedidas.cintura}
-              onChange={(e) => setFormMedidas((p) => ({ ...p, cintura: e.target.value }))}
-            />
-          </label>
-          <label>
-            Braço (cm)
-            <input
-              type="number"
-              step="0.1"
-              min={LIMITES_MEDIDAS.braco.min}
-              max={LIMITES_MEDIDAS.braco.max}
-              value={formMedidas.braco}
-              onChange={(e) => setFormMedidas((p) => ({ ...p, braco: e.target.value }))}
-            />
-          </label>
-          <label>
-            Perna (cm)
-            <input
-              type="number"
-              step="0.1"
-              min={LIMITES_MEDIDAS.perna.min}
-              max={LIMITES_MEDIDAS.perna.max}
-              value={formMedidas.perna}
-              onChange={(e) => setFormMedidas((p) => ({ ...p, perna: e.target.value }))}
-            />
-          </label>
-          <label>
-            Gordura (%)
-            <input
-              type="number"
-              step="0.1"
-              min={LIMITES_MEDIDAS.gordura.min}
-              max={LIMITES_MEDIDAS.gordura.max}
-              value={formMedidas.gordura}
-              onChange={(e) => setFormMedidas((p) => ({ ...p, gordura: e.target.value }))}
-            />
-          </label>
+          {CAMPOS_MEDIDAS.filter(([campo]) => camposAtivos.includes(campo)).map(([campo, rotulo]) => <label key={campo}>{rotulo} ({campo === 'gordura' ? '%' : 'cm'})<input type="number" step="0.1" min={LIMITES_MEDIDAS[campo].min} max={LIMITES_MEDIDAS[campo].max} value={formMedidas[campo]} onChange={(e) => setFormMedidas((p) => ({ ...p, [campo]: e.target.value }))} /></label>)}
+          <fieldset className={estilos.configuradorMedidas}>
+            <legend>Adicionar medida opcional</legend>
+            <select value={novaMedida} onChange={(e) => setNovaMedida(e.target.value)}>{TIPOS_CONFIGURAVEIS.map((item) => <option key={item.valor} value={item.valor}>{item.rotulo}</option>)}</select>
+            {TIPOS_CONFIGURAVEIS.find((item) => item.valor === novaMedida)?.lateral && <select aria-label="Lado da medida" value={ladoMedida} onChange={(e) => setLadoMedida(e.target.value)}><option>Direito</option><option>Esquerdo</option></select>}
+            <button type="button" className={estilos.botaoSecundario} onClick={adicionarCampoMedida}><Plus size={15} aria-hidden="true" /> Incluir campo</button>
+          </fieldset>
           {erroMedidas && <p className={estilos.erro}>{erroMedidas}</p>}
           <button type="submit" className={estilos.botaoPrimario}>
             Registrar medidas
@@ -539,12 +544,7 @@ export default function EvolucaoPage() {
                     <>
                       <span>
                         <strong>{formatarDataCurta(item.data)}</strong>
-                        {[
-                          item.cintura != null && `Cintura ${item.cintura}cm`,
-                          item.braco != null && `Braço ${item.braco}cm`,
-                          item.perna != null && `Perna ${item.perna}cm`,
-                          item.gordura != null && `${item.gordura}% gordura`,
-                        ]
+                        {CAMPOS_MEDIDAS.map(([campo, rotulo]) => item[campo] != null && `${rotulo} ${item[campo]}${campo === 'gordura' ? '%' : 'cm'}`)
                           .filter(Boolean)
                           .join(' · ')}
                       </span>
@@ -565,13 +565,20 @@ export default function EvolucaoPage() {
       </div>
 
       <div className={estilos.cartao}>
+        <aside className={estilos.avisoPrivacidade}><strong>Fotos privadas</strong><span>As imagens são armazenadas no backend e só podem ser acessadas com sua autenticação. Não use links públicos.</span></aside>
         <div className={estilos.fotosCabecalho}>
           <h3 className={estilos.cartaoTitulo}>Fotos de progresso</h3>
-          <label className={estilos.botaoSecundario}>
+          <label className={estilos.botaoSecundario} aria-disabled={enviandoFoto}>
             <Plus size={16} strokeWidth={2.5} />
-            Adicionar
-            <input type="file" accept="image/*" onChange={adicionarFoto} hidden />
+            {enviandoFoto ? 'Enviando…' : 'Adicionar'}
+            <input type="file" accept="image/jpeg,image/png,image/webp" onChange={adicionarFoto} disabled={enviandoFoto} hidden />
           </label>
+        </div>
+
+        <div className={estilos.formFoto}>
+          <label>Data<input type="date" required value={formFoto.data} onChange={(e) => setFormFoto((p) => ({ ...p, data: e.target.value }))} /></label>
+          <label>Pose<select required value={formFoto.pose} onChange={(e) => setFormFoto((p) => ({ ...p, pose: e.target.value }))}><option value="FRENTE">Frente</option><option value="COSTAS">Costas</option><option value="LADO">Lado</option></select></label>
+          <label>Descrição<input type="text" maxLength="500" value={formFoto.descricao} onChange={(e) => setFormFoto((p) => ({ ...p, descricao: e.target.value }))} placeholder="Opcional" /></label>
         </div>
 
         {erroFoto && <p className={estilos.erro}>{erroFoto}</p>}
@@ -585,13 +592,13 @@ export default function EvolucaoPage() {
           <div className={estilos.gradeFotos}>
             {fotos.map((foto) => (
               <figure key={foto.id || foto.src} className={estilos.fotoItem}>
-                <img src={foto.src} alt={`Progresso de ${formatarDataCurta(foto.data)}`} />
+                <img src={foto.src} alt={`Progresso de ${formatarDataCurta(foto.data)}`} loading="lazy" decoding="async" />
                 <figcaption>
-                  <span>{formatarDataCurta(foto.data)}</span>
+                  <span>{formatarDataCurta(foto.data)} · {foto.pose?.toLowerCase()}{foto.descricao ? ` · ${foto.descricao}` : ''}</span>
                   {confirmacao === `foto-${foto.id}` ? (
                     <span className={estilos.confirmacaoInline}>
-                      Remover?
-                      <button type="button" onClick={() => removerFoto(foto.id)}>Sim</button>
+                      Excluir permanentemente?
+                      <button type="button" onClick={() => removerFoto(foto.id)}>Sim, excluir</button>
                       <button type="button" onClick={() => setConfirmacao(null)}>Não</button>
                     </span>
                   ) : (

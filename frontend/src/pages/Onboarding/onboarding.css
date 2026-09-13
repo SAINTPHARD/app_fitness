@@ -3,7 +3,7 @@
   display: grid;
   place-items: center;
   padding: 2rem;
-  background: radial-gradient(circle at top, rgba(163, 230, 53, 0.14), transparent 40%),
+  background: radial-gradient(circle at top, rgba(var(--brand-rgb), 0.14), transparent 40%),
     var(--bg-primary);
 }
 
@@ -61,7 +61,7 @@
 .input:focus {
   outline: none;
   border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.2);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb), 0.2);
 }
 
 .submit {
@@ -99,7 +99,7 @@
 
 .eyebrow {
   margin: 0;
-  color: #65a30d;
+  color: var(--brand);
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -132,7 +132,7 @@
 }
 
 .opcaoCartao:hover {
-  border-color: #bef264;
+  border-color: var(--brand);
   transform: translateY(-1px);
 }
 

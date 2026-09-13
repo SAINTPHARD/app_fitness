@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo } from 'react';
-import { useNutrition } from '../../../../context/NutritionContext';
+import { useNutrition } from '../../../../hooks/useNutrition';
 import { useMetas } from './useMetas';
 
 export function useHidratacao(dataSelecionadaISO) {
@@ -34,6 +34,11 @@ export function useHidratacao(dataSelecionadaISO) {
     [atualizarMetas, metas]
   );
 
+  const recarregar = useCallback(
+    () => carregarAgua(dataSelecionadaISO, { forcar: true }),
+    [carregarAgua, dataSelecionadaISO]
+  );
+
   return {
     registros,
     totalMl,
@@ -43,6 +48,6 @@ export function useHidratacao(dataSelecionadaISO) {
     adicionarAgua,
     removerRegistro,
     definirMetaMl,
-    recarregar: () => carregarAgua(dataSelecionadaISO, { forcar: true }),
+    recarregar,
   };
 }

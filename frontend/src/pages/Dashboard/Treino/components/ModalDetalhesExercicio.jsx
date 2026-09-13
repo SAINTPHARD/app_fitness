@@ -106,6 +106,7 @@ export default function ModalDetalhesExercicio({ exercicio, aoFechar, registros 
                     src={midia}
                     alt={`Demonstração de ${exercicio.nome}`}
                     loading="lazy"
+                    decoding="async"
                     className="h-full w-full object-contain"
                   />
                 ) : (
@@ -140,7 +141,7 @@ export default function ModalDetalhesExercicio({ exercicio, aoFechar, registros 
                     {serie.carga ?? '—'} kg x {serie.repeticoes ?? '—'} rep.
                   </span>
                   {serie.status === 'CONCLUIDA' && (
-                    <span className="ml-auto rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400">
+                    <span className="ml-auto rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold text-brand-soft-ink">
                       Concluída
                     </span>
                   )}

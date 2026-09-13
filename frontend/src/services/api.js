@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { notificarErro, notificarInfo } from '../utils/notificacoes';
 import { extrairMensagemErro } from '../utils/erroApi';
+import { medirRequisicao } from '../utils/observabilidade';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -120,6 +121,7 @@ async function renovarToken() {
 api.interceptors.request.use(
   (config) => {
     registrarInicioRequisicao();
+    config.metadata = { inicio: performance.now() };
 
     const token = localStorage.getItem('token');
     
@@ -144,10 +146,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => {
     registrarFimRequisicao();
+    medirRequisicao(response.config, response.status, true);
     return response;
   },
   async (error) => {
     registrarFimRequisicao();
+    medirRequisicao(error.config, error.response?.status ?? 0, false);
     const requisicaoOriginal = error.config;
     const urlOriginal = requisicaoOriginal?.url || '';
     const rotaAutenticacao = urlOriginal.includes('/auth/login') || urlOriginal.includes('/auth/refresh');
