@@ -37,9 +37,10 @@ public class Usuario implements UserDetails {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(nullable = false, length = 150)
 	private String nome;
 
-	@Column(unique = true, nullable = false)
+	@Column(unique = true, nullable = false, length = 150)
 	private String email;
 
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)

@@ -53,7 +53,10 @@ public class GlobalExceptionHandler {
 				LocalDateTime.now(),
 				HttpStatus.BAD_REQUEST.value(),
 				"JSON inválido",
-				List.of("Verifique o corpo da requisição e envie um JSON válido.")
+				List.of(
+						"Verifique a sintaxe e os tipos enviados: idade deve ser um número inteiro; "
+						+ "peso e altura devem ser números; objetivo deve ser EMAGRECER, MANTER ou HIPERTROFIA."
+				)
 		);
 
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erroResposta);

@@ -9,6 +9,8 @@ import com.appfitness.exception.AcessoNegadoException;
 import com.appfitness.dto.usuario.MetasUsuarioDTO;
 import com.appfitness.dto.usuario.AlterarSenhaDTO;
 import com.appfitness.dto.usuario.ConfirmarExclusaoContaDTO;
+import com.appfitness.dto.usuario.UsuarioRequestDTO;
+import com.appfitness.dto.usuario.UsuarioResponseDTO;
 import com.appfitness.model.entity.Usuario;
 import com.appfitness.service.UsuarioService;
 
@@ -34,8 +36,9 @@ public class UsuarioController {
      * URL: POST http://localhost:8080/usuarios
      */
     @PostMapping
-    public ResponseEntity<Usuario> criarUsuario(@Valid @RequestBody Usuario usuario) {
-        Usuario novoUsuario = usuarioService.salvar(usuario);
+    public ResponseEntity<UsuarioResponseDTO> criarUsuario(
+            @Valid @RequestBody UsuarioRequestDTO usuario) {
+        UsuarioResponseDTO novoUsuario = usuarioService.salvar(usuario);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoUsuario);
     }
 

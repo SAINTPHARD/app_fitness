@@ -4,24 +4,42 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.appfitness.model.enums.Objetivo;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UsuarioRequestDTO {
 
-    @NotBlank
+    @NotBlank(message = "é obrigatório")
+    @Size(max = 150, message = "deve ter no máximo 150 caracteres")
     private String nome;
 
-    @Email
-    @NotBlank
+    @Email(message = "deve ter um formato válido")
+    @NotBlank(message = "é obrigatório")
+    @Size(max = 150, message = "deve ter no máximo 150 caracteres")
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "é obrigatória")
+    @Size(min = 8, max = 72, message = "deve ter entre 8 e 72 caracteres")
+    @Pattern(
+            regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$",
+            message = "deve conter pelo menos uma letra e um número"
+    )
     private String senha;
 
+    @Positive(message = "deve ser maior que zero")
     private Integer idade;
+
+    @Positive(message = "deve ser maior que zero")
     private Double peso;
+
+    @Positive(message = "deve ser maior que zero")
     private Double altura;
+
+    @Pattern(regexp = "(?i)[MF]", message = "deve ser M ou F")
     private String sexo;
+
     private Objetivo objetivo;
 
     public UsuarioRequestDTO() {

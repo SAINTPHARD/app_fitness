@@ -1,6 +1,7 @@
 package com.appfitness.service;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -9,9 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.appfitness.model.entity.Usuario;
 import com.appfitness.repository.UsuarioRepository;
 import com.appfitness.dto.usuario.MetasUsuarioDTO;
+import com.appfitness.dto.usuario.UsuarioRequestDTO;
+import com.appfitness.dto.usuario.UsuarioResponseDTO;
 import com.appfitness.exception.AcessoNegadoException;
-
-import jakarta.validation.Valid;
 
 /**
  * Camada de serviço responsável pelas regras de negócio e atualização dos dados do usuário.
@@ -31,13 +32,21 @@ public class UsuarioService {
     // CREATE
     // =====================================================
     @Transactional
-    public Usuario salvar(@Valid Usuario usuario) {
-        String senhaOriginal = usuario.getSenha();
-        // Criptografa a senha apenas se for enviada em texto puro (não hash BCrypt)
-        if (senhaOriginal != null && !senhaOriginal.startsWith("$2a$") && !senhaOriginal.startsWith("$2b$") && !senhaOriginal.startsWith("$2y$")) {
-            usuario.setSenha(passwordEncoder.encode(senhaOriginal));
+    public UsuarioResponseDTO salvar(UsuarioRequestDTO dados) {
+        Usuario usuario = new Usuario();
+        usuario.setNome(dados.getNome().trim());
+        usuario.setEmail(dados.getEmail().trim().toLowerCase(Locale.ROOT));
+        usuario.setSenha(passwordEncoder.encode(dados.getSenha()));
+        usuario.setIdade(dados.getIdade());
+        usuario.setPeso(dados.getPeso());
+        usuario.setAltura(dados.getAltura());
+        usuario.setObjetivo(dados.getObjetivo());
+
+        if (dados.getSexo() != null && !dados.getSexo().isBlank()) {
+            usuario.setSexo(dados.getSexo().trim().toUpperCase(Locale.ROOT).charAt(0));
         }
-        return repository.save(usuario);
+
+        return paraResponseDTO(repository.save(usuario));
     }
 
     // =====================================================
@@ -115,6 +124,21 @@ public class UsuarioService {
         dto.setGorduras(usuario.getMetaGorduras());
         dto.setAguaMl(usuario.getMetaAguaMl());
         return dto;
+    }
+
+    private UsuarioResponseDTO paraResponseDTO(Usuario usuario) {
+        Character sexo = usuario.getSexo();
+
+        return new UsuarioResponseDTO(
+                usuario.getId(),
+                usuario.getNome(),
+                usuario.getEmail(),
+                usuario.getIdade(),
+                usuario.getPeso(),
+                usuario.getAltura(),
+                sexo != null ? sexo.toString() : null,
+                usuario.getObjetivo()
+        );
     }
 
     // =====================================================
