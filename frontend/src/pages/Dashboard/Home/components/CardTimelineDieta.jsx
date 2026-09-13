@@ -136,7 +136,7 @@ export default function CardTimelineDieta({ refeicoes, aoAdicionarRefeicao, aoRe
                 setCriando(false);
                 setNovaRefeicao(FORMULARIO_VAZIO);
               }}
-              className="rounded-xl bg-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-300 dark:bg-zinc-700 dark:text-zinc-300"
+              className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
             >
               Cancelar
             </button>
@@ -166,7 +166,7 @@ export default function CardTimelineDieta({ refeicoes, aoAdicionarRefeicao, aoRe
             return (
               <li
                 key={refeicao.id}
-                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-zinc-700 dark:bg-zinc-900/40"
+                className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/60"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-lg shadow-[0_4px_6px_rgba(15,23,42,0.05)] dark:bg-zinc-800">
                   <IconeRefeicao size={19} className="text-teal-600 dark:text-teal-400" aria-hidden="true" />
