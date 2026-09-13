@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import { Scale, Check } from 'lucide-react';
 import { calcularImc } from '../../utils/imc';
 
@@ -92,3 +93,7 @@ export default function AtualizacaoPesoCard({ perfilAtual, aoAtualizarPerfil }) 
     </div>
   );
 }
+
+AtualizacaoPesoCard.propTypes = { perfilAtual: PropTypes.shape({ peso: PropTypes.number, altura: PropTypes.number }), aoAtualizarPerfil: PropTypes.func.isRequired };
+
+AtualizacaoPesoCard.propTypes = { perfilAtual: PropTypes.shape({ peso: PropTypes.number, altura: PropTypes.number }), aoAtualizarPerfil: PropTypes.func.isRequired };

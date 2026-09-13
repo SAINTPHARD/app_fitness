@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.appfitness.model.entity.Usuario;
 import com.appfitness.repository.UsuarioRepository;
 import com.appfitness.dto.usuario.MetasUsuarioDTO;
+import com.appfitness.exception.AcessoNegadoException;
 
 import jakarta.validation.Valid;
 
@@ -63,6 +64,10 @@ public class UsuarioService {
     public Usuario atualizar(Long id, Usuario dadosNovos) {
         Usuario usuarioExistente = buscarPorId(id);
 
+        if (dadosNovos.getNome() != null && !dadosNovos.getNome().isBlank()) {
+            usuarioExistente.setNome(dadosNovos.getNome().trim());
+        }
+
      // Atualização de métricas corporais (peso, altura, idade, sexo e objetivo)
         if (dadosNovos.getPeso() != null) {
             usuarioExistente.setPeso(dadosNovos.getPeso());
@@ -80,10 +85,8 @@ public class UsuarioService {
         if (dadosNovos.getObjetivo() != null) {
             usuarioExistente.setObjetivo(dadosNovos.getObjetivo());
         }
-        // Atualiza a senha se uma nova senha for fornecida
-        if (dadosNovos.getSenha() != null && !dadosNovos.getSenha().isBlank()) {
-            usuarioExistente.setSenha(passwordEncoder.encode(dadosNovos.getSenha()));
-        }
+        // Senha nunca é alterada pelo endpoint genérico de perfil. Use
+        // alterarSenha(), que exige reautenticação com a senha atual.
 
         return repository.save(usuarioExistente);
     }
@@ -121,5 +124,35 @@ public class UsuarioService {
     public void deletar(Long id) {
         Usuario usuario = buscarPorId(id);
         repository.delete(usuario);
+    }
+
+    @Transactional
+    public void alterarSenha(Long id, String senhaAtual, String novaSenha) {
+        Usuario usuario = buscarPorId(id);
+        validarSenhaAtual(usuario, senhaAtual);
+        if (novaSenha == null || novaSenha.length() < 8 || novaSenha.length() > 72) {
+            throw new IllegalArgumentException("A nova senha deve ter entre 8 e 72 caracteres.");
+        }
+        if (passwordEncoder.matches(novaSenha, usuario.getSenha())) {
+            throw new IllegalArgumentException("A nova senha deve ser diferente da senha atual.");
+        }
+        usuario.setSenha(passwordEncoder.encode(novaSenha));
+        repository.save(usuario);
+    }
+
+    @Transactional
+    public void excluirContaComConfirmacao(Long id, String senhaAtual, String confirmacao) {
+        Usuario usuario = buscarPorId(id);
+        validarSenhaAtual(usuario, senhaAtual);
+        if (!"EXCLUIR MINHA CONTA".equals(confirmacao)) {
+            throw new IllegalArgumentException("Digite EXCLUIR MINHA CONTA para confirmar.");
+        }
+        repository.delete(usuario);
+    }
+
+    private void validarSenhaAtual(Usuario usuario, String senhaAtual) {
+        if (senhaAtual == null || !passwordEncoder.matches(senhaAtual, usuario.getSenha())) {
+            throw new AcessoNegadoException("Senha atual incorreta.");
+        }
     }
 }

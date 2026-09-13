@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import PropTypes from 'prop-types';
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
 
 const CORES = { proteina: '#22c55e', carboidratos: '#eab308', gordura: '#a855f7' };
@@ -61,3 +62,5 @@ export default function DistribuicaoMacronutrientes({ totais }) {
     </div>
   );
 }
+
+DistribuicaoMacronutrientes.propTypes = { totais: PropTypes.shape({ proteina: PropTypes.number, carboidratos: PropTypes.number, gordura: PropTypes.number }).isRequired };

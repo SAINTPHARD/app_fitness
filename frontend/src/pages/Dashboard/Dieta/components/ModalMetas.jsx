@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import { X, Sparkles, Info } from 'lucide-react';
 import { validarMetas } from '../utils/validarMetas';
 import { calcularMetasNutricionais } from '../utils/calculadoraMetabolica';
@@ -399,3 +400,5 @@ export default function ModalMetas({ aberto, metasAtuais, aoFechar, aoSalvar }) 
     </div>
   );
 }
+
+ModalMetas.propTypes = { aberto: PropTypes.bool.isRequired, metasAtuais: PropTypes.shape({ calorias: PropTypes.number, proteinas: PropTypes.number, carboidratos: PropTypes.number, gorduras: PropTypes.number, aguaMl: PropTypes.number }).isRequired, aoFechar: PropTypes.func.isRequired, aoSalvar: PropTypes.func.isRequired };

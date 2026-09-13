@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { obterIconeAlimento, obterIconeRefeicao, PALETA_FUNDO_ICONE } from '../utils/iconesAlimento';
 import {
@@ -42,6 +43,7 @@ export default function CartaoRefeicao({
   const [erroSalvar, setErroSalvar] = useState(null);
   const [alimentosRascunho, setAlimentosRascunho] = useState([]);
   const [confirmandoExclusaoId, setConfirmandoExclusaoId] = useState(null);
+  const [ultimoAlimentoRemovido, setUltimoAlimentoRemovido] = useState(null);
   const [confirmandoExclusaoRefeicao, setConfirmandoExclusaoRefeicao] = useState(false);
   // Refeição já concluída: o formulário de "Novo alimento" fica escondido por
   // padrão (a refeição já está "fechada") e só aparece quando o usuário clica
@@ -111,7 +113,8 @@ export default function CartaoRefeicao({
     try {
       let idAtual = refeicao.id;
       for (const alimento of alimentosRascunho) {
-        const { tempId, ...alimentoParaEnviar } = alimento;
+        const alimentoParaEnviar = { ...alimento };
+        delete alimentoParaEnviar.tempId;
         idAtual = (await aoAdicionarAlimento(idAtual, alimentoParaEnviar)) ?? idAtual;
       }
       await aoConcluir(idAtual);
@@ -154,6 +157,37 @@ export default function CartaoRefeicao({
     } catch (err) {
       console.error('Erro ao remover refeição:', err);
       setErroSalvar('Não foi possível remover a refeição.');
+      setSalvando(false);
+    }
+  };
+
+  const removerAlimentoComDesfazer = async (alimento) => {
+    if (!aoRemoverAlimento || salvando) return;
+    setSalvando(true);
+    setErroSalvar(null);
+    try {
+      await aoRemoverAlimento(refeicao.id, alimento.id);
+      setUltimoAlimentoRemovido(alimento);
+      setConfirmandoExclusaoId(null);
+    } catch (err) {
+      setErroSalvar(err?.message || 'Não foi possível remover o alimento.');
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  const desfazerRemocaoAlimento = async () => {
+    if (!ultimoAlimentoRemovido || !aoAdicionarAlimento || salvando) return;
+    const alimentoParaRestaurar = { ...ultimoAlimentoRemovido };
+    delete alimentoParaRestaurar.id;
+    setSalvando(true);
+    setErroSalvar(null);
+    try {
+      await aoAdicionarAlimento(refeicao.id, alimentoParaRestaurar);
+      setUltimoAlimentoRemovido(null);
+    } catch (err) {
+      setErroSalvar(err?.message || 'Não foi possível restaurar o alimento.');
+    } finally {
       setSalvando(false);
     }
   };
@@ -376,7 +410,7 @@ export default function CartaoRefeicao({
                           confirmandoExclusaoId === alimento.id ? (
                             <span className="flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300">
                               Remover?
-                              <button type="button" onClick={() => { aoRemoverAlimento(refeicao.id, alimento.id); setConfirmandoExclusaoId(null); }} className="hover:underline">Sim</button>
+                              <button type="button" onClick={() => removerAlimentoComDesfazer(alimento)} disabled={salvando} className="hover:underline">Sim</button>
                               <button type="button" onClick={() => setConfirmandoExclusaoId(null)} className="text-slate-400 hover:underline">Não</button>
                             </span>
                           ) : (
@@ -392,6 +426,15 @@ export default function CartaoRefeicao({
           ) : (
             <p className="m-0 text-sm text-slate-400 dark:text-zinc-500">Nenhum alimento registrado</p>
           )}
+
+          <div aria-live="polite" aria-atomic="true">
+            {ultimoAlimentoRemovido && (
+              <p className="m-0 flex items-center justify-between gap-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">
+                “{ultimoAlimentoRemovido.nome}” removido.
+                <button type="button" onClick={desfazerRemocaoAlimento} disabled={salvando} className="font-bold underline">Desfazer</button>
+              </p>
+            )}
+          </div>
 
           {!concluida && alimentosRascunho.length > 0 && (
             <div className="flex flex-col gap-2 rounded-2xl border-2 border-dashed border-lime-300 bg-lime-50/40 p-3 dark:border-lime-400/30 dark:bg-lime-400/5">
@@ -456,3 +499,37 @@ export default function CartaoRefeicao({
     </article>
   );
 }
+
+const alimentoShape = PropTypes.shape({
+  id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+  nome: PropTypes.string,
+  quantidade: PropTypes.string,
+  calorias: PropTypes.number,
+  proteina: PropTypes.number,
+  carboidratos: PropTypes.number,
+  gordura: PropTypes.number,
+});
+
+CartaoRefeicao.propTypes = {
+  refeicao: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+    nome: PropTypes.string.isRequired,
+    horario: PropTypes.string,
+    status: PropTypes.string,
+    alimentos: PropTypes.arrayOf(alimentoShape),
+  }).isRequired,
+  metas: PropTypes.shape({
+    calorias: PropTypes.number,
+    proteinas: PropTypes.number,
+    carboidratos: PropTypes.number,
+    gorduras: PropTypes.number,
+  }).isRequired,
+  expandida: PropTypes.bool.isRequired,
+  aoAlternarExpandida: PropTypes.func.isRequired,
+  aoAdicionarAlimento: PropTypes.func.isRequired,
+  aoRemoverAlimento: PropTypes.func,
+  aoEditarAlimento: PropTypes.func,
+  aoEditarRefeicao: PropTypes.func,
+  aoRemoverRefeicao: PropTypes.func,
+  aoConcluir: PropTypes.func,
+};

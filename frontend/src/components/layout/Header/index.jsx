@@ -13,6 +13,19 @@ function obterSaudacaoPorHorario() {
   return 'Boa noite';
 }
 
+// Data completa por extenso (ex: "Sexta-feira, 5 de setembro de 2026"),
+// exibida logo abaixo da saudação — o `Intl` já cuida de mês/dia da semana
+// em português sem precisar de nenhuma tabela de tradução própria.
+function obterDataCompletaPorExtenso() {
+  const bruta = new Intl.DateTimeFormat('pt-BR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date());
+  return bruta.charAt(0).toUpperCase() + bruta.slice(1);
+}
+
 // Atalhos rápidos do Header: navegação direta para as ações mais comuns do
 // dia a dia, sem precisar abrir o menu e procurar a página certa.
 const ATALHOS_RAPIDOS = [
@@ -45,7 +58,7 @@ function useFecharAoClicarFora(aberto, aoFechar) {
   return referenciaContainer;
 }
 
-export default function Header({ user, onLogout, aoAbrirMenu }) {
+export default function Header({ user, onLogout, aoAbrirMenu, referenciaBotaoMenu }) {
   const { ehEscuro, alternarTema } = useTema();
   const [notificacoesAbertas, setNotificacoesAbertas] = useState(false);
   const [menuUsuarioAberto, setMenuUsuarioAberto] = useState(false);
@@ -61,11 +74,12 @@ export default function Header({ user, onLogout, aoAbrirMenu }) {
 
   return (
     <header className="header">
-      <button type="button" className="menuButton" onClick={aoAbrirMenu} aria-label="Abrir menu principal"><Menu size={22} strokeWidth={2.5} /></button>
+      <button ref={referenciaBotaoMenu} type="button" className="menuButton" onClick={aoAbrirMenu} aria-label="Abrir menu principal"><Menu size={22} strokeWidth={2.5} aria-hidden="true" /></button>
       <div className="headerIntro">
         <p className="greeting">
           {obterSaudacaoPorHorario()}, {primeiroNome} 👋
         </p>
+        <p className="motivationalPhrase">{obterDataCompletaPorExtenso()}</p>
       </div>
 
       <div className="headerActions">
@@ -74,7 +88,7 @@ export default function Header({ user, onLogout, aoAbrirMenu }) {
         <div className="quickActions">
           {ATALHOS_RAPIDOS.map(({ rotulo, destino, icone: Icone }) => (
             <Link key={rotulo} to={destino} className="iconButton" title={rotulo} aria-label={rotulo}>
-              <Icone size={17} strokeWidth={2} />
+              <Icone size={17} strokeWidth={2} aria-hidden="true" />
             </Link>
           ))}
         </div>
@@ -89,7 +103,7 @@ export default function Header({ user, onLogout, aoAbrirMenu }) {
             aria-label="Notificações"
             aria-expanded={notificacoesAbertas}
           >
-            <Bell size={18} strokeWidth={2} />
+            <Bell size={18} strokeWidth={2} aria-hidden="true" />
           </button>
           {notificacoesAbertas && (
             <div className="dropdownPanel">
@@ -103,9 +117,11 @@ export default function Header({ user, onLogout, aoAbrirMenu }) {
           type="button"
           className="iconButton"
           onClick={alternarTema}
+          role="switch"
+          aria-checked={ehEscuro}
           aria-label={ehEscuro ? 'Ativar modo claro' : 'Ativar modo escuro'}
         >
-          {ehEscuro ? <Sun size={18} strokeWidth={2} /> : <Moon size={18} strokeWidth={2} />}
+          {ehEscuro ? <Sun size={18} strokeWidth={2} aria-hidden="true" /> : <Moon size={18} strokeWidth={2} aria-hidden="true" />}
         </button>
 
         <div className="dropdownContainer" ref={refMenuUsuario}>
@@ -120,19 +136,19 @@ export default function Header({ user, onLogout, aoAbrirMenu }) {
               <strong>{nomeCompleto}</strong>
               <p>Plano ativo</p>
             </div>
-            <ChevronDown size={16} strokeWidth={2.5} className="profileChevron" />
+            <ChevronDown size={16} strokeWidth={2.5} className="profileChevron" aria-hidden="true" />
           </button>
 
           {menuUsuarioAberto && (
             <div className="dropdownPanel">
               <Link to="/dashboard/perfil" className="dropdownItem" onClick={() => setMenuUsuarioAberto(false)}>
-                <UserIcon size={15} strokeWidth={2.5} /> Perfil
+                <UserIcon size={15} strokeWidth={2.5} aria-hidden="true" /> Perfil
               </Link>
               <Link to="/dashboard/configuracoes" className="dropdownItem" onClick={() => setMenuUsuarioAberto(false)}>
-                <Settings size={15} strokeWidth={2.5} /> Configurações
+                <Settings size={15} strokeWidth={2.5} aria-hidden="true" /> Configurações
               </Link>
               <button type="button" className="dropdownItem dropdownItemDanger" onClick={onLogout}>
-                <LogOut size={15} strokeWidth={2.5} /> Sair
+                <LogOut size={15} strokeWidth={2.5} aria-hidden="true" /> Sair
               </button>
             </div>
           )}
@@ -146,4 +162,5 @@ Header.propTypes = {
   user: PropTypes.shape({ nome: PropTypes.string, email: PropTypes.string }),
   onLogout: PropTypes.func.isRequired,
   aoAbrirMenu: PropTypes.func.isRequired,
+  referenciaBotaoMenu: PropTypes.shape({ current: PropTypes.object }).isRequired,
 };

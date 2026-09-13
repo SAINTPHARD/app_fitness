@@ -73,6 +73,16 @@ export const authService = {
     }
   },
 
+  requestPasswordReset: async (email) => {
+    const response = await api.post('/auth/password/forgot', { email });
+    return response.data;
+  },
+
+  resetPassword: async (token, novaSenha) => {
+    const response = await api.post('/auth/password/reset', { token, novaSenha });
+    return response.data;
+  },
+
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');

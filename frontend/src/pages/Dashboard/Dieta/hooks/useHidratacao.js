@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo } from 'react';
-import { useNutrition } from '../../../../context/NutritionContext';
+import { useNutrition } from '../../../../hooks/useNutrition';
 import { useMetas } from './useMetas';
 
 export function useHidratacao(dataSelecionadaISO) {

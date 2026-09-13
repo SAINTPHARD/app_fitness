@@ -1,4 +1,5 @@
 import { calcularPercentual } from '../utils/progresso';
+import PropTypes from 'prop-types';
 
 const RAIO_ANEL = 70;
 const ESPESSURA_ANEL = 14;
@@ -78,3 +79,5 @@ export default function CartaoMetaDiaria({ meta, consumido, aoEditar }) {
     </div>
   );
 }
+
+CartaoMetaDiaria.propTypes = { meta: PropTypes.number.isRequired, consumido: PropTypes.number.isRequired, aoEditar: PropTypes.func.isRequired };

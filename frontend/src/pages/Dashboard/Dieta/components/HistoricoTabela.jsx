@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 import { obterHistoricoDiario } from '../utils/historicoDiario';
 import { useHistoricoRefeicoes } from '../../../../hooks/useHistoricoRefeicoes';
 
@@ -100,3 +101,5 @@ export default function HistoricoTabela({ historicoPeso }) {
     </div>
   );
 }
+
+HistoricoTabela.propTypes = { historicoPeso: PropTypes.arrayOf(PropTypes.object).isRequired };

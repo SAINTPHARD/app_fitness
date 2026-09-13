@@ -63,6 +63,7 @@ public class SecurityConfig {
 
 				// Rota pública para renovar access tokens usando refresh token
 				.requestMatchers(HttpMethod.POST, "/auth/refresh").permitAll()
+				.requestMatchers(HttpMethod.POST, "/auth/password/forgot", "/auth/password/reset").permitAll()
 				
 				// Rota pública para Autenticação alternativa (Caso use mapeamento direto sem o prefixo)
 				.requestMatchers(HttpMethod.POST, "/login").permitAll()
@@ -72,6 +73,9 @@ public class SecurityConfig {
 				
 				// Rota pública para o tratamento interno de erros do Spring Boot
 				.requestMatchers("/error").permitAll()
+
+				// Render pode consultar somente o estado agregado; métricas continuam protegidas por JWT.
+				.requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
 				
 				// Qualquer outra requisição do sistema exige autenticação por Token JWT
 				.anyRequest().authenticated()
@@ -100,7 +104,7 @@ public class SecurityConfig {
 		configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin"));
 		
 		// Expõe o cabeçalho Authorization para que o frontend consiga ler o Token JWT retornado
-		configuration.setExposedHeaders(List.of("Authorization"));
+		configuration.setExposedHeaders(List.of("Authorization", "X-Food-Source"));
 		
 		// Permite envio de credenciais (cookies, headers de autenticação)
 		configuration.setAllowCredentials(true);

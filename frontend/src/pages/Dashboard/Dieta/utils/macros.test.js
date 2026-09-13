@@ -4,8 +4,18 @@ import { validarValoresAlimento } from './macros.js';
 
 test('rejeita quantidade vazia, zero ou negativa', () => {
   for (const quantidade of ['', 0, -1]) {
-    assert.equal(validarValoresAlimento({ quantidade }), 'A quantidade deve ser maior que 0');
+    assert.equal(
+      validarValoresAlimento({ quantidade }),
+      'Informe uma quantidade válida (ex: 150g, 200ml, 1l ou 2 unidades)'
+    );
   }
+});
+
+test('mantém a mensagem canônica para texto sem quantidade numérica', () => {
+  assert.equal(
+    validarValoresAlimento({ quantidade: 'duas porções' }),
+    'Informe uma quantidade válida (ex: 150g, 200ml, 1l ou 2 unidades)'
+  );
 });
 
 test('rejeita macronutriente negativo', () => {

@@ -15,6 +15,7 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,6 +63,7 @@ import com.appfitness.repository.UsuarioRepository;
  * para isolar numa transação própria.
  */
 @DataJpaTest
+@ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({SerieInsercaoService.class, SessaoTreinoInsercaoService.class})
 @TestPropertySource(properties = {
@@ -69,8 +71,7 @@ import com.appfitness.repository.UsuarioRepository;
 		"spring.datasource.driver-class-name=org.h2.Driver",
 		"spring.datasource.username=sa",
 		"spring.datasource.password=",
-		"spring.jpa.hibernate.ddl-auto=create-drop",
-		"spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect"
+		"spring.jpa.hibernate.ddl-auto=create-drop"
 })
 // @DataJpaTest envolve cada método numa transação só desfeita (rollback) no
 // final — mas o INSERT via `REQUIRES_NEW` commita de verdade numa conexão

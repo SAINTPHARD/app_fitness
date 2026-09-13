@@ -1,4 +1,5 @@
 import { Info } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 const LINHAS = [
   { chave: 'proteina', rotulo: 'Proteínas', corBarra: 'bg-gradient-to-r from-blue-500 to-cyan-400' },
@@ -58,3 +59,5 @@ export default function ResumoNutricional({ totais, metas, percentuais }) {
     </div>
   );
 }
+
+ResumoNutricional.propTypes = { totais: PropTypes.object.isRequired, metas: PropTypes.object.isRequired, percentuais: PropTypes.object.isRequired };

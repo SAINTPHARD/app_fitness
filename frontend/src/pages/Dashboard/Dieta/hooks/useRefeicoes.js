@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { useNutrition } from '../../../../context/NutritionContext';
+import { useNutrition } from '../../../../hooks/useNutrition';
 
 /**
  * Wrapper de compatibilidade para os componentes de Dieta/Home. A fonte real

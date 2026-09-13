@@ -65,6 +65,15 @@ public class MedidaCorporal {
     
     @Positive(message = "O percentual de gordura deve ser um valor positivo")
     private Double gordura;
+    private Double torax;
+    private Double quadril;
+    private Double pescoco;
+    private Double bracoDireito;
+    private Double bracoEsquerdo;
+    private Double pernaDireita;
+    private Double pernaEsquerda;
+    private Double panturrilhaDireita;
+    private Double panturrilhaEsquerda;
 
     // =====================================================
     // RELACIONAMENTOS (FOREIGN KEYS)
@@ -138,6 +147,25 @@ public class MedidaCorporal {
     public void setGordura(Double gordura) {
         this.gordura = gordura;
     }
+
+    public Double getTorax() { return torax; }
+    public void setTorax(Double valor) { this.torax = valor; }
+    public Double getQuadril() { return quadril; }
+    public void setQuadril(Double valor) { this.quadril = valor; }
+    public Double getPescoco() { return pescoco; }
+    public void setPescoco(Double valor) { this.pescoco = valor; }
+    public Double getBracoDireito() { return bracoDireito; }
+    public void setBracoDireito(Double valor) { this.bracoDireito = valor; }
+    public Double getBracoEsquerdo() { return bracoEsquerdo; }
+    public void setBracoEsquerdo(Double valor) { this.bracoEsquerdo = valor; }
+    public Double getPernaDireita() { return pernaDireita; }
+    public void setPernaDireita(Double valor) { this.pernaDireita = valor; }
+    public Double getPernaEsquerda() { return pernaEsquerda; }
+    public void setPernaEsquerda(Double valor) { this.pernaEsquerda = valor; }
+    public Double getPanturrilhaDireita() { return panturrilhaDireita; }
+    public void setPanturrilhaDireita(Double valor) { this.panturrilhaDireita = valor; }
+    public Double getPanturrilhaEsquerda() { return panturrilhaEsquerda; }
+    public void setPanturrilhaEsquerda(Double valor) { this.panturrilhaEsquerda = valor; }
 
     public Usuario getUsuario() {
         return usuario;

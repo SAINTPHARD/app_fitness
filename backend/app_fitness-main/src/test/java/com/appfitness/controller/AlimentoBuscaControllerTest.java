@@ -46,6 +46,7 @@ class AlimentoBuscaControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).containsExactly(frango);
+        assertThat(response.getHeaders().getFirst("X-Food-Source")).isEqualTo("catalogo-local");
         verify(geminiVisionService, never()).buscarMacrosPorTexto(any());
     }
 
@@ -59,6 +60,7 @@ class AlimentoBuscaControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).containsExactly(prato);
+        assertThat(response.getHeaders().getFirst("X-Food-Source")).isEqualTo("ia-generativa");
     }
 
     @Test
@@ -82,5 +84,6 @@ class AlimentoBuscaControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEmpty();
+        assertThat(response.getHeaders().getFirst("X-Food-Source")).isEqualTo("indisponivel");
     }
 }

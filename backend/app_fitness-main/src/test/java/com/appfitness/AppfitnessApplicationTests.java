@@ -1,13 +1,22 @@
 package com.appfitness;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(properties = "ninjas.api.key=")
+import javax.sql.DataSource;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+@SpringBootTest
+@ActiveProfiles("test")
 class AppfitnessApplicationTests {
+	@Autowired DataSource dataSource;
 
 	@Test
-	void contextLoads() {
+	void contextLoadsComBancoH2Isolado() throws Exception {
+		assertThat(dataSource.getConnection().getMetaData().getURL()).startsWith("jdbc:h2:mem:");
 	}
 
 }

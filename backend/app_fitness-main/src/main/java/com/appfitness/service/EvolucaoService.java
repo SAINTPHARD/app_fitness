@@ -1,6 +1,7 @@
 package com.appfitness.service;
 
 import java.util.List;
+import java.util.Base64;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -136,6 +137,7 @@ public class EvolucaoService {
 
     @Transactional
     public FotoProgresso salvarFoto(FotoProgresso foto, Usuario usuario) {
+        validarFoto(foto);
         foto.setUsuario(usuario);
         return fotoRepository.save(foto);
     }
@@ -145,9 +147,19 @@ public class EvolucaoService {
         FotoProgresso existente = fotoRepository.findByIdAndUsuarioId(id, usuario.getId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Foto de progresso não encontrada."));
 
+        validarFoto(foto);
         existente.setData(foto.getData());
         existente.setSrc(foto.getSrc());
+        existente.setPose(foto.getPose());
+        existente.setDescricao(foto.getDescricao());
+        existente.setTipoConteudo(foto.getTipoConteudo());
         return fotoRepository.save(existente);
+    }
+
+    @Transactional(readOnly = true)
+    public FotoProgresso buscarFoto(Long id, Usuario usuario) {
+        return fotoRepository.findByIdAndUsuarioId(id, usuario.getId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Foto de progresso não encontrada."));
     }
 
     @Transactional
@@ -163,6 +175,15 @@ public class EvolucaoService {
         destino.setBraco(origem.getBraco());
         destino.setPerna(origem.getPerna());
         destino.setGordura(origem.getGordura());
+        destino.setTorax(origem.getTorax());
+        destino.setQuadril(origem.getQuadril());
+        destino.setPescoco(origem.getPescoco());
+        destino.setBracoDireito(origem.getBracoDireito());
+        destino.setBracoEsquerdo(origem.getBracoEsquerdo());
+        destino.setPernaDireita(origem.getPernaDireita());
+        destino.setPernaEsquerda(origem.getPernaEsquerda());
+        destino.setPanturrilhaDireita(origem.getPanturrilhaDireita());
+        destino.setPanturrilhaEsquerda(origem.getPanturrilhaEsquerda());
     }
 
     private void validarPeso(Double peso) {
@@ -176,11 +197,23 @@ public class EvolucaoService {
         validarFaixa(registro.getBraco(), 10, 80, "Braço");
         validarFaixa(registro.getPerna(), 20, 100, "Perna");
         validarFaixa(registro.getGordura(), 2, 70, "Gordura corporal");
+        validarFaixa(registro.getTorax(), 30, 250, "Tórax");
+        validarFaixa(registro.getQuadril(), 30, 250, "Quadril");
+        validarFaixa(registro.getPescoco(), 15, 100, "Pescoço");
+        validarFaixa(registro.getBracoDireito(), 10, 100, "Braço direito");
+        validarFaixa(registro.getBracoEsquerdo(), 10, 100, "Braço esquerdo");
+        validarFaixa(registro.getPernaDireita(), 20, 150, "Perna direita");
+        validarFaixa(registro.getPernaEsquerda(), 20, 150, "Perna esquerda");
+        validarFaixa(registro.getPanturrilhaDireita(), 10, 100, "Panturrilha direita");
+        validarFaixa(registro.getPanturrilhaEsquerda(), 10, 100, "Panturrilha esquerda");
 
         if (registro.getCintura() == null
                 && registro.getBraco() == null
                 && registro.getPerna() == null
-                && registro.getGordura() == null) {
+                && registro.getGordura() == null && registro.getTorax() == null && registro.getQuadril() == null
+                && registro.getPescoco() == null && registro.getBracoDireito() == null && registro.getBracoEsquerdo() == null
+                && registro.getPernaDireita() == null && registro.getPernaEsquerda() == null
+                && registro.getPanturrilhaDireita() == null && registro.getPanturrilhaEsquerda() == null) {
             throw new IllegalArgumentException("Informe ao menos uma medida.");
         }
     }
@@ -189,5 +222,28 @@ public class EvolucaoService {
         if (valor != null && (valor < min || valor > max)) {
             throw new IllegalArgumentException(rotulo + " deve estar entre " + min + " e " + max + ".");
         }
+    }
+
+    private void validarFoto(FotoProgresso foto) {
+        if (foto.getData() == null) throw new IllegalArgumentException("A data da foto é obrigatória.");
+        String pose = foto.getPose() == null ? "" : foto.getPose().trim().toUpperCase();
+        if (!List.of("FRENTE", "COSTAS", "LADO").contains(pose)) {
+            throw new IllegalArgumentException("Pose inválida. Use FRENTE, COSTAS ou LADO.");
+        }
+        if (foto.getDescricao() != null && foto.getDescricao().trim().length() > 500) {
+            throw new IllegalArgumentException("A descrição deve ter no máximo 500 caracteres.");
+        }
+        String src = foto.getSrc();
+        if (src == null || !src.matches("^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=\\r\\n]+$")) {
+            throw new IllegalArgumentException("A imagem deve ser enviada diretamente em JPEG, PNG ou WebP; URLs públicas não são aceitas.");
+        }
+        String[] partes = src.split(",", 2);
+        byte[] bytes;
+        try { bytes = Base64.getMimeDecoder().decode(partes[1]); }
+        catch (IllegalArgumentException erro) { throw new IllegalArgumentException("Conteúdo da imagem inválido."); }
+        if (bytes.length > 1572864) throw new IllegalArgumentException("A imagem deve ter no máximo 1,5 MB.");
+        foto.setPose(pose);
+        foto.setDescricao(foto.getDescricao() == null || foto.getDescricao().isBlank() ? null : foto.getDescricao().trim());
+        foto.setTipoConteudo(partes[0].substring(5, partes[0].indexOf(';')));
     }
 }

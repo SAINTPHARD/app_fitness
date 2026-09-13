@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.*;
 
 import com.appfitness.exception.AcessoNegadoException;
 import com.appfitness.dto.usuario.MetasUsuarioDTO;
+import com.appfitness.dto.usuario.AlterarSenhaDTO;
+import com.appfitness.dto.usuario.ConfirmarExclusaoContaDTO;
 import com.appfitness.model.entity.Usuario;
 import com.appfitness.service.UsuarioService;
 
@@ -121,13 +123,27 @@ public class UsuarioController {
      * URL: DELETE http://localhost:8080/usuarios/{id}
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarUsuario(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<Void> deletarUsuario(@PathVariable Long id, @Valid @RequestBody ConfirmarExclusaoContaDTO confirmacao, Authentication authentication) {
         Usuario usuarioLogado = extrairUsuarioAutenticado(authentication);
         if (!usuarioLogado.getId().equals(id)) {
             throw new AcessoNegadoException("Você não tem permissão para excluir outro usuário.");
         }
-        usuarioService.deletar(id);
+        usuarioService.excluirContaComConfirmacao(id, confirmacao.senhaAtual(), confirmacao.confirmacao());
         return ResponseEntity.noContent().build(); // Retorna 204 No Content
+    }
+
+    @PutMapping("/me/senha")
+    public ResponseEntity<Void> alterarSenha(@Valid @RequestBody AlterarSenhaDTO dados, Authentication authentication) {
+        Usuario usuario = extrairUsuarioAutenticado(authentication);
+        usuarioService.alterarSenha(usuario.getId(), dados.senhaAtual(), dados.novaSenha());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> excluirConta(@Valid @RequestBody ConfirmarExclusaoContaDTO dados, Authentication authentication) {
+        Usuario usuario = extrairUsuarioAutenticado(authentication);
+        usuarioService.excluirContaComConfirmacao(usuario.getId(), dados.senhaAtual(), dados.confirmacao());
+        return ResponseEntity.noContent().build();
     }
 
     /**

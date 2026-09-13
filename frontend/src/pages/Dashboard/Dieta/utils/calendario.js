@@ -1,3 +1,5 @@
+import { formatarDataCivil, hojeDataCivil } from '../../../../utils/dataCivil';
+
 const ROTULOS_DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 /**
@@ -7,14 +9,11 @@ const ROTULOS_DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
  * fuso-horário ao comparar/serializar no localStorage.
  */
 export function formatarDataISO(data) {
-  const ano = data.getFullYear();
-  const mes = String(data.getMonth() + 1).padStart(2, '0');
-  const dia = String(data.getDate()).padStart(2, '0');
-  return `${ano}-${mes}-${dia}`;
+  return formatarDataCivil(data);
 }
 
 export function obterDataDeHojeISO() {
-  return formatarDataISO(new Date());
+  return hojeDataCivil();
 }
 
 /**

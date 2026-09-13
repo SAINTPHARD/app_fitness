@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom';
+import PropTypes from 'prop-types';
 import './modal.css';
 
 export default function Modal({ title, open, onClose, children }) {
@@ -19,3 +20,5 @@ export default function Modal({ title, open, onClose, children }) {
     document.body,
   );
 }
+
+Modal.propTypes = { title: PropTypes.node.isRequired, open: PropTypes.bool.isRequired, onClose: PropTypes.func.isRequired, children: PropTypes.node.isRequired };

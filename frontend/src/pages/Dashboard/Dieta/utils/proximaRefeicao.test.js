@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { obterProximaRefeicao, refeicaoAtrasada, refeicaoConcluida } from './proximaRefeicao.js';
+import { calcularResumoRefeicoes, obterProximaRefeicao, refeicaoAtrasada, refeicaoConcluida } from './proximaRefeicao.js';
 
 // Fixa um horário de referência em vez de usar `new Date()` — os testes
 // injetam `agora` explicitamente em vez de depender do relógio real da
@@ -70,5 +70,16 @@ describe('refeicaoConcluida', () => {
     assert.equal(refeicaoConcluida({ status: 'PENDENTE' }), false);
     assert.equal(refeicaoConcluida({}), false);
     assert.equal(refeicaoConcluida(null), false);
+  });
+});
+
+describe('calcularResumoRefeicoes', () => {
+  test('não considera refeição vazia como registrada ou consumida', () => {
+    const resumo = calcularResumoRefeicoes([
+      { status: 'PENDENTE', alimentos: [] },
+      { status: 'PENDENTE', alimentos: [{ id: 1 }] },
+      { status: 'CONCLUIDO', alimentos: [{ id: 2 }] },
+    ]);
+    assert.deepEqual(resumo, { total: 3, planejadas: 3, comAlimentos: 2, concluidas: 1, pendentes: 2 });
   });
 });

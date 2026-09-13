@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
 import { buscarAlimentos } from '../utils/tabelaAlimentos';
 import { buscarAlimentosExternos, BuscaExternaIndisponivelError } from '../../../../services/openFoodFactsApi';
 
@@ -129,3 +130,5 @@ export default function BuscaAlimento({ valor, aoDigitar, aoSelecionar }) {
     </div>
   );
 }
+
+BuscaAlimento.propTypes = { valor: PropTypes.string.isRequired, aoDigitar: PropTypes.func.isRequired, aoSelecionar: PropTypes.func.isRequired };

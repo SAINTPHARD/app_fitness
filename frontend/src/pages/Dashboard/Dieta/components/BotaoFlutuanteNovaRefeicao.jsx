@@ -1,4 +1,5 @@
 import { Plus, X } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 /**
  * Botão flutuante (FAB) fixo no canto inferior direito para criar uma nova
@@ -17,3 +18,5 @@ export default function BotaoFlutuanteNovaRefeicao({ aberto, aoAlternar }) {
     </button>
   );
 }
+
+BotaoFlutuanteNovaRefeicao.propTypes = { aberto: PropTypes.bool.isRequired, aoAlternar: PropTypes.func.isRequired };

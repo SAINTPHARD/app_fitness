@@ -37,7 +37,6 @@ export function useSincronizacaoOffline({ aoSincronizarComSucesso } = {}) {
       for (const item of fila) {
         marcarEstado(item.chave, 'salvando');
         try {
-          // eslint-disable-next-line no-await-in-loop
           await fitnessApi[item.tipo](...item.args);
           fila = removerDaFila(item.chave);
           marcarEstado(item.chave, 'salvo');

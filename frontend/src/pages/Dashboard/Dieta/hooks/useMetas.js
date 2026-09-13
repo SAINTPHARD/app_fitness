@@ -1,4 +1,4 @@
-import { useMetasContext } from '../../../../context/MetasContext';
+import { useMetasContext } from '../../../../hooks/useMetasContext';
 
 export function useMetas() {
   return useMetasContext();

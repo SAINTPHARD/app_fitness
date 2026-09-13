@@ -4,6 +4,7 @@ import {
   mensagemErroCatalogo,
   normalizarMusculoCatalogo,
   normalizarRespostaCatalogo,
+  traduzirMetadadoCatalogo,
 } from './catalogoExerciciosApi.js';
 
 test('traduz os ids legados do dropdown para o contrato do catálogo local', () => {
@@ -12,6 +13,11 @@ test('traduz os ids legados do dropdown para o contrato do catálogo local', () 
   assert.equal(normalizarMusculoCatalogo('lats'), 'back');
   assert.equal(normalizarMusculoCatalogo('delts'), 'shoulders');
   assert.equal(normalizarMusculoCatalogo('abs'), 'core');
+});
+
+test('traduz metadados conhecidos e mantém fallback legível', () => {
+  assert.equal(traduzirMetadadoCatalogo('body_only'), 'Peso corporal');
+  assert.equal(traduzirMetadadoCatalogo('custom_value'), 'custom value');
 });
 
 test('normaliza aliases de membros inferiores em português', () => {

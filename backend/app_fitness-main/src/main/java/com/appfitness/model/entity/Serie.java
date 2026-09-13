@@ -62,6 +62,20 @@ public class Serie {
 	@PositiveOrZero(message = "As repetições não podem ser negativas")
 	private Integer repeticoes;
 
+	// `nullable` fica permissivo no mapeamento para ambientes legados que ainda
+	// usam ddl-auto=update; a migration V10 preenche KG e impõe NOT NULL.
+	@Column(name = "unidade_carga", length = 10)
+	private String unidadeCarga = "KG";
+
+	@PositiveOrZero(message = "O RIR não pode ser negativo")
+	private Integer rir;
+
+	@PositiveOrZero(message = "O RPE não pode ser negativo")
+	private BigDecimal rpe;
+
+	@Column(length = 500)
+	private String observacao;
+
 	@Enumerated(EnumType.STRING)
 	@Column(length = 20)
 	private SerieTipo tipo = SerieTipo.NORMAL;
@@ -143,6 +157,15 @@ public class Serie {
 	public void setRepeticoes(Integer repeticoes) {
 		this.repeticoes = repeticoes;
 	}
+
+	public String getUnidadeCarga() { return unidadeCarga; }
+	public void setUnidadeCarga(String unidadeCarga) { this.unidadeCarga = unidadeCarga; }
+	public Integer getRir() { return rir; }
+	public void setRir(Integer rir) { this.rir = rir; }
+	public BigDecimal getRpe() { return rpe; }
+	public void setRpe(BigDecimal rpe) { this.rpe = rpe; }
+	public String getObservacao() { return observacao; }
+	public void setObservacao(String observacao) { this.observacao = observacao; }
 
 	public SerieTipo getTipo() {
 		return tipo;

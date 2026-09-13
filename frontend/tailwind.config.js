@@ -9,6 +9,36 @@ export default {
   ],
   theme: {
     extend: {
+      colors: {
+        canvas: 'var(--bg-primary)',
+        surface: 'var(--bg-surface)',
+        muted: 'var(--bg-muted)',
+        content: 'var(--text-primary)',
+        secondary: 'var(--text-secondary)',
+        subtle: 'var(--text-muted)',
+        line: 'var(--border)',
+        brand: 'var(--brand)',
+        'brand-ink': 'var(--brand-ink)',
+        'brand-soft': 'var(--brand-soft)',
+        danger: 'var(--danger)',
+        warning: 'var(--warning)',
+        success: 'var(--success)',
+      },
+      borderRadius: {
+        '2xl': 'var(--radius-lg)',
+        '3xl': 'var(--radius-lg)',
+      },
+      boxShadow: {
+        sm: 'var(--shadow-sm)',
+        DEFAULT: 'var(--shadow)',
+        md: 'var(--shadow)',
+        lg: 'var(--shadow)',
+        xl: 'var(--shadow)',
+        '2xl': 'var(--shadow)',
+      },
+      spacing: {
+        control: '2.75rem',
+      },
       keyframes: {
         fadeIn: {
           from: { opacity: '0' },

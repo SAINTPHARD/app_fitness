@@ -1,4 +1,5 @@
 import estilos from './CartaoMetrica.module.css';
+import PropTypes from 'prop-types';
 
 /**
  * Cartão genérico de métrica do resumo do dia (calorias, água, proteína,
@@ -34,3 +35,7 @@ export default function CartaoMetrica({ emoji, rotulo, valorPrincipal, valorSecu
     </article>
   );
 }
+
+CartaoMetrica.propTypes = { emoji: PropTypes.node, rotulo: PropTypes.string.isRequired, valorPrincipal: PropTypes.node.isRequired, valorSecundario: PropTypes.node, percentual: PropTypes.number, alerta: PropTypes.bool };
+
+CartaoMetrica.propTypes = { emoji: PropTypes.node, rotulo: PropTypes.string.isRequired, valorPrincipal: PropTypes.node.isRequired, valorSecundario: PropTypes.node, percentual: PropTypes.number, alerta: PropTypes.bool };

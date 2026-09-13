@@ -73,6 +73,11 @@ CampoSerie.propTypes = {
 function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) {
   const [carga, setCarga] = useState(serie.carga ?? '');
   const [repeticoes, setRepeticoes] = useState(serie.repeticoes ?? '');
+  const [detalhesAbertos, setDetalhesAbertos] = useState(Boolean(serie.rir != null || serie.rpe != null || serie.observacao));
+  const [unidadeCarga, setUnidadeCarga] = useState(serie.unidadeCarga || 'KG');
+  const [rir, setRir] = useState(serie.rir ?? '');
+  const [rpe, setRpe] = useState(serie.rpe ?? '');
+  const [observacao, setObservacao] = useState(serie.observacao ?? '');
 
   const concluida = serie.status === 'CONCLUIDA';
   const pendenteCriacao = String(serie.id).startsWith('temp-');
@@ -83,13 +88,21 @@ function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) 
   useEffect(() => {
     setCarga(serie.carga ?? '');
     setRepeticoes(serie.repeticoes ?? '');
-  }, [serie.carga, serie.repeticoes]);
+    setUnidadeCarga(serie.unidadeCarga || 'KG');
+    setRir(serie.rir ?? '');
+    setRpe(serie.rpe ?? '');
+    setObservacao(serie.observacao ?? '');
+  }, [serie.carga, serie.repeticoes, serie.unidadeCarga, serie.rir, serie.rpe, serie.observacao]);
 
   const salvar = () => {
     aoAtualizar(serie.id, {
       exercicioId: serie.exercicioId,
       carga: numeroOuNull(carga),
       repeticoes: numeroOuNull(repeticoes),
+      unidadeCarga,
+      rir: numeroOuNull(rir),
+      rpe: numeroOuNull(rpe),
+      observacao: observacao.trim() || null,
     });
   };
 
@@ -117,8 +130,8 @@ function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) 
         </button>
 
         <CampoSerie
-          sufixo="kg"
-          rotuloAcessivel={`Carga da série ${serie.numeroSerie} em quilogramas`}
+          sufixo={unidadeCarga.toLowerCase()}
+          rotuloAcessivel={`Carga da série ${serie.numeroSerie} em ${unidadeCarga === 'LB' ? 'libras' : 'quilogramas'}`}
           valor={carga}
           aoDigitar={setCarga}
           aoSalvar={salvar}
@@ -153,6 +166,30 @@ function LinhaSerie({ serie, processando, aoAtualizar, aoConcluir, aoExcluir }) 
         </button>
       </div>
 
+      {!concluida && (
+        <div className="mt-1 pl-12">
+          <button type="button" onClick={() => setDetalhesAbertos((valor) => !valor)} aria-expanded={detalhesAbertos} className="text-xs font-semibold text-zinc-500 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+            {detalhesAbertos ? 'Ocultar detalhes' : 'Detalhes da série'}
+          </button>
+          {detalhesAbertos && (
+            <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl border border-zinc-200 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-900 sm:grid-cols-4">
+              <label className="text-xs text-zinc-600 dark:text-zinc-300">Unidade
+                <select value={unidadeCarga} onChange={(e) => setUnidadeCarga(e.target.value)} onBlur={salvar} disabled={bloqueada} className="mt-1 w-full rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-800"><option>KG</option><option>LB</option></select>
+              </label>
+              <label className="text-xs text-zinc-600 dark:text-zinc-300">RIR
+                <input type="number" min="0" max="10" value={rir} onChange={(e) => setRir(e.target.value)} onBlur={salvar} disabled={bloqueada} className="mt-1 w-full rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-800" />
+              </label>
+              <label className="text-xs text-zinc-600 dark:text-zinc-300">RPE
+                <input type="number" min="0" max="10" step="0.5" value={rpe} onChange={(e) => setRpe(e.target.value)} onBlur={salvar} disabled={bloqueada} className="mt-1 w-full rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-800" />
+              </label>
+              <label className="col-span-2 text-xs text-zinc-600 dark:text-zinc-300 sm:col-span-1">Observação
+                <input type="text" maxLength="500" value={observacao} onChange={(e) => setObservacao(e.target.value)} onBlur={salvar} disabled={bloqueada} placeholder="Opcional" className="mt-1 w-full rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-800" />
+              </label>
+            </div>
+          )}
+        </div>
+      )}
+
       {(erroPreenchimento || serie.pendenteSincronizacao) && (
         <p className="mt-1 pl-12 text-xs font-medium text-zinc-500 dark:text-zinc-400">
           {erroPreenchimento && (
@@ -177,6 +214,10 @@ LinhaSerie.propTypes = {
     repeticoes: PropTypes.number,
     status: PropTypes.string,
     pendenteSincronizacao: PropTypes.bool,
+    unidadeCarga: PropTypes.string,
+    rir: PropTypes.number,
+    rpe: PropTypes.number,
+    observacao: PropTypes.string,
   }).isRequired,
   processando: PropTypes.bool,
   aoAtualizar: PropTypes.func.isRequired,

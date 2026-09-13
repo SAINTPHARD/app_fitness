@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { formatarDataParaExibicaoBr } from '../utils/calendario';
 
@@ -54,13 +55,17 @@ export default function GraficoEvolucaoPeso({ historicoPeso }) {
       ) : (
         <div className="flex flex-col items-center gap-2 py-8 text-center">
           <p className="m-0 text-sm text-slate-400 dark:text-zinc-500">
-            Continue atualizando seu peso no Perfil — com pelo menos 2 registros, o gráfico aparece aqui.
+            Registre seu peso em Evolução — com pelo menos 2 registros, o gráfico aparece aqui.
           </p>
-          <Link to="/dashboard/perfil" className="text-sm font-bold text-lime-600 hover:underline dark:text-lime-300">
-            Atualizar peso agora →
+          <Link to="/dashboard/evolucao" className="text-sm font-bold text-emerald-700 hover:underline dark:text-emerald-300">
+            Abrir Evolução →
           </Link>
         </div>
       )}
     </div>
   );
 }
+
+GraficoEvolucaoPeso.propTypes = {
+  historicoPeso: PropTypes.arrayOf(PropTypes.shape({ data: PropTypes.string, peso: PropTypes.number })).isRequired,
+};

@@ -13,6 +13,24 @@ import com.appfitness.model.entity.Serie;
 import com.appfitness.model.entity.Usuario;
 
 public interface SerieRepository extends JpaRepository<Serie, Long> {
+	@Query("""
+		SELECT serie.sessao.data, COALESCE(serie.exercicio.grupoMuscular, 'Não informado'),
+		SUM(serie.carga * serie.repeticoes)
+		FROM Serie serie
+		WHERE serie.sessao.usuario.id = :usuarioId
+		AND serie.sessao.data BETWEEN :inicio AND :fim
+		AND serie.status = com.appfitness.model.enums.SerieStatus.CONCLUIDA
+		AND serie.carga IS NOT NULL AND serie.repeticoes IS NOT NULL
+		GROUP BY serie.sessao.data, COALESCE(serie.exercicio.grupoMuscular, 'Não informado')
+		""")
+	List<Object[]> somarVolumePorGrupo(@Param("usuarioId") Long usuarioId, @Param("inicio") java.time.LocalDate inicio, @Param("fim") java.time.LocalDate fim);
+
+	@Query("""
+		SELECT serie.sessao.data, COUNT(serie), SUM(CASE WHEN serie.status = com.appfitness.model.enums.SerieStatus.CONCLUIDA THEN 1 ELSE 0 END)
+		FROM Serie serie WHERE serie.sessao.usuario.id = :usuarioId AND serie.sessao.data BETWEEN :inicio AND :fim
+		GROUP BY serie.sessao.data
+		""")
+	List<Object[]> resumirAderencia(@Param("usuarioId") Long usuarioId, @Param("inicio") java.time.LocalDate inicio, @Param("fim") java.time.LocalDate fim);
 
 	/**
 	 * Séries concluídas do exercício, do mais recente para o mais antigo —

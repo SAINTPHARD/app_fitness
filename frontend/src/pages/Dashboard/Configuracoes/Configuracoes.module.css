@@ -77,6 +77,7 @@
 
 .linhaDesabilitada {
   opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* Interruptor claro/escuro */
@@ -85,7 +86,7 @@
   display: inline-flex;
   align-items: center;
   width: 48px;
-  height: 28px;
+  height: 44px;
   border-radius: 999px;
   border: none;
   background: var(--bg-muted);
@@ -100,13 +101,36 @@
 
 .interruptorBolinha {
   position: absolute;
-  top: 3px;
+  top: 11px;
   left: 3px;
   width: 22px;
   height: 22px;
   border-radius: 50%;
   background: white;
   transition: transform 0.2s ease;
+}
+
+.formSeguranca { display: grid; gap: 0.85rem; max-width: 620px; }
+.formSeguranca label { display: grid; gap: 0.4rem; color: var(--text-secondary); font-size: 0.86rem; font-weight: 700; }
+.formSeguranca input { min-height: 44px; padding: 0.7rem 0.85rem; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-muted); color: var(--text-primary); }
+.formSeguranca input:focus-visible, .botaoPrimario:focus-visible, .botaoPerigo:focus-visible, .botaoSecundario:focus-visible, .interruptor:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand) 45%, transparent); outline-offset: 2px; }
+.formTitulo { display: flex; align-items: center; gap: 0.65rem; color: var(--text-primary); }
+.formTitulo div { display: grid; gap: 0.15rem; }
+.formTitulo small { color: var(--text-muted); font-weight: 400; }
+.botaoPrimario, .botaoPerigo, .botaoSecundario { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.7rem 1rem; border-radius: 12px; font-weight: 800; cursor: pointer; }
+.botaoPrimario { border: 0; background: var(--brand); color: var(--brand-ink); }
+.botaoSecundario { border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-primary); text-decoration: none; }
+.botaoPerigo { border: 1px solid var(--danger); background: var(--danger); color: white; }
+.botaoPrimario:disabled, .botaoPerigo:disabled { cursor: not-allowed; opacity: 0.5; }
+.zonaPerigo { border-color: color-mix(in srgb, var(--danger) 35%, var(--border)); }
+.erro, .sucesso { margin: 0; padding: 0.85rem 1rem; border-radius: 12px; font-weight: 700; }
+.erro { background: var(--danger-soft); color: var(--danger); }
+.sucesso { background: var(--success-soft); color: var(--success); }
+
+@media (max-width: 640px) {
+  .linha { align-items: flex-start; flex-direction: column; }
+  .interruptor { align-self: flex-end; margin-top: -44px; }
+  .botaoSecundario { width: 100%; }
 }
 
 .interruptorAtivo .interruptorBolinha {

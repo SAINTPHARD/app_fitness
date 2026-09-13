@@ -1,3 +1,5 @@
+import PropTypes from 'prop-types';
+
 /**
  * Um dos 4 cartões compactos do topo da Dieta (Calorias, Proteínas,
  * Carboidratos, Gorduras): ícone colorido + valor consumido/meta + barra
@@ -38,3 +40,7 @@ export default function CartaoMetricaMacro({ icone: Icone, corIcone, rotulo, con
     </article>
   );
 }
+
+CartaoMetricaMacro.propTypes = { icone: PropTypes.elementType.isRequired, corIcone: PropTypes.string, rotulo: PropTypes.string.isRequired, consumido: PropTypes.number.isRequired, meta: PropTypes.number.isRequired, unidade: PropTypes.string.isRequired, percentual: PropTypes.number.isRequired, alerta: PropTypes.bool };
+
+CartaoMetricaMacro.propTypes = { icone: PropTypes.elementType.isRequired, corIcone: PropTypes.string, rotulo: PropTypes.string.isRequired, consumido: PropTypes.number.isRequired, meta: PropTypes.number.isRequired, unidade: PropTypes.string.isRequired, percentual: PropTypes.number.isRequired, alerta: PropTypes.bool };

@@ -5,6 +5,7 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -49,7 +50,18 @@ public class FotoProgresso {
     // columnDefinition = "TEXT" é vital aqui, pois Base64 ou URLs longas ultrapassam o limite de 255 caracteres do VARCHAR padrão.
     @NotBlank(message = "A imagem é obrigatória")
     @Column(name = "src", nullable = false, columnDefinition = "TEXT")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String src;
+
+    @NotBlank(message = "O tipo de pose é obrigatório")
+    @Column(nullable = false, length = 20)
+    private String pose;
+
+    @Column(length = 500)
+    private String descricao;
+
+    @Column(name = "tipo_conteudo", length = 50)
+    private String tipoConteudo;
 
     // =====================================================
     // RELACIONAMENTOS (FOREIGN KEYS)
@@ -102,6 +114,13 @@ public class FotoProgresso {
     public void setSrc(String src) {
         this.src = src;
     }
+
+    public String getPose() { return pose; }
+    public void setPose(String pose) { this.pose = pose; }
+    public String getDescricao() { return descricao; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
+    public String getTipoConteudo() { return tipoConteudo; }
+    public void setTipoConteudo(String tipoConteudo) { this.tipoConteudo = tipoConteudo; }
 
     public Usuario getUsuario() {
         return usuario;

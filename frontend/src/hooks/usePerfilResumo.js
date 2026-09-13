@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { fitnessApi } from '../services/fitnessApi';
-import { obterDataDeHojeISO } from '../pages/Dashboard/Dieta/utils/calendario';
 import { calcularImc, classificarImc, normalizarAlturaCm } from '../utils/imc';
 import { obterUltimoRegistroPeso, ordenarPesosPorData } from '../utils/historicoPeso';
 
@@ -16,10 +15,6 @@ function lerHistoricoPesoSalvo() {
   } catch {
     return [];
   }
-}
-
-function ordenarPorData(lista) {
-  return ordenarPesosPorData(lista);
 }
 
 /**
@@ -66,7 +61,6 @@ export function usePerfilResumo() {
             );
         }
 
-        const pesoAtual = Number(dadosPerfil.peso);
         let pesosBackend = [];
 
         try {
@@ -74,17 +68,6 @@ export function usePerfilResumo() {
         } catch (erroHistorico) {
           console.error('Falha ao carregar histórico de peso do backend:', erroHistorico);
           pesosBackend = lerHistoricoPesoSalvo();
-        }
-
-        if (pesoAtual > 0 && pesosBackend.length === 0) {
-          const hojeISO = obterDataDeHojeISO();
-          try {
-            const registroCriado = await fitnessApi.criarPeso({ data: hojeISO, peso: pesoAtual });
-            pesosBackend = [registroCriado];
-          } catch (erroRegistroPeso) {
-            console.error('Falha ao registrar peso atual no backend:', erroRegistroPeso);
-            pesosBackend = [{ data: hojeISO, peso: pesoAtual }];
-          }
         }
 
         const historicoOrdenado = ordenarPesosPorData(pesosBackend).slice(-MAXIMO_PONTOS_HISTORICO);
@@ -119,21 +102,6 @@ export function usePerfilResumo() {
     return Number((ultimo - primeiro).toFixed(1));
   }, [historicoPeso]);
 
-  const registrarPeso = useCallback(async ({ data = obterDataDeHojeISO(), peso }) => {
-    const pesoNumero = Number(peso);
-    if (!Number.isFinite(pesoNumero) || pesoNumero < 20 || pesoNumero > 300) {
-      throw new Error('Peso deve estar entre 20 e 300 kg.');
-    }
-
-    const registro = await fitnessApi.criarPeso({ data, peso: pesoNumero });
-    setHistoricoPeso((anterior) => {
-      const semMesmoDia = anterior.filter((ponto) => ponto.data !== registro.data);
-      return ordenarPorData([...semMesmoDia, registro]).slice(-MAXIMO_PONTOS_HISTORICO);
-    });
-    setPerfil((atual) => (atual ? { ...atual, peso: pesoNumero } : atual));
-    return registro;
-  }, []);
-
   return {
     perfil,
     carregando,
@@ -141,6 +109,5 @@ export function usePerfilResumo() {
     classificacaoImc: classificarImc(imc),
     historicoPeso,
     variacaoPeso,
-    registrarPeso,
   };
 }

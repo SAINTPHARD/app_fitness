@@ -55,7 +55,7 @@ export default function PainelDieta() {
   } = useRefeicoes(dataSelecionadaISO);
   // Peso/IMC não vivem mais aqui — só na página de Perfil. `historicoPeso`
   // continua sendo usado pelo gráfico de evolução, mais abaixo.
-  const { historicoPeso, registrarPeso } = usePerfilResumo();
+  const { historicoPeso } = usePerfilResumo();
 
   const lidarComAdicaoDeAlimento = async (idRefeicao, novoAlimento) => {
     // CORREÇÃO: `adicionarAlimento` agora pode criar a Refeição no backend
@@ -205,12 +205,15 @@ export default function PainelDieta() {
           card de "refeições concluídas" foi removido — a lista de refeições
           do dia logo abaixo já mostra o status de cada uma. */}
       <div className="mx-auto w-full lg:max-w-md">
-        <WidgetHidratacao dataSelecionadaISO={dataSelecionadaISO} />
+        <WidgetHidratacao dataSelecionadaISO={dataSelecionadaISO} aoEditarMetas={() => setModalMetasAberto(true)} />
       </div>
 
       {/* Busca de alimentos por texto livre via IA — calcula macros na hora,
           sem depender de uma API de nutrição terceira (Edamam/FatSecret). */}
-      <BuscaAlimentosIA refeicoes={refeicoesDoDia} aoAdicionarAlimento={lidarComAdicaoDeAlimento} />
+      <details className="group rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+        <summary className="cursor-pointer font-bold text-slate-700 dark:text-zinc-200">Busca assistida de alimentos (opcional)</summary>
+        <div className="mt-4"><BuscaAlimentosIA refeicoes={refeicoesDoDia} aoAdicionarAlimento={lidarComAdicaoDeAlimento} /></div>
+      </details>
 
       {/* Refeições do dia (accordion) + resumo nutricional/distribuição de macros. */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
@@ -267,12 +270,16 @@ export default function PainelDieta() {
       </div>
 
       {/* Gráficos: tendência semanal de calorias e evolução do peso. */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
-        <GraficoCaloriasSemanais />
-        <GraficoEvolucaoPeso historicoPeso={historicoPeso} aoRegistrarPeso={registrarPeso} />
-      </div>
-
-      <HistoricoTabela historicoPeso={historicoPeso} />
+      <details className="group rounded-2xl border border-slate-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+        <summary className="cursor-pointer font-bold text-slate-700 dark:text-zinc-200">Análises e histórico</summary>
+        <div className="mt-5 flex flex-col gap-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
+            <GraficoCaloriasSemanais />
+            <GraficoEvolucaoPeso historicoPeso={historicoPeso} />
+          </div>
+          <HistoricoTabela historicoPeso={historicoPeso} />
+        </div>
+      </details>
 
       <BotaoFlutuanteNovaRefeicao aberto={criandoRefeicao} aoAlternar={() => setCriandoRefeicao((prev) => !prev)} />
 

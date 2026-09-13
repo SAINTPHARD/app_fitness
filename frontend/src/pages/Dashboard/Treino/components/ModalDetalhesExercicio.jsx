@@ -106,6 +106,7 @@ export default function ModalDetalhesExercicio({ exercicio, aoFechar, registros 
                     src={midia}
                     alt={`Demonstração de ${exercicio.nome}`}
                     loading="lazy"
+                    decoding="async"
                     className="h-full w-full object-contain"
                   />
                 ) : (

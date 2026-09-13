@@ -58,4 +58,12 @@ public interface RefeicaoRepository extends JpaRepository<Refeicao, Long> {
 			@Param("usuarioId") Long usuarioId,
 			@Param("dataRefeicao") LocalDate dataRefeicao,
 			@Param("nome") String nome);
+
+	@Query("""
+		SELECT r.dataRefeicao, COALESCE(SUM(a.calorias), 0)
+		FROM Refeicao r LEFT JOIN r.alimentos a
+		WHERE r.usuario.id = :usuarioId AND r.dataRefeicao BETWEEN :inicio AND :fim
+		GROUP BY r.dataRefeicao ORDER BY r.dataRefeicao
+		""")
+	List<Object[]> somarCaloriasPorDia(@Param("usuarioId") Long usuarioId, @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 }

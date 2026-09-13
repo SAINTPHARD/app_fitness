@@ -6,6 +6,8 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.appfitness.model.entity.AguaRegistro;
 
@@ -29,4 +31,11 @@ public interface AguaRegistroRepository extends JpaRepository<AguaRegistro, Long
      * impedindo que um usuário acesse, edite ou delete registros de água de terceiros.
      */
     Optional<AguaRegistro> findByIdAndUsuarioId(Long id, Long usuarioId);
+
+    @Query("""
+        SELECT a.diaReferencia, SUM(a.quantidadeMl) FROM AguaRegistro a
+        WHERE a.usuario.id = :usuarioId AND a.diaReferencia BETWEEN :inicio AND :fim
+        GROUP BY a.diaReferencia ORDER BY a.diaReferencia
+        """)
+    List<Object[]> somarPorDia(@Param("usuarioId") Long usuarioId, @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 }

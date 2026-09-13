@@ -7,7 +7,7 @@ export const DIAS_SEMANA = [
   { id: 'quinta', label: 'Quinta-feira', foco: 'Ombros e Abdômen' },
   { id: 'sexta', label: 'Sexta-feira', foco: 'Upper Body (Superior)' },
   { id: 'sabado', label: 'Sábado', foco: 'Cardio e Descanso Ativo' },
-  { id: 'domingo', label: 'Domingo', foco: 'Descanso Total' },
+  { id: 'domingo', label: 'Domingo', foco: 'Descanso Total', descanso: true },
 ];
 
 // `Date.getDay()` retorna 0 (domingo) a 6 (sábado) — traduzimos para os
@@ -20,4 +20,8 @@ export function obterIdDiaDaSemanaAtual() {
 
 export function obterInfoDoDia(id) {
   return DIAS_SEMANA.find((dia) => dia.id === id);
+}
+
+export function ehDiaDeDescanso(id) {
+  return Boolean(obterInfoDoDia(id)?.descanso);
 }

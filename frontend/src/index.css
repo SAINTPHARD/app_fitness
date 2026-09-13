@@ -11,7 +11,7 @@
   --text-secondary: #3f3f46;
   --text-muted: #71717a;
   --border: #d4d4d8;
-  --brand: #15803d;
+  --brand: #166534;
   --brand-ink: #ffffff;
   --brand-soft: #dcfce7;
   --success: #16a34a;
@@ -20,6 +20,7 @@
   --danger-soft: #fee2e2;
   --warning: #d97706;
   --warning-soft: #fef3c7;
+  --focus-ring: #2563eb;
   --radius-sm: 12px;
   --radius: 16px;
   --radius-lg: 16px;
@@ -46,6 +47,7 @@
   --success-soft: #0f2e1d;
   --danger-soft: #3a1620;
   --warning-soft: #3a2a10;
+  --focus-ring: #60a5fa;
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
   --shadow: var(--shadow-sm);
 }
@@ -76,11 +78,20 @@ button,
 input,
 textarea,
 select {
-  font: inherit;
+  font: inherit; 
 }
 
 button {
   cursor: pointer;
+}
+
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+:where(button, input, textarea, select):disabled {
+  cursor: not-allowed;
 }
 
 a {

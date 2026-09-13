@@ -1,6 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import PropTypes from 'prop-types';
 import { authService } from '../services/authService';
 import api from '../services/api';
+import { AuthContext } from './authContextBase';
 
 const CHAVE_PERFIL_COMPLETO = 'profile_complete';
 const CHAVE_NOME = 'userName';
@@ -13,21 +15,6 @@ function lerLocal(chave) {
     return null;
   }
 }
-
-const AuthContext = createContext({
-  user: null,
-  signed: false,
-  loading: true,
-  autenticando: false,
-  perfilCompleto: false,
-  error: null,
-  login: async () => {},
-  logout: () => {},
-  marcarPerfilCompleto: () => {},
-  reiniciarPerfilCompleto: () => {},
-  sincronizarPerfil: async () => {},
-  definirNomeUsuario: () => {},
-});
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -190,12 +177,4 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error('useAuth deve ser usado dentro de AuthProvider');
-  }
-
-  return context;
-}
+AuthProvider.propTypes = { children: PropTypes.node.isRequired };

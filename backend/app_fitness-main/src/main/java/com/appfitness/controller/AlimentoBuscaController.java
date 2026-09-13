@@ -33,6 +33,7 @@ import com.appfitness.service.GeminiVisionService;
 @RestController
 @RequestMapping("/api/alimentos")
 public class AlimentoBuscaController {
+	private static final String HEADER_FONTE = "X-Food-Source";
 	private static final Logger LOGGER = LoggerFactory.getLogger(AlimentoBuscaController.class);
 
 	private final AlimentoLocalService alimentoLocalService;
@@ -56,18 +57,18 @@ public class AlimentoBuscaController {
 		// 1. Catálogo local primeiro: instantâneo, sem custo de API.
 		List<AlimentoBuscaResponseDTO> resultadosOffline = alimentoLocalService.buscarAlimentosOffline(query);
 		if (!resultadosOffline.isEmpty()) {
-			return ResponseEntity.ok(resultadosOffline);
+			return ResponseEntity.ok().header(HEADER_FONTE, "catalogo-local").body(resultadosOffline);
 		}
 
 		// 2. Fallback de IA: só chamado quando o catálogo local não encontrou nada.
 		try {
 			List<AlimentoBuscaResponseDTO> resultadosIa = geminiVisionService.buscarMacrosPorTexto(query);
-			return ResponseEntity.ok(resultadosIa);
+			return ResponseEntity.ok().header(HEADER_FONTE, "ia-generativa").body(resultadosIa);
 		} catch (RuntimeException exception) {
 			// Defesa adicional: mesmo uma implementação futura do provider que
 			// volte a lançar erro mantém o contrato estável de HTTP 200 + [].
 			LOGGER.warn("Fallback vazio no endpoint de busca alimentar: {}", exception.getMessage());
-			return ResponseEntity.ok(List.of());
+			return ResponseEntity.ok().header(HEADER_FONTE, "indisponivel").body(List.of());
 		}
 	}
 }

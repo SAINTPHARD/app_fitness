@@ -39,4 +39,12 @@ public interface SessaoTreinoRepository extends JpaRepository<SessaoTreino, Long
 		List<SessaoTreino> anteriores = buscarAnterioresATreino(treino, data, Pageable.ofSize(1));
 		return anteriores.isEmpty() ? Optional.empty() : Optional.of(anteriores.get(0));
 	}
+
+	@Query("""
+		SELECT s.data, COUNT(s),
+		SUM(CASE WHEN s.status = com.appfitness.model.enums.SessaoStatus.CONCLUIDO THEN 1 ELSE 0 END)
+		FROM SessaoTreino s WHERE s.usuario.id = :usuarioId AND s.data BETWEEN :inicio AND :fim
+		GROUP BY s.data ORDER BY s.data
+		""")
+	List<Object[]> resumirSessoesPorDia(@Param("usuarioId") Long usuarioId, @Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
 }

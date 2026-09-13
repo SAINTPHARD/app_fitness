@@ -34,6 +34,21 @@ export function normalizarRespostaCatalogo(dados) {
   return Array.isArray(dados) ? dados : [];
 }
 
+const TRADUCOES = {
+  beginner: 'Iniciante', intermediate: 'Intermediário', expert: 'Avançado', body_only: 'Peso corporal',
+  dumbbell: 'Halteres', barbell: 'Barra', cable: 'Cabo', machine: 'Máquina', chest: 'Peitoral',
+  pectorals: 'Peitoral', biceps: 'Bíceps', triceps: 'Tríceps', quadriceps: 'Quadríceps',
+  hamstrings: 'Posteriores de coxa', glutes: 'Glúteos', back: 'Costas', shoulders: 'Ombros',
+  core: 'Abdômen', calves: 'Panturrilhas',
+};
+
+export function traduzirMetadadoCatalogo(valor) {
+  const original = String(valor ?? '').trim();
+  if (!original) return '';
+  const chave = original.toLowerCase().replace(/[ -]+/g, '_');
+  return TRADUCOES[chave] || original.replaceAll('_', ' ');
+}
+
 export function mensagemErroCatalogo(error) {
   const dados = error?.response?.data;
 

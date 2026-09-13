@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import PropTypes from 'prop-types';
 import { Plus } from 'lucide-react';
 
 /**
@@ -71,3 +72,5 @@ export default function FormularioNovaRefeicao({ aoAdicionarRefeicao, aoCancelar
     </form>
   );
 }
+
+FormularioNovaRefeicao.propTypes = { aoAdicionarRefeicao: PropTypes.func.isRequired, aoCancelar: PropTypes.func.isRequired };

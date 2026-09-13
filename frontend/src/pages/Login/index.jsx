@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Zap } from 'lucide-react';
+import { Eye, EyeOff, Zap } from 'lucide-react';
 import { authService } from '../../services/authService';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import { notificarErro } from '../../utils/notificacoes';
 import ToastBoasVindas from '../../components/ui/ToastBoasVindas';
 import styles from './login.module.css';
+import { mensagemErroAutenticacao } from '../../utils/authErrors';
 
 // Tempo que o toast de boas-vindas fica na tela antes do redirecionamento.
 const DURACAO_BOAS_VINDAS_MS = 2200;
@@ -27,6 +28,10 @@ export default function LoginPage() {
   const [formData, setFormData] = useState(FORMULARIO_VAZIO);
   const [mensagemSucesso, setMensagemSucesso] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [recuperandoSenha, setRecuperandoSenha] = useState(false);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [erroFormulario, setErroFormulario] = useState('');
+  const [feedback, setFeedback] = useState('');
 
   const navigate = useNavigate();
   // `login` do contexto (e não `authService.login` direto): é ele que marca o
@@ -51,6 +56,8 @@ export default function LoginPage() {
     setIsSignUp((prev) => !prev);
     setMensagemSucesso('');
     setFormData((prev) => ({ ...prev, password: '', confirmPassword: '' }));
+    setErroFormulario('');
+    setFeedback('');
   };
 
   const finalizarCadastroComFalhaNoLogin = (erro) => {
@@ -102,13 +109,29 @@ export default function LoginPage() {
     e.preventDefault();
     if (enviando) return;
 
+    setErroFormulario('');
+    setFeedback('');
+
+    if (recuperandoSenha) {
+      setEnviando(true);
+      try {
+        const resposta = await authService.requestPasswordReset(formData.email);
+        setFeedback(resposta?.message || 'Se o e-mail estiver cadastrado, enviaremos as instruções de recuperação.');
+      } catch (err) {
+        setErroFormulario(mensagemErroAutenticacao(err));
+      } finally {
+        setEnviando(false);
+      }
+      return;
+    }
+
     if (isSignUp && !senhaValida) {
-      notificarErro('A senha deve ter no mínimo 8 caracteres, com letras e números.');
+      setErroFormulario('A senha deve ter no mínimo 8 caracteres, com letras e números.');
       return;
     }
 
     if (isSignUp && formData.password !== formData.confirmPassword) {
-      notificarErro('As senhas não coincidem!');
+      setErroFormulario('As senhas não coincidem.');
       return;
     }
 
@@ -127,7 +150,7 @@ export default function LoginPage() {
       // tela de login para o painel.
       navigate('/dashboard/inicio', { replace: true });
     } catch (err) {
-      notificarErro(`Erro ao entrar: ${err?.message || 'tente novamente em instantes.'}`);
+      setErroFormulario(mensagemErroAutenticacao(err));
       setEnviando(false);
     }
   };
@@ -154,16 +177,20 @@ export default function LoginPage() {
       <div className={styles.formSection}>
         <div key={isSignUp ? 'cadastro' : 'login'} className={styles.card}>
           <h2 className={styles.formTitle}>
-            {isSignUp ? 'Crie sua conta' : 'Bem-vindo de volta'}
+            {recuperandoSenha ? 'Recupere sua senha' : isSignUp ? 'Crie sua conta' : 'Bem-vindo de volta'}
           </h2>
           <p className={styles.formSubtitle}>
-            {isSignUp ? 'Preencha os dados abaixo para começar.' : 'Entre com seu e-mail e senha.'}
+            {recuperandoSenha
+              ? 'Informe seu e-mail para receber um link temporário.'
+              : isSignUp ? 'Preencha os dados abaixo para começar.' : 'Entre com seu e-mail e senha.'}
           </p>
 
           <form className={styles.form} onSubmit={handleSubmit}>
-            {isSignUp && (
+            {isSignUp && !recuperandoSenha && (
               <div className={styles.rowInputs}>
-                <input
+                <label className={styles.field}>
+                  <span className={styles.label}>Nome</span>
+                  <input
                   className={styles.input}
                   name="firstName"
                   placeholder="Nome"
@@ -172,8 +199,11 @@ export default function LoginPage() {
                   onChange={handleInputChange}
                   disabled={enviando}
                   required
-                />
-                <input
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span className={styles.label}>Sobrenome</span>
+                  <input
                   className={styles.input}
                   name="lastName"
                   placeholder="Sobrenome"
@@ -182,82 +212,119 @@ export default function LoginPage() {
                   onChange={handleInputChange}
                   disabled={enviando}
                   required
-                />
+                  />
+                </label>
               </div>
             )}
 
-            <input
-              className={styles.input}
-              name="email"
-              type="email"
-              placeholder="Endereço de Email"
-              autoComplete="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              disabled={enviando}
-              required
-            />
+            <label className={styles.field}>
+              <span className={styles.label}>E-mail</span>
+              <input
+                className={styles.input}
+                name="email"
+                type="email"
+                placeholder="voce@exemplo.com"
+                autoComplete="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                disabled={enviando}
+                aria-describedby={erroFormulario ? 'auth-error' : undefined}
+                required
+              />
+            </label>
 
-            <input
-              className={styles.input}
-              name="password"
-              type="password"
-              placeholder="Senha"
-              autoComplete={isSignUp ? 'new-password' : 'current-password'}
-              value={formData.password}
-              onChange={handleInputChange}
-              disabled={enviando}
-              required
-            />
+            {!recuperandoSenha && (
+              <label className={styles.field}>
+                <span className={styles.label}>Senha</span>
+                <span className={styles.passwordField}>
+                  <input
+                    className={styles.input}
+                    name="password"
+                    type={mostrarSenha ? 'text' : 'password'}
+                    placeholder="Sua senha"
+                    autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    disabled={enviando}
+                    aria-describedby={erroFormulario ? 'auth-error' : undefined}
+                    required
+                  />
+                  <button type="button" className={styles.passwordToggle}
+                    onClick={() => setMostrarSenha((valor) => !valor)}
+                    aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}>
+                    {mostrarSenha ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+                  </button>
+                </span>
+              </label>
+            )}
 
-            {isSignUp && (
+            {!isSignUp && !recuperandoSenha && (
+              <button type="button" className={styles.forgotButton}
+                onClick={() => { setRecuperandoSenha(true); setErroFormulario(''); setFeedback(''); }}>
+                Esqueci minha senha
+              </button>
+            )}
+
+            {isSignUp && !recuperandoSenha && (
               <p
                 style={{
                   margin: '-0.5rem 0 0',
                   fontSize: '0.75rem',
-                  color: formData.password.length === 0 ? '#71717a' : senhaValida ? '#16a34a' : '#dc2626',
+                  color: 'var(--text-muted)',
                 }}
               >
                 A senha deve ter no mínimo 8 caracteres, com letras e números
               </p>
             )}
 
-            {isSignUp && (
-              <input
-                className={styles.input}
-                name="confirmPassword"
-                type="password"
-                placeholder="Confirmar senha"
-                autoComplete="new-password"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                disabled={enviando}
-                required
-              />
+            {isSignUp && !recuperandoSenha && (
+              <label className={styles.field}>
+                <span className={styles.label}>Confirmar senha</span>
+                <input
+                  className={styles.input}
+                  name="confirmPassword"
+                  type={mostrarSenha ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  disabled={enviando}
+                  aria-describedby={erroFormulario ? 'auth-error' : undefined}
+                  required
+                />
+              </label>
             )}
+
+            {erroFormulario && <p id="auth-error" className={styles.error} role="alert">{erroFormulario}</p>}
+            <p className={styles.feedback} aria-live="polite">{feedback}</p>
 
             <button
               type="submit"
               className={styles.submitBtn}
               disabled={enviando || (isSignUp && !senhaValida)}
+              aria-busy={enviando}
             >
               {enviando
-                ? isSignUp
+                ? recuperandoSenha ? 'Enviando…' : isSignUp
                   ? 'Criando sua conta…'
                   : 'Entrando…'
-                : isSignUp
+                : recuperandoSenha ? 'Enviar link de recuperação' : isSignUp
                   ? 'Criar Minha Conta'
                   : 'Entrar no Sistema'}
             </button>
           </form>
 
           {/* Link de alternância entre as duas abas internas */}
-          <p className={styles.toggleText}>
+          {recuperandoSenha ? (
+            <button type="button" className={styles.backButton}
+              onClick={() => { setRecuperandoSenha(false); setErroFormulario(''); setFeedback(''); }}>
+              Voltar para o login
+            </button>
+          ) : <p className={styles.toggleText}>
             {isSignUp ? 'Já tem uma conta?' : 'Ainda não tem conta?'}
             <button type="button" className={styles.toggleLink} onClick={alternarModo} disabled={enviando}>
               {isSignUp ? ' Entre aqui' : ' Cadastre-se agora'}
             </button>
-          </p>
+          </p>}
         </div>
       </div>
     </div>

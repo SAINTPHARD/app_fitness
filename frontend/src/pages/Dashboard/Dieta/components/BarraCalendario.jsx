@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import PropTypes from 'prop-types';
 import { formatarDataISO, obterDataDeHojeISO, obterDiasDaSemana } from '../utils/calendario';
 
 /**
@@ -76,3 +77,5 @@ export default function BarraCalendario({ dataSelecionadaISO, aoSelecionarDia })
     </div>
   );
 }
+
+BarraCalendario.propTypes = { dataSelecionadaISO: PropTypes.string.isRequired, aoSelecionarDia: PropTypes.func.isRequired };

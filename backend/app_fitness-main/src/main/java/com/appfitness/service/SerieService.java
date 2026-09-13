@@ -88,6 +88,7 @@ public class SerieService {
 		serie.setNumeroSerie((int) seriesExistentes + 1);
 		serie.setCarga(dto.carga());
 		serie.setRepeticoes(dto.repeticoes());
+		aplicarDetalhes(serie, dto);
 		serie.setTipo(parseTipo(dto.tipo()));
 		serie.setStatus(SerieStatus.EM_ANDAMENTO);
 		serie.setHorarioInicio(LocalDateTime.now());
@@ -143,6 +144,7 @@ public class SerieService {
 		avisarSeSessaoConcluida(serie.getSessao(), "editar série " + serieId, usuarioAutenticado);
 		serie.setCarga(dto.carga());
 		serie.setRepeticoes(dto.repeticoes());
+		aplicarDetalhes(serie, dto);
 		if (dto.tipo() != null) {
 			serie.setTipo(parseTipo(dto.tipo()));
 		}
@@ -243,5 +245,27 @@ public class SerieService {
 		} catch (IllegalArgumentException ex) {
 			throw new DadosInvalidosException("Tipo de série inválido: " + tipo);
 		}
+	}
+
+	private void aplicarDetalhes(Serie serie, SerieRequestDTO dto) {
+		String unidade = dto.unidadeCarga() == null || dto.unidadeCarga().isBlank()
+				? "KG" : dto.unidadeCarga().trim().toUpperCase();
+		if (!unidade.equals("KG") && !unidade.equals("LB")) {
+			throw new DadosInvalidosException("Unidade de carga inválida. Use KG ou LB.");
+		}
+		if (dto.rir() != null && dto.rir() > 10) {
+			throw new DadosInvalidosException("O RIR deve estar entre 0 e 10.");
+		}
+		if (dto.rpe() != null && dto.rpe().compareTo(java.math.BigDecimal.TEN) > 0) {
+			throw new DadosInvalidosException("O RPE deve estar entre 0 e 10.");
+		}
+		String observacao = dto.observacao() == null ? null : dto.observacao().trim();
+		if (observacao != null && observacao.length() > 500) {
+			throw new DadosInvalidosException("A observação deve ter no máximo 500 caracteres.");
+		}
+		serie.setUnidadeCarga(unidade);
+		serie.setRir(dto.rir());
+		serie.setRpe(dto.rpe());
+		serie.setObservacao(observacao == null || observacao.isBlank() ? null : observacao);
 	}
 }

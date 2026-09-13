@@ -84,6 +84,76 @@
   align-items: end;
 }
 
+.controlesGrafico,
+.formFoto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.controlesGrafico label,
+.formFoto label {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.controlesGrafico input,
+.controlesGrafico select,
+.formFoto input,
+.formFoto select {
+  min-height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-primary);
+  padding: 0.65rem 0.75rem;
+}
+
+.avisoPrivacidade {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid color-mix(in srgb, var(--brand) 25%, var(--border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--brand) 7%, var(--surface));
+  color: var(--text-secondary);
+  padding: 0.85rem 1rem;
+  font-size: 0.85rem;
+}
+
+.avisoPrivacidade strong { color: var(--text-primary); }
+
+.configuradorMedidas {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.6rem;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 0.75rem;
+}
+
+.configuradorMedidas legend {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0 0.3rem;
+}
+
+.configuradorMedidas select {
+  min-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-primary);
+  padding: 0.5rem;
+}
+
 .formMedidas label {
   display: grid;
   gap: 0.4rem;

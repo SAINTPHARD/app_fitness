@@ -15,11 +15,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.appfitness.dto.auth.LoginDTO;
+import com.appfitness.dto.auth.PasswordResetConfirmDTO;
+import com.appfitness.dto.auth.PasswordResetRequestDTO;
 import com.appfitness.dto.auth.RefreshTokenDTO;
 import com.appfitness.dto.auth.TokenDTO;
 import com.appfitness.model.entity.Usuario;
 import com.appfitness.repository.UsuarioRepository;
 import com.appfitness.security.TokenService;
+import com.appfitness.service.PasswordResetService;
+
+import jakarta.validation.Valid;
 
 /**
  * Controller responsável pelos endpoints de autenticação e login da API.
@@ -31,12 +36,15 @@ public class AuthController {
 	private final AuthenticationManager authenticationManager;
 	private final TokenService tokenService;
 	private final UsuarioRepository usuarioRepository;
+	private final PasswordResetService passwordResetService;
 
 	// Injeção de dependência via construtor (Padrão Sênior)
-	public AuthController(AuthenticationManager authenticationManager, TokenService tokenService, UsuarioRepository usuarioRepository) {
+	public AuthController(AuthenticationManager authenticationManager, TokenService tokenService,
+			UsuarioRepository usuarioRepository, PasswordResetService passwordResetService) {
 		this.authenticationManager = authenticationManager;
 		this.tokenService = tokenService;
 		this.usuarioRepository = usuarioRepository;
+		this.passwordResetService = passwordResetService;
 	}
 
 	/**
@@ -71,9 +79,25 @@ public class AuthController {
 		} catch (AuthenticationException ex) {
 			// Tratamento seguro para falhas de credenciais (retorna 401 Unauthorized)
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
-					"message", "E-mail ou senha inválidos. Confira os dados cadastrados no banco."
+					"message", "E-mail ou senha inválidos."
 			));
 		}
+	}
+
+	@PostMapping("/password/forgot")
+	public ResponseEntity<Map<String, String>> solicitarRedefinicao(
+			@Valid @RequestBody PasswordResetRequestDTO request) {
+		passwordResetService.solicitar(request.email());
+		return ResponseEntity.accepted().body(Map.of(
+				"message", "Se o e-mail estiver cadastrado, enviaremos as instruções de recuperação."
+		));
+	}
+
+	@PostMapping("/password/reset")
+	public ResponseEntity<Map<String, String>> redefinirSenha(
+			@Valid @RequestBody PasswordResetConfirmDTO request) {
+		passwordResetService.redefinir(request.token(), request.novaSenha());
+		return ResponseEntity.ok(Map.of("message", "Senha redefinida com sucesso."));
 	}
 
 	/**

@@ -121,6 +121,18 @@
   gap: 1rem;
 }
 
+.field { display: flex; flex-direction: column; gap: 0.4rem; width: 100%; }
+.label { color: var(--text-secondary); font-size: 0.875rem; font-weight: 600; }
+.passwordField { position: relative; display: block; }
+.passwordField .input { padding-right: 3rem; }
+.passwordToggle { position: absolute; right: 0.65rem; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 2rem; height: 2rem; border: 0; border-radius: 0.5rem; background: transparent; color: var(--text-muted); cursor: pointer; }
+.passwordToggle svg { width: 1.1rem; height: 1.1rem; }
+.forgotButton { align-self: flex-end; margin-top: -0.5rem; border: 0; background: none; color: var(--brand); font: inherit; font-size: 0.875rem; cursor: pointer; }
+.backButton { display: block; margin-top: 1.25rem; border: 0; background: none; color: var(--brand); text-align: center; font: inherit; font-weight: 600; cursor: pointer; }
+.error { margin: 0; color: var(--danger); font-size: 0.875rem; }
+.feedback { min-height: 1.25rem; margin: 0; color: var(--success); font-size: 0.875rem; }
+.passwordToggle:focus-visible, .forgotButton:focus-visible, .backButton:focus-visible, .toggleLink:focus-visible, .submitBtn:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+
 .rowInputs {
   display: flex;
   flex-direction: column;

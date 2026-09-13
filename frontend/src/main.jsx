@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
+import { iniciarWebVitals } from './utils/observabilidade.js'
 
 const rootElement = document.getElementById('root')
 
@@ -17,3 +18,5 @@ createRoot(rootElement).render(
     </ErrorBoundary>
   </StrictMode>,
 )
+
+iniciarWebVitals()
