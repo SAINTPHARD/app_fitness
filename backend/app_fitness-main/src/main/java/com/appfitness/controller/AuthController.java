@@ -24,8 +24,16 @@ import com.appfitness.repository.UsuarioRepository;
 import com.appfitness.security.TokenService;
 import com.appfitness.service.PasswordResetService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
+@Tag(name = "Autenticação", 
+	description = "Endpoints para autenticação, login e gerenciamento de tokens JWT.")
 /**
  * Controller responsável pelos endpoints de autenticação e login da API.
  */
@@ -46,6 +54,28 @@ public class AuthController {
 		this.usuarioRepository = usuarioRepository;
 		this.passwordResetService = passwordResetService;
 	}
+	
+	/**
+	 * Redefine o endpoint de login para autenticar o usuário e retornar um token JWT válido.
+	 */
+	@Operation(
+			summary = "Autentica o usuário e retorna o Token JWT.", 
+			description = "Recebe e-mail e senha, valida as credenciais e retorna um token JWT válido para autenticação."
+		)
+		@ApiResponses(value = {
+			@ApiResponse(
+				responseCode = "200", 
+				description = "Autenticação bem-sucedida, retorna o token JWT.",
+				content = @Content(
+					mediaType = "application/json", 
+					schema = @Schema(implementation = TokenDTO.class)
+				)
+			),
+			@ApiResponse(
+				responseCode = "401", 
+				description = "Credenciais inválidas, e-mail ou senha incorretos."
+			)
+		})
 
 	/**
 	 * Endpoint público para autenticar o usuário e retornar o Token JWT.
@@ -60,7 +90,7 @@ public class AuthController {
 			}
 
 			// Normaliza o e-mail (remove espaços e converte para minúsculas)
-			String email = loginDTO.email().trim().toLowerCase();
+			String email = loginDTO.	email().trim().toLowerCase();
 			
 			// Cria o token de autenticação para o Spring Security validar
 			var authToken = new UsernamePasswordAuthenticationToken(email, loginDTO.password());

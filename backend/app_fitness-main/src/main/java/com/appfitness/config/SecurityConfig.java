@@ -77,6 +77,13 @@ public class SecurityConfig {
 				// Render pode consultar somente o estado agregado; métricas continuam protegidas por JWT.
 				.requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
 				
+				// Rota pública para documentação da API (OpenAPI/Swagger)
+				.requestMatchers(
+						"/v3/api-docs/**", 
+						"/swagger-ui/**", 
+						"/swagger-ui.html"
+						).permitAll()
+				
 				// Qualquer outra requisição do sistema exige autenticação por Token JWT
 				.anyRequest().authenticated()
 			)
